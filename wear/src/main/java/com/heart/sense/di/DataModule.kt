@@ -1,6 +1,8 @@
 package com.heart.sense.di
 
 import android.content.Context
+import androidx.health.services.client.HealthServices
+import androidx.health.services.client.HealthServicesClient
 import com.heart.sense.data.SettingsDataStore
 import dagger.Module
 import dagger.Provides
@@ -17,5 +19,11 @@ object DataModule {
     @Singleton
     fun provideSettingsDataStore(@ApplicationContext context: Context): SettingsDataStore {
         return SettingsDataStore(context)
+    }
+
+    @Provides
+    @Singleton
+    fun provideHealthServicesClient(@ApplicationContext context: Context): HealthServicesClient {
+        return HealthServices.getClient(context)
     }
 }
