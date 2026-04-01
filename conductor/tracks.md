@@ -2,7 +2,7 @@
 
 | Track ID | Name | Description | Status |
 | :--- | :--- | :--- | :--- |
-| `001-setup` | Project Setup | Initialize Android/WearOS project modules and permissions. | Pending |
+| `001-setup` | Project Setup | Initialize Android/WearOS project modules and permissions. | In Progress |
 | `002-data-sync` | Configuration & Sync | Implement threshold settings on phone and sync to watch via DataClient. | Pending |
 | `003-passive-monitor` | Passive Monitoring | Implement background HR monitoring on WearOS. | Pending |
 | `004-active-monitor` | Watching Closer | Implement Foreground Service and MeasureClient for real-time tracking. | Pending |
