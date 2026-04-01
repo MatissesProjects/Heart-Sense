@@ -39,6 +39,11 @@
             android:permission="com.google.android.wearable.healthservices.permission.PASSIVE_DATA_BINDING" />
 
         <service
+            android:name=".service.HealthMonitoringService"
+            android:foregroundServiceType="health"
+            android:exported="false" />
+
+        <service
             android:name=".service.SettingsListenerService"
             android:exported="true">
             <intent-filter>

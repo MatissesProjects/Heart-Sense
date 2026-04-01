@@ -1,5 +1,6 @@
 package com.heart.sense.service
 
+import android.content.Intent
 import androidx.health.services.client.PassiveListenerService
 import androidx.health.services.client.data.*
 import com.heart.sense.data.SettingsDataStore
@@ -40,7 +41,7 @@ class PassiveMonitoringService : PassiveListenerService() {
     }
 
     private fun triggerHighHrAlert(hr: Int) {
-        // TODO: Start Foreground Service for real-time monitoring
-        // TODO: Send message to phone
+        val intent = Intent(this, HealthMonitoringService::class.java)
+        startForegroundService(intent)
     }
 }
