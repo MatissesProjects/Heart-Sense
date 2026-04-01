@@ -1,51 +1,56 @@
-Here is the Kotlin-based architectural plan for your Pixel 9 and Pixel Watch 3.
+# Heart-Sense Implementation Plan
 
-Step 1: The Kotlin APIs You Will Use
-You will be building a project with two modules: a wear app and an app (mobile).
+## Overview
+Heart-Sense is a two-tiered health monitoring system for Pixel Watch 3 and Pixel 9. It balances battery efficiency with real-time accuracy to detect heart rate anomalies and provide timely alerts.
 
-Health Services API (WearOS): This is the holy grail for your project. It bypasses raw sensor polling and gives you processed, battery-optimized health data.
+---
 
-Wearable Data Layer API: This is how your Pixel Watch 3 will talk to your Pixel 9 (using MessageClient for instant alerts and DataClient for syncing history).
+## 🚀 Key Features & Requirements
 
-Kotlin Coroutines & Flows: Used to handle asynchronous sensor data streams seamlessly.
+### 1. Two-Tiered Monitoring (WearOS)
+-   **Passive Mode:** Uses `PassiveMonitoringClient` for battery-efficient background tracking.
+-   **Watching Closer Mode:** Shifts to `MeasureClient` and a Foreground Service for 1Hz real-time tracking when anomalies are detected.
 
-Step 2: The Two-Tiered Monitoring System
-Your brilliant idea of a "watching closer" mode maps perfectly to two distinct clients within the Health Services API:
+### 2. Configuration & Sync (Mobile to Watch)
+-   **Threshold Management:** Set HR limits (e.g., 100bpm stationary) from the Pixel 9.
+-   **Data Sync:** Uses `DataClient` to sync thresholds and health state to the watch instantly.
 
-Mode 1: The "Batch Processing" Mode (PassiveMonitoringClient)
-This is your everyday, battery-saving mode.
+### 3. Health Context (Sick Mode)
+-   **Mark State:** Users can mark themselves as "sick" or "resting" from the phone or watch.
+-   **Dynamic Triggers:**
+    -   **Lower Thresholds:** Alerts trigger at lower HR levels when sick (e.g., alert at 90bpm instead of 100bpm).
+    -   **Sit-Down Warnings:** Proactive warnings if the user is active while marked as "sick" or if HR is elevated while stationary.
 
-How it works: You register a PassiveListenerConfig for Heart Rate and Activity State. The WearOS system batches this data in the background and delivers it to your app periodically without waking up the main processor constantly.
+### 4. Cross-Device Alerts
+-   **Message System:** Watch sends `/hr_alert` via `MessageClient`.
+-   **Phone Response:** Pixel 9 triggers high-priority notifications/alarms.
 
-The Trigger: You evaluate the batched data. If you see USER_ACTIVITY_STATE_PASSIVE (sitting still) combined with a high average HR in the batch, you trigger the alert and transition to Mode 2.
+---
 
-Mode 2: The "Watching Closer" Mode (MeasureClient)
-When an anomaly is detected, your app shifts gears to get real-time data.
+## 🛠 Tech Stack
+-   **Kotlin & Coroutines/Flows**
+-   **Jetpack Compose** (Mobile & WearOS)
+-   **Health Services API**
+-   **Wearable Data Layer API**
+-   **Hilt** (DI)
 
-How it works: You start a Foreground Service on the watch (which requires showing an ongoing notification to the user, e.g., "Monitoring High HR..."). Inside this service, you use the MeasureClient.
+---
 
-The Data: MeasureClient provides a continuous, per-second stream of Heart Rate (DataType.HEART_RATE_BPM).
+## 🛤 Tracks (Conductor)
+Detailed progress is tracked in the `conductor/` directory.
 
-The Resolution: If the heart rate drops back to normal for a set duration (e.g., 2 minutes), you stop the Foreground Service, stop the MeasureClient, and fall back to Mode 1 (PassiveMonitoringClient).
+1.  **[001-setup](./conductor/tracks/001-setup/plan.md):** Project Setup & Permissions.
+2.  **[002-data-sync](./conductor/tracks/002-data-sync/plan.md):** Configuration & DataLayer Sync.
+3.  **[003-passive-monitor](./conductor/tracks/003-passive-monitor/plan.md):** Background Passive Monitoring.
+4.  **[004-active-monitor](./conductor/tracks/004-active-monitor/plan.md):** "Watching Closer" Foreground Service.
+5.  **[005-alerts](./conductor/tracks/005-alerts/plan.md):** UI & Cross-Device Notification System.
+6.  **[006-sick-mode](./conductor/tracks/006-sick-mode/plan.md):** Logic for Health Context & Dynamic Thresholds.
 
-Step 3: Required Android Permissions
-Because health data is highly sensitive, your AndroidManifest.xml will need specific permissions to make this work:
+---
 
-android.permission.BODY_SENSORS (To read heart rate)
-
-android.permission.BODY_SENSORS_BACKGROUND (To read it while the app is closed)
-
-android.permission.ACTIVITY_RECOGNITION (To know if you are stationary or moving)
-
-android.permission.FOREGROUND_SERVICE_HEALTH (To run the "Watching Closer" mode in the background)
-
-android.permission.POST_NOTIFICATIONS (To alert you)
-
-Step 4: Communication with the Pixel 9
-When the Watch detects the anomaly, it needs to wake up the phone.
-
-Using the Wearable.getMessageClient(context), the watch sends a tiny, instant payload (e.g., path = "/hr_alert", data = "125bpm_stationary").
-
-A WearableListenerService running on your Pixel 9 intercepts this message.
-
-The Pixel 9 then triggers a high-priority, full-screen intent or a loud notification so you don't miss it.
+## 📜 Android Permissions
+-   `BODY_SENSORS`
+-   `BODY_SENSORS_BACKGROUND`
+-   `ACTIVITY_RECOGNITION`
+-   `FOREGROUND_SERVICE_HEALTH`
+-   `POST_NOTIFICATIONS`
