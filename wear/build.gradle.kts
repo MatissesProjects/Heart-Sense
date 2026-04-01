@@ -54,6 +54,7 @@ dependencies {
     // Health Services
     implementation(libs.androidx.health.services)
     implementation(libs.play.services-wearable)
+    implementation(libs.androidx.datastore.preferences)
     
     // Hilt
     implementation(libs.hilt.android)
