@@ -13,4 +13,4 @@ Initialize the Android project with mobile and WearOS modules and configure esse
 - [x] Create basic MainActivity and Application classes for both modules
 - [x] Configure permissions in manifests
 - [x] Add Hilt implementation (annotation processor setup)
-- [ ] Setup basic Compose themes
+- [x] Setup basic Compose themes
