@@ -49,8 +49,10 @@ dependencies {
     implementation(libs.androidx.material3)
     
     // Health & Wearable
-    implementation(libs.play.services-wearable)
-    
+    implementation(libs.play.services.wearable)
+//    implementation(libs.androidx.health.services)
+
+
     // Hilt
     implementation(libs.hilt.android)
     ksp(libs.hilt.compiler)
