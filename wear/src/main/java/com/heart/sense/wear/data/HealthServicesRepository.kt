@@ -15,6 +15,11 @@ import kotlinx.coroutines.guava.await
 import javax.inject.Inject
 import javax.inject.Singleton
 
+sealed class MeasureUpdate {
+    data class DataReceived(val container: DataPointContainer) : MeasureUpdate()
+    data class AvailabilityChanged(val dataType: DeltaDataType<*, *>, val availability: Availability) : MeasureUpdate()
+}
+
 @Singleton
 class HealthServicesRepository @Inject constructor(
     private val healthServicesClient: HealthServicesClient
@@ -22,18 +27,17 @@ class HealthServicesRepository @Inject constructor(
     private val passiveMonitoringClient = healthServicesClient.passiveMonitoringClient
     private val measureClient = healthServicesClient.measureClient
 
-    fun getMeasureData(dataType: DeltaDataType<*, *>) : Flow<DataPointContainer> = callbackFlow {
+    fun getMeasureData(dataType: DeltaDataType<*, *>) : Flow<MeasureUpdate> = callbackFlow {
         val callback = object : MeasureCallback {
             override fun onDataReceived(data: DataPointContainer) {
-                trySend(data)
+                trySend(MeasureUpdate.DataReceived(data))
             }
 
             override fun onAvailabilityChanged(dataType: DeltaDataType<*, *>, availability: Availability) {
-                // Handle availability changes
+                trySend(MeasureUpdate.AvailabilityChanged(dataType, availability))
             }
 
             override fun onRegistered() {
-                // Handle registration success
             }
 
             override fun onRegistrationFailed(throwable: Throwable) {
