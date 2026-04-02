@@ -55,6 +55,7 @@ dependencies {
     implementation(libs.androidx.health.services)
     implementation(libs.play.services.wearable)
     implementation(libs.androidx.datastore.preferences)
+    implementation(libs.kotlinx.coroutines.play.services)
     implementation("org.jetbrains.kotlinx:kotlinx-coroutines-guava:1.8.1")
     
     // Hilt

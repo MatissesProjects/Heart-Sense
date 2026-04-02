@@ -1,4 +1,4 @@
-package com.heart.sense.service
+package com.heart.sense.wear.service
 
 import android.app.Notification
 import android.app.NotificationChannel
@@ -11,8 +11,8 @@ import android.os.IBinder
 import androidx.core.app.NotificationCompat
 import androidx.core.app.ServiceCompat
 import androidx.health.services.client.data.DataType
-import com.heart.sense.data.HealthServicesRepository
-import com.heart.sense.data.SettingsDataStore
+import com.heart.sense.wear.data.HealthServicesRepository
+import com.heart.sense.wear.data.SettingsDataStore
 import dagger.hilt.android.AndroidEntryPoint
 import kotlinx.coroutines.*
 import kotlinx.coroutines.flow.first
@@ -56,7 +56,9 @@ class HealthMonitoringService : Service() {
             var stableCount = 0
             
             healthServicesRepository.getMeasureData(DataType.HEART_RATE_BPM).collect { measureMessage ->
-                val hr = measureMessage.dataPoints.last().value.toDouble().toInt()
+                val hrDataPoints = measureMessage.getData(DataType.HEART_RATE_BPM)
+                if (hrDataPoints.isEmpty()) return@collect
+                val hr = hrDataPoints.last().value.toInt()
                 
                 // Update notification with latest HR
                 val manager = getSystemService(NotificationManager::class.java)

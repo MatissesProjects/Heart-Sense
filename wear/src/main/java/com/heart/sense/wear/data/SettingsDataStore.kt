@@ -1,4 +1,4 @@
-package com.heart.sense.data
+package com.heart.sense.wear.data
 
 import android.content.Context
 import androidx.datastore.preferences.core.booleanPreferencesKey

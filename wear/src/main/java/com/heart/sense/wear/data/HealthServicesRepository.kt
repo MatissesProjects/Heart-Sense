@@ -1,4 +1,4 @@
-package com.heart.sense.data
+package com.heart.sense.wear.data
 
 import androidx.health.services.client.HealthServicesClient
 import androidx.health.services.client.MeasureCallback
@@ -6,6 +6,7 @@ import androidx.health.services.client.PassiveListenerService
 import androidx.health.services.client.data.DataPointContainer
 import androidx.health.services.client.data.DataType
 import androidx.health.services.client.data.DeltaDataType
+import androidx.health.services.client.data.Availability
 import androidx.health.services.client.data.PassiveListenerConfig
 import kotlinx.coroutines.channels.awaitClose
 import kotlinx.coroutines.flow.Flow
@@ -27,15 +28,23 @@ class HealthServicesRepository @Inject constructor(
                 trySend(data)
             }
 
-            override fun onAvailabilityChanged(dataType: DataType<*, *>, availability: androidx.health.services.client.data.Availability) {
-                // Handle availability changes if needed
+            override fun onAvailabilityChanged(dataType: DeltaDataType<*, *>, availability: Availability) {
+                // Handle availability changes
+            }
+
+            override fun onRegistered() {
+                // Handle registration success
+            }
+
+            override fun onRegistrationFailed(throwable: Throwable) {
+                close(throwable)
             }
         }
 
         measureClient.registerMeasureCallback(dataType, callback)
 
         awaitClose {
-            measureClient.unregisterMeasureCallback(dataType, callback)
+            measureClient.unregisterMeasureCallbackAsync(dataType, callback)
         }
     }
 

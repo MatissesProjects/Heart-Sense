@@ -1,10 +1,10 @@
-package com.heart.sense.service
+package com.heart.sense.wear.service
 
 import android.content.Intent
 import androidx.health.services.client.PassiveListenerService
 import androidx.health.services.client.data.*
-import com.heart.sense.data.SettingsDataStore
-import com.heart.sense.data.WearableCommunicationRepository
+import com.heart.sense.wear.data.SettingsDataStore
+import com.heart.sense.wear.data.WearableCommunicationRepository
 import dagger.hilt.android.AndroidEntryPoint
 import kotlinx.coroutines.CoroutineScope
 import kotlinx.coroutines.Dispatchers
@@ -23,15 +23,19 @@ class PassiveMonitoringService : PassiveListenerService() {
     lateinit var wearableCommunicationRepository: WearableCommunicationRepository
 
     private val scope = CoroutineScope(SupervisorJob() + Dispatchers.Main)
+    
+    private var lastActivityState: UserActivityState = UserActivityState.USER_ACTIVITY_UNKNOWN
 
-    override fun onPassiveUpdate(update: PassiveMonitoringUpdate) {
-        val dataPoints = update.getDataPoints(DataType.HEART_RATE_BPM)
-        val userActivityInfo = update.userActivityInfo
-        
-        if (dataPoints.isEmpty() || userActivityInfo == null) return
+    override fun onUserActivityInfoReceived(userActivityInfo: UserActivityInfo) {
+        lastActivityState = userActivityInfo.userActivityState
+    }
 
-        val latestHr = dataPoints.last().value.toDouble().toInt()
-        val isStationary = userActivityInfo.userActivityState == UserActivityState.USER_ACTIVITY_STATE_PASSIVE
+    override fun onNewDataPointsReceived(dataPoints: DataPointContainer) {
+        val hrDataPoints = dataPoints.getData(DataType.HEART_RATE_BPM)
+        if (hrDataPoints.isEmpty()) return
+
+        val latestHr = hrDataPoints.last().value.toInt()
+        val isStationary = lastActivityState == UserActivityState.USER_ACTIVITY_PASSIVE
 
         scope.launch {
             val settings = settingsDataStore.settings.first()

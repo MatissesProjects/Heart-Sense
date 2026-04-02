@@ -1,4 +1,4 @@
-package com.heart.sense.di
+package com.heart.sense.wear.di
 
 import android.content.Context
 import androidx.health.services.client.HealthServices
@@ -6,10 +6,10 @@ import androidx.health.services.client.HealthServicesClient
 import com.google.android.gms.wearable.MessageClient
 import com.google.android.gms.wearable.NodeClient
 import com.google.android.gms.wearable.Wearable
-import com.heart.sense.data.SettingsDataStore
+import com.heart.sense.wear.data.SettingsDataStore
 import dagger.Module
 import dagger.Provides
-import dagger.InstallIn
+import dagger.hilt.InstallIn
 import dagger.hilt.android.qualifiers.ApplicationContext
 import dagger.hilt.components.SingletonComponent
 import javax.inject.Singleton

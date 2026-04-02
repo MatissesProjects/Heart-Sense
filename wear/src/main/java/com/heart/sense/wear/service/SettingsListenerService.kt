@@ -1,9 +1,9 @@
-package com.heart.sense.service
+package com.heart.sense.wear.service
 
 import com.google.android.gms.wearable.DataEventBuffer
 import com.google.android.gms.wearable.DataMapItem
 import com.google.android.gms.wearable.WearableListenerService
-import com.heart.sense.data.SettingsDataStore
+import com.heart.sense.wear.data.SettingsDataStore
 import dagger.hilt.android.AndroidEntryPoint
 import kotlinx.coroutines.CoroutineScope
 import kotlinx.coroutines.Dispatchers

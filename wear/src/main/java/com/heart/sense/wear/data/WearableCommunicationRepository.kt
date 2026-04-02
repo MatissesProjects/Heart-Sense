@@ -1,4 +1,4 @@
-package com.heart.sense.data
+package com.heart.sense.wear.data
 
 import com.google.android.gms.wearable.MessageClient
 import com.google.android.gms.wearable.NodeClient
