@@ -4,6 +4,7 @@ import android.content.Intent
 import androidx.health.services.client.PassiveListenerService
 import androidx.health.services.client.data.*
 import com.heart.sense.data.SettingsDataStore
+import com.heart.sense.data.WearableCommunicationRepository
 import dagger.hilt.android.AndroidEntryPoint
 import kotlinx.coroutines.CoroutineScope
 import kotlinx.coroutines.Dispatchers
@@ -17,6 +18,9 @@ class PassiveMonitoringService : PassiveListenerService() {
 
     @Inject
     lateinit var settingsDataStore: SettingsDataStore
+
+    @Inject
+    lateinit var wearableCommunicationRepository: WearableCommunicationRepository
 
     private val scope = CoroutineScope(SupervisorJob() + Dispatchers.Main)
 
@@ -43,5 +47,9 @@ class PassiveMonitoringService : PassiveListenerService() {
     private fun triggerHighHrAlert(hr: Int) {
         val intent = Intent(this, HealthMonitoringService::class.java)
         startForegroundService(intent)
+        
+        scope.launch {
+            wearableCommunicationRepository.sendHrAlert(hr)
+        }
     }
 }

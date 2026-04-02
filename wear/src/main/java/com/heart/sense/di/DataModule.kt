@@ -3,6 +3,9 @@ package com.heart.sense.di
 import android.content.Context
 import androidx.health.services.client.HealthServices
 import androidx.health.services.client.HealthServicesClient
+import com.google.android.gms.wearable.MessageClient
+import com.google.android.gms.wearable.NodeClient
+import com.google.android.gms.wearable.Wearable
 import com.heart.sense.data.SettingsDataStore
 import dagger.Module
 import dagger.Provides
@@ -25,5 +28,17 @@ object DataModule {
     @Singleton
     fun provideHealthServicesClient(@ApplicationContext context: Context): HealthServicesClient {
         return HealthServices.getClient(context)
+    }
+
+    @Provides
+    @Singleton
+    fun provideMessageClient(@ApplicationContext context: Context): MessageClient {
+        return Wearable.getMessageClient(context)
+    }
+
+    @Provides
+    @Singleton
+    fun provideNodeClient(@ApplicationContext context: Context): NodeClient {
+        return Wearable.getNodeClient(context)
     }
 }
