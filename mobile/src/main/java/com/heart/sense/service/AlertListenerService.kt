@@ -8,21 +8,37 @@ import android.content.Intent
 import androidx.core.app.NotificationCompat
 import com.google.android.gms.wearable.MessageEvent
 import com.google.android.gms.wearable.WearableListenerService
+import com.heart.sense.data.AlertsRepository
 import com.heart.sense.receiver.AlertActionReceiver
 import dagger.hilt.android.AndroidEntryPoint
+import javax.inject.Inject
 
+import android.util.Log
+// ...
 @AndroidEntryPoint
 class AlertListenerService : WearableListenerService() {
 
+    @Inject
+    lateinit var alertsRepository: AlertsRepository
+
     override fun onMessageReceived(messageEvent: MessageEvent) {
+        Log.d("AlertListenerService", "Message received: ${messageEvent.path}")
         when (messageEvent.path) {
             "/hr_alert" -> {
                 val hr = String(messageEvent.data).toInt()
+                Log.d("AlertListenerService", "HR Alert: $hr BPM")
+                alertsRepository.addAlert(hr, "High HR")
                 showHighHrNotification(hr)
             }
             "/sit_down" -> {
                 val hr = String(messageEvent.data).toInt()
+                Log.d("AlertListenerService", "Sit Down Alert: $hr BPM")
+                alertsRepository.addAlert(hr, "Sit Down")
                 showSitDownWarning(hr)
+            }
+            "/live_hr" -> {
+                val hr = String(messageEvent.data).toInt()
+                alertsRepository.updateLiveHr(hr)
             }
         }
     }
