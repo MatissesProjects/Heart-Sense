@@ -30,7 +30,7 @@ class SettingsRepository @Inject constructor(
         }.asPutDataRequest().setUrgent()
         
         try {
-            dataClient.putData(request).await()
+            dataClient.putDataItem(request).await()
         } catch (e: Exception) {
             // Handle error
         }

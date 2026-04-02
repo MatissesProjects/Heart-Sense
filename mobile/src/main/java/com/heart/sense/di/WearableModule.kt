@@ -8,7 +8,7 @@ import com.google.android.gms.wearable.Wearable
 import com.heart.sense.data.SettingsDataStore
 import dagger.Module
 import dagger.Provides
-import dagger.InstallIn
+import dagger.hilt.InstallIn
 import dagger.hilt.android.qualifiers.ApplicationContext
 import dagger.hilt.components.SingletonComponent
 import javax.inject.Singleton
