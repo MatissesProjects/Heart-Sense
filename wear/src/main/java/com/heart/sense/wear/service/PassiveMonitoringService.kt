@@ -13,6 +13,8 @@ import kotlinx.coroutines.flow.first
 import kotlinx.coroutines.launch
 import javax.inject.Inject
 
+import android.util.Log
+// ...
 @AndroidEntryPoint
 class PassiveMonitoringService : PassiveListenerService() {
 
@@ -27,6 +29,7 @@ class PassiveMonitoringService : PassiveListenerService() {
     private var lastActivityState: UserActivityState = UserActivityState.USER_ACTIVITY_UNKNOWN
 
     override fun onUserActivityInfoReceived(userActivityInfo: UserActivityInfo) {
+        Log.d("PassiveMonitoring", "Activity State: ${userActivityInfo.userActivityState}")
         lastActivityState = userActivityInfo.userActivityState
     }
 
@@ -35,6 +38,7 @@ class PassiveMonitoringService : PassiveListenerService() {
         if (hrDataPoints.isEmpty()) return
 
         val latestHr = hrDataPoints.last().value.toInt()
+        Log.d("PassiveMonitoring", "New HR: $latestHr BPM, Activity: $lastActivityState")
         val isStationary = lastActivityState == UserActivityState.USER_ACTIVITY_PASSIVE
 
         scope.launch {
@@ -47,11 +51,13 @@ class PassiveMonitoringService : PassiveListenerService() {
             
             // If stationary and HR > threshold, we need to watch closer.
             if (isStationary && latestHr > effectiveThreshold) {
+                Log.d("PassiveMonitoring", "Stationary & High HR -> Trigger Alert")
                 triggerHighHrAlert(latestHr)
             }
             
             // Sit-down warning: if sick, not stationary, and HR is elevated.
             if (settings.isSickMode && !isStationary && latestHr > effectiveThreshold) {
+                Log.d("PassiveMonitoring", "Sick & Not Stationary & High HR -> Trigger Sit Down")
                 triggerSitDownWarning(latestHr)
             }
         }

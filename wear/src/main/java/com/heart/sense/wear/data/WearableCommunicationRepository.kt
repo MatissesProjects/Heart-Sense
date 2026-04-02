@@ -24,4 +24,11 @@ class WearableCommunicationRepository @Inject constructor(
             messageClient.sendMessage(node.id, "/sit_down", hr.toString().toByteArray()).await()
         }
     }
+
+    suspend fun sendLiveHr(hr: Int) {
+        val nodes = nodeClient.connectedNodes.await()
+        nodes.forEach { node ->
+            messageClient.sendMessage(node.id, "/live_hr", hr.toString().toByteArray()).await()
+        }
+    }
 }
