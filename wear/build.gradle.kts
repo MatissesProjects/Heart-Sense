@@ -53,7 +53,7 @@ dependencies {
     
     // Health Services
     implementation(libs.androidx.health.services)
-    implementation(libs.play.services-wearable)
+    implementation(libs.play.services.wearable)
     implementation(libs.androidx.datastore.preferences)
     implementation("org.jetbrains.kotlinx:kotlinx-coroutines-guava:1.8.1")
     
@@ -63,9 +63,9 @@ dependencies {
     
     testImplementation(libs.junit)
     androidTestImplementation(libs.androidx.junit)
-    androidTestImplementation(libs.androidx.espresso-core)
+    androidTestImplementation(libs.androidx.espresso.core)
     androidTestImplementation(platform(libs.androidx.compose.bom))
-    androidTestImplementation(libs.androidx.ui.test-junit4)
+    androidTestImplementation(libs.androidx.ui.test.junit4)
     debugImplementation(libs.androidx.ui.tooling)
-    debugImplementation(libs.androidx.ui.test-manifest)
+    debugImplementation(libs.androidx.ui.test.manifest)
 }

@@ -62,8 +62,15 @@ class HealthMonitoringService : Service() {
                 val manager = getSystemService(NotificationManager::class.java)
                 manager.notify(1, createNotification("Current HR: $hr BPM"))
 
+                // Determine effective threshold based on Sick Mode
+                val effectiveThreshold = if (settings.isSickMode) {
+                    settings.highHrThreshold - 10
+                } else {
+                    settings.highHrThreshold
+                }
+
                 // If HR is back to normal (with 10 BPM buffer) for 10 consecutive readings, we stop.
-                if (hr <= settings.highHrThreshold - 10) {
+                if (hr <= effectiveThreshold - 10) {
                     stableCount++
                 } else {
                     stableCount = 0

@@ -3,36 +3,37 @@ package com.heart.sense.ui.settings
 import androidx.lifecycle.ViewModel
 import androidx.lifecycle.viewModelScope
 import com.heart.sense.data.Settings
+import com.heart.sense.data.SettingsDataStore
 import com.heart.sense.data.SettingsRepository
 import dagger.hilt.android.lifecycle.HiltViewModel
-import kotlinx.coroutines.flow.MutableStateFlow
+import kotlinx.coroutines.flow.SharingStarted
 import kotlinx.coroutines.flow.StateFlow
+import kotlinx.coroutines.flow.stateIn
 import kotlinx.coroutines.launch
 import javax.inject.Inject
 
 @HiltViewModel
 class SettingsViewModel @Inject constructor(
-    private val repository: SettingsRepository
+    private val repository: SettingsRepository,
+    settingsDataStore: SettingsDataStore
 ) : ViewModel() {
     
-    private val _settings = MutableStateFlow(Settings())
-    val settings: StateFlow<Settings> = _settings
+    val settings: StateFlow<Settings> = settingsDataStore.settings.stateIn(
+        scope = viewModelScope,
+        started = SharingStarted.WhileSubscribed(5000),
+        initialValue = Settings()
+    )
     
     fun updateThreshold(threshold: Int) {
-        val updated = _settings.value.copy(highHrThreshold = threshold)
-        _settings.value = updated
-        sync(updated)
+        viewModelScope.launch {
+            val updated = settings.value.copy(highHrThreshold = threshold)
+            repository.updateSettings(updated)
+        }
     }
     
     fun toggleSickMode(isSick: Boolean) {
-        val updated = _settings.value.copy(isSickMode = isSick)
-        _settings.value = updated
-        sync(updated)
-    }
-    
-    private fun sync(settings: Settings) {
         viewModelScope.launch {
-            repository.updateSettings(settings)
+            repository.updateSickMode(isSick)
         }
     }
 }
