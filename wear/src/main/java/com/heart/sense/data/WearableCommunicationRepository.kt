@@ -17,4 +17,11 @@ class WearableCommunicationRepository @Inject constructor(
             messageClient.sendMessage(node.id, "/hr_alert", hr.toString().toByteArray()).await()
         }
     }
+
+    suspend fun sendSitDownWarning(hr: Int) {
+        val nodes = nodeClient.connectedNodes.await()
+        nodes.forEach { node ->
+            messageClient.sendMessage(node.id, "/sit_down", hr.toString().toByteArray()).await()
+        }
+    }
 }

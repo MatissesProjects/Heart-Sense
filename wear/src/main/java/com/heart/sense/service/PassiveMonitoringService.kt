@@ -35,11 +35,20 @@ class PassiveMonitoringService : PassiveListenerService() {
 
         scope.launch {
             val settings = settingsDataStore.settings.first()
+            val effectiveThreshold = if (settings.isSickMode) {
+                settings.highHrThreshold - 10
+            } else {
+                settings.highHrThreshold
+            }
             
-            // Basic Anomaly Detection
             // If stationary and HR > threshold, we need to watch closer.
-            if (isStationary && latestHr > settings.highHrThreshold) {
+            if (isStationary && latestHr > effectiveThreshold) {
                 triggerHighHrAlert(latestHr)
+            }
+            
+            // Sit-down warning: if sick, not stationary, and HR is elevated.
+            if (settings.isSickMode && !isStationary && latestHr > effectiveThreshold) {
+                triggerSitDownWarning(latestHr)
             }
         }
     }
@@ -50,6 +59,13 @@ class PassiveMonitoringService : PassiveListenerService() {
         
         scope.launch {
             wearableCommunicationRepository.sendHrAlert(hr)
+        }
+    }
+
+    private fun triggerSitDownWarning(hr: Int) {
+        // Send a specific message to phone for sit-down warning
+        scope.launch {
+            wearableCommunicationRepository.sendSitDownWarning(hr)
         }
     }
 }

@@ -15,10 +15,31 @@ import dagger.hilt.android.AndroidEntryPoint
 class AlertListenerService : WearableListenerService() {
 
     override fun onMessageReceived(messageEvent: MessageEvent) {
-        if (messageEvent.path == "/hr_alert") {
-            val hr = String(messageEvent.data).toInt()
-            showHighHrNotification(hr)
+        when (messageEvent.path) {
+            "/hr_alert" -> {
+                val hr = String(messageEvent.data).toInt()
+                showHighHrNotification(hr)
+            }
+            "/sit_down" -> {
+                val hr = String(messageEvent.data).toInt()
+                showSitDownWarning(hr)
+            }
         }
+    }
+
+    private fun showSitDownWarning(hr: Int) {
+        val notificationManager = getSystemService(Context.NOTIFICATION_SERVICE) as NotificationManager
+        val channelId = "high_hr_alerts"
+        
+        val notification = NotificationCompat.Builder(this, channelId)
+            .setSmallIcon(android.R.drawable.ic_dialog_info)
+            .setContentTitle("Please Sit Down")
+            .setContentText("You are sick and your HR is $hr BPM. Please rest.")
+            .setPriority(NotificationCompat.PRIORITY_HIGH)
+            .setAutoCancel(true)
+            .build()
+
+        notificationManager.notify(101, notification)
     }
 
     private fun showHighHrNotification(hr: Int) {
