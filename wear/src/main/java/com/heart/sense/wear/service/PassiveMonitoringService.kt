@@ -15,6 +15,10 @@ import javax.inject.Inject
 
 import android.util.Log
 // ...
+import android.content.BroadcastReceiver
+import android.content.Context
+import android.content.IntentFilter
+
 @AndroidEntryPoint
 class PassiveMonitoringService : PassiveListenerService() {
 
@@ -27,6 +31,36 @@ class PassiveMonitoringService : PassiveListenerService() {
     private val scope = CoroutineScope(SupervisorJob() + Dispatchers.Main)
     
     private var lastActivityState: UserActivityState = UserActivityState.USER_ACTIVITY_UNKNOWN
+    private var isPaused: Boolean = false
+
+    private val receiver = object : BroadcastReceiver() {
+        override fun onReceive(context: Context?, intent: Intent?) {
+            when (intent?.action) {
+                Intent.ACTION_SCREEN_OFF -> {
+                    Log.d("PassiveMonitoring", "Screen OFF - Pausing monitoring (proxy for off-body)")
+                    isPaused = true
+                }
+                Intent.ACTION_SCREEN_ON -> {
+                    Log.d("PassiveMonitoring", "Screen ON - Resuming monitoring (proxy for on-body)")
+                    isPaused = false
+                }
+            }
+        }
+    }
+
+    override fun onCreate() {
+        super.onCreate()
+        val filter = IntentFilter().apply {
+            addAction(Intent.ACTION_SCREEN_OFF)
+            addAction(Intent.ACTION_SCREEN_ON)
+        }
+        registerReceiver(receiver, filter)
+    }
+
+    override fun onDestroy() {
+        super.onDestroy()
+        unregisterReceiver(receiver)
+    }
 
     override fun onUserActivityInfoReceived(userActivityInfo: UserActivityInfo) {
         Log.d("PassiveMonitoring", "Activity State: ${userActivityInfo.userActivityState}")
@@ -34,6 +68,11 @@ class PassiveMonitoringService : PassiveListenerService() {
     }
 
     override fun onNewDataPointsReceived(dataPoints: DataPointContainer) {
+        if (isPaused) {
+            Log.d("PassiveMonitoring", "Monitoring is paused, ignoring data points.")
+            return
+        }
+        
         val hrDataPoints = dataPoints.getData(DataType.HEART_RATE_BPM)
         if (hrDataPoints.isEmpty()) return
 

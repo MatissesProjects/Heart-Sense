@@ -11,7 +11,9 @@ import android.os.IBinder
 import androidx.core.app.NotificationCompat
 import androidx.core.app.ServiceCompat
 import androidx.health.services.client.data.DataType
+import androidx.health.services.client.data.DataTypeAvailability
 import com.heart.sense.wear.data.HealthServicesRepository
+import com.heart.sense.wear.data.MeasureUpdate
 import com.heart.sense.wear.data.SettingsDataStore
 import dagger.hilt.android.AndroidEntryPoint
 import kotlinx.coroutines.*
@@ -55,31 +57,41 @@ class HealthMonitoringService : Service() {
             val settings = settingsDataStore.settings.first()
             var stableCount = 0
             
-            healthServicesRepository.getMeasureData(DataType.HEART_RATE_BPM).collect { measureMessage ->
-                val hrDataPoints = measureMessage.getData(DataType.HEART_RATE_BPM)
-                if (hrDataPoints.isEmpty()) return@collect
-                val hr = hrDataPoints.last().value.toInt()
-                
-                // Update notification with latest HR
-                val manager = getSystemService(NotificationManager::class.java)
-                manager.notify(1, createNotification("Current HR: $hr BPM"))
+            healthServicesRepository.getMeasureData(DataType.HEART_RATE_BPM).collect { update ->
+                when (update) {
+                    is MeasureUpdate.DataReceived -> {
+                        val hrDataPoints = update.container.getData(DataType.HEART_RATE_BPM)
+                        if (hrDataPoints.isEmpty()) return@collect
+                        val hr = hrDataPoints.last().value.toInt()
+                        
+                        // Update notification with latest HR
+                        val manager = getSystemService(NotificationManager::class.java)
+                        manager.notify(1, createNotification("Current HR: $hr BPM"))
 
-                // Determine effective threshold based on Sick Mode
-                val effectiveThreshold = if (settings.isSickMode) {
-                    settings.highHrThreshold - 10
-                } else {
-                    settings.highHrThreshold
-                }
+                        // Determine effective threshold based on Sick Mode
+                        val effectiveThreshold = if (settings.isSickMode) {
+                            settings.highHrThreshold - 10
+                        } else {
+                            settings.highHrThreshold
+                        }
 
-                // If HR is back to normal (with 10 BPM buffer) for 10 consecutive readings, we stop.
-                if (hr <= effectiveThreshold - 10) {
-                    stableCount++
-                } else {
-                    stableCount = 0
-                }
+                        // If HR is back to normal (with 10 BPM buffer) for 10 consecutive readings, we stop.
+                        if (hr <= effectiveThreshold - 10) {
+                            stableCount++
+                        } else {
+                            stableCount = 0
+                        }
 
-                if (stableCount >= 10) {
-                    stopSelf()
+                        if (stableCount >= 10) {
+                            stopSelf()
+                        }
+                    }
+                    is MeasureUpdate.AvailabilityChanged -> {
+                        if (update.availability == DataTypeAvailability.UNAVAILABLE_DEVICE_OFF_BODY) {
+                            // Device is off body, stop the foreground service.
+                            stopSelf()
+                        }
+                    }
                 }
             }
         }

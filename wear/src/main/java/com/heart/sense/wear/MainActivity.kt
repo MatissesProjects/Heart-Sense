@@ -55,12 +55,16 @@ class MainActivity : ComponentActivity() {
         setContent {
             val scope = rememberCoroutineScope()
             val measureFlow = remember { healthServicesRepository.getMeasureData(DataType.HEART_RATE_BPM) }
-            val measureData by measureFlow.collectAsState(initial = null)
+            val measureUpdate by measureFlow.collectAsState(initial = null)
             
             val settings by settingsDataStore.settings.collectAsState(initial = com.heart.sense.wear.data.Settings())
             
-            val lastDataPoint = measureData?.getData(DataType.HEART_RATE_BPM)?.lastOrNull()
-            val currentHr = lastDataPoint?.value?.toInt()
+            val currentHr = when (val update = measureUpdate) {
+                is com.heart.sense.wear.data.MeasureUpdate.DataReceived -> {
+                    update.container.getData(DataType.HEART_RATE_BPM).lastOrNull()?.value?.toInt()
+                }
+                else -> null
+            }
             
             var isStreaming by remember { mutableStateOf(false) }
 
