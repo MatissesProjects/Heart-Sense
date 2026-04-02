@@ -3,7 +3,6 @@
 build/reports/problems/problems-report.html
 local.properties
 gradle/wrapper/gradle-wrapper.jar
-gradle/wrapper/gradle-wrapper.properties
 gradlew
 gradlew.bat
 image.png
