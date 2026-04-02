@@ -8,11 +8,17 @@ import androidx.compose.ui.Modifier
 import androidx.compose.ui.unit.dp
 import androidx.hilt.navigation.compose.hiltViewModel
 
+import androidx.compose.foundation.lazy.LazyColumn
+import androidx.compose.foundation.lazy.items
+import java.time.format.DateTimeFormatter
+
 @Composable
 fun SettingsScreen(
     viewModel: SettingsViewModel = hiltViewModel()
 ) {
     val settings by viewModel.settings.collectAsState()
+    val alerts by viewModel.alerts.collectAsState()
+    val liveHr by viewModel.liveHr.collectAsState()
     
     Column(
         modifier = Modifier
@@ -21,27 +27,81 @@ fun SettingsScreen(
         horizontalAlignment = Alignment.CenterHorizontally,
         verticalArrangement = Arrangement.spacedBy(16.dp)
     ) {
-        Text("Heart-Sense Settings", style = MaterialTheme.typography.headlineMedium)
+        Text("Heart-Sense", style = MaterialTheme.typography.headlineMedium)
+
+        Card(modifier = Modifier.fillMaxWidth(), colors = CardDefaults.cardColors(
+            containerColor = if (liveHr != null) MaterialTheme.colorScheme.primaryContainer else MaterialTheme.colorScheme.surfaceVariant
+        )) {
+            Row(
+                modifier = Modifier.padding(16.dp),
+                verticalAlignment = Alignment.CenterVertically,
+                horizontalArrangement = Arrangement.Center
+            ) {
+                Text(
+                    text = if (liveHr != null) "Watch Live HR: $liveHr BPM" else "Watch Disconnected",
+                    style = MaterialTheme.typography.titleLarge,
+                    modifier = Modifier.fillMaxWidth(),
+                    textAlign = androidx.compose.ui.text.style.TextAlign.Center
+                )
+            }
+        }
         
-        Spacer(modifier = Modifier.height(16.dp))
+        Card(modifier = Modifier.fillMaxWidth()) {
+            Column(modifier = Modifier.padding(16.dp), verticalArrangement = Arrangement.spacedBy(8.dp)) {
+                Text("Threshold: ${settings.highHrThreshold} bpm")
+                Slider(
+                    value = settings.highHrThreshold.toFloat(),
+                    onValueChange = { viewModel.updateThreshold(it.toInt()) },
+                    valueRange = 60f..180f,
+                    steps = 24
+                )
+                
+                Row(
+                    verticalAlignment = Alignment.CenterVertically,
+                    horizontalArrangement = Arrangement.spacedBy(8.dp)
+                ) {
+                    Text("Sick Mode")
+                    Switch(
+                        checked = settings.isSickMode,
+                        onCheckedChange = { viewModel.toggleSickMode(it) }
+                    )
+                }
+            }
+        }
+
+        Button(onClick = { viewModel.testAlert() }) {
+            Text("Send Test Alert")
+        }
+
+        Divider()
         
-        Text("High HR Threshold: ${settings.highHrThreshold} bpm")
-        Slider(
-            value = settings.highHrThreshold.toFloat(),
-            onValueChange = { viewModel.updateThreshold(it.toInt()) },
-            valueRange = 60f..180f,
-            steps = 24
-        )
+        Text("Recent Alerts", style = MaterialTheme.typography.titleMedium)
         
-        Row(
-            verticalAlignment = Alignment.CenterVertically,
-            horizontalArrangement = Arrangement.spacedBy(8.dp)
+        LazyColumn(
+            modifier = Modifier.fillMaxWidth(),
+            verticalArrangement = Arrangement.spacedBy(8.dp)
         ) {
-            Text("Sick Mode")
-            Switch(
-                checked = settings.isSickMode,
-                onCheckedChange = { viewModel.toggleSickMode(it) }
-            )
+            items(alerts) { alert ->
+                AlertItem(alert)
+            }
+        }
+    }
+}
+
+@Composable
+fun AlertItem(alert: com.heart.sense.data.Alert) {
+    val formatter = DateTimeFormatter.ofPattern("HH:mm:ss")
+    Card(modifier = Modifier.fillMaxWidth()) {
+        Row(
+            modifier = Modifier.padding(12.dp),
+            horizontalArrangement = Arrangement.SpaceBetween,
+            verticalAlignment = Alignment.CenterVertically
+        ) {
+            Column {
+                Text(alert.type, style = MaterialTheme.typography.bodyLarge)
+                Text(alert.timestamp.format(formatter), style = MaterialTheme.typography.bodySmall)
+            }
+            Text("${alert.hr} BPM", style = MaterialTheme.typography.headlineSmall)
         }
     }
 }
