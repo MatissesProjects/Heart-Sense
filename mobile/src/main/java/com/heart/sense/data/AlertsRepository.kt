@@ -15,13 +15,18 @@ class AlertsRepository @Inject constructor() {
     private val _liveHr = MutableStateFlow<Int?>(null)
     val liveHr: StateFlow<Int?> = _liveHr.asStateFlow()
 
+    private val _lastMessageTimestamp = MutableStateFlow<Long>(0L)
+    val lastMessageTimestamp: StateFlow<Long> = _lastMessageTimestamp.asStateFlow()
+
     fun addAlert(hr: Int, type: String) {
+        _lastMessageTimestamp.value = System.currentTimeMillis()
         _alerts.update { current ->
             (listOf(Alert(hr, type)) + current).take(10)
         }
     }
 
     fun updateLiveHr(hr: Int) {
+        _lastMessageTimestamp.value = System.currentTimeMillis()
         _liveHr.value = hr
     }
 }

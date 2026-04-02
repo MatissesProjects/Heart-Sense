@@ -19,6 +19,7 @@ fun SettingsScreen(
     val settings by viewModel.settings.collectAsState()
     val alerts by viewModel.alerts.collectAsState()
     val liveHr by viewModel.liveHr.collectAsState()
+    val isConnected by viewModel.isWatchConnected.collectAsState()
     
     Column(
         modifier = Modifier
@@ -30,15 +31,20 @@ fun SettingsScreen(
         Text("Heart-Sense", style = MaterialTheme.typography.headlineMedium)
 
         Card(modifier = Modifier.fillMaxWidth(), colors = CardDefaults.cardColors(
-            containerColor = if (liveHr != null) MaterialTheme.colorScheme.primaryContainer else MaterialTheme.colorScheme.surfaceVariant
+            containerColor = if (isConnected) MaterialTheme.colorScheme.primaryContainer else MaterialTheme.colorScheme.surfaceVariant
         )) {
             Row(
                 modifier = Modifier.padding(16.dp),
                 verticalAlignment = Alignment.CenterVertically,
                 horizontalArrangement = Arrangement.Center
             ) {
+                val statusText = when {
+                    isConnected && liveHr != null -> "Watch Connected: $liveHr BPM"
+                    isConnected -> "Watch Connected"
+                    else -> "Watch Disconnected"
+                }
                 Text(
-                    text = if (liveHr != null) "Watch Live HR: $liveHr BPM" else "Watch Disconnected",
+                    text = statusText,
                     style = MaterialTheme.typography.titleLarge,
                     modifier = Modifier.fillMaxWidth(),
                     textAlign = androidx.compose.ui.text.style.TextAlign.Center

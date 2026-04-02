@@ -10,6 +10,7 @@ import com.heart.sense.data.SettingsRepository
 import dagger.hilt.android.lifecycle.HiltViewModel
 import kotlinx.coroutines.flow.SharingStarted
 import kotlinx.coroutines.flow.StateFlow
+import kotlinx.coroutines.flow.map
 import kotlinx.coroutines.flow.stateIn
 import kotlinx.coroutines.launch
 import javax.inject.Inject
@@ -29,6 +30,10 @@ class SettingsViewModel @Inject constructor(
 
     val alerts: StateFlow<List<Alert>> = alertsRepository.alerts
     val liveHr: StateFlow<Int?> = alertsRepository.liveHr
+    
+    val isWatchConnected: StateFlow<Boolean> = alertsRepository.lastMessageTimestamp.map { timestamp ->
+        System.currentTimeMillis() - timestamp < 60000 // Connected if seen in last 60 seconds
+    }.stateIn(viewModelScope, SharingStarted.WhileSubscribed(5000), false)
     
     fun updateThreshold(threshold: Int) {
         viewModelScope.launch {
