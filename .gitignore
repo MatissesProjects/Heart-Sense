@@ -1,8 +1,22 @@
 .gradle
 .idea
-build/reports/problems/problems-report.html
+build/
 local.properties
 gradle/wrapper/gradle-wrapper.jar
 gradlew
 gradlew.bat
 image.png
+*.hprof
+
+# Android specific
+.cxx
+Captures/
+*.apk
+*.aar
+*.jks
+*.keystore
+*.google_services.json
+google-services.json
+
+# Build outputs
+*/build/**
