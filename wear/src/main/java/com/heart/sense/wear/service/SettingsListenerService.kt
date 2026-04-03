@@ -4,6 +4,7 @@ import com.google.android.gms.wearable.DataEventBuffer
 import com.google.android.gms.wearable.DataMapItem
 import com.google.android.gms.wearable.WearableListenerService
 import com.heart.sense.wear.data.SettingsDataStore
+import com.heart.sense.wear.util.Constants
 import dagger.hilt.android.AndroidEntryPoint
 import kotlinx.coroutines.CoroutineScope
 import kotlinx.coroutines.Dispatchers
@@ -21,10 +22,10 @@ class SettingsListenerService : WearableListenerService() {
 
     override fun onDataChanged(dataEvents: DataEventBuffer) {
         dataEvents.forEach { event ->
-            if (event.dataItem.uri.path == "/settings") {
+            if (event.dataItem.uri.path == Constants.PATH_SETTINGS) {
                 val dataMap = DataMapItem.fromDataItem(event.dataItem).dataMap
-                val threshold = dataMap.getInt("highHrThreshold")
-                val isSick = dataMap.getBoolean("isSickMode")
+                val threshold = dataMap.getInt(Constants.KEY_HIGH_HR_THRESHOLD)
+                val isSick = dataMap.getBoolean(Constants.KEY_IS_SICK_MODE)
                 
                 scope.launch {
                     settingsDataStore.updateSettings(threshold, isSick)

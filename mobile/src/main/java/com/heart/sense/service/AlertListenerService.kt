@@ -5,16 +5,16 @@ import android.app.NotificationManager
 import android.app.PendingIntent
 import android.content.Context
 import android.content.Intent
+import android.util.Log
 import androidx.core.app.NotificationCompat
 import com.google.android.gms.wearable.MessageEvent
 import com.google.android.gms.wearable.WearableListenerService
 import com.heart.sense.data.AlertsRepository
 import com.heart.sense.receiver.AlertActionReceiver
+import com.heart.sense.util.Constants
 import dagger.hilt.android.AndroidEntryPoint
 import javax.inject.Inject
 
-import android.util.Log
-// ...
 @AndroidEntryPoint
 class AlertListenerService : WearableListenerService() {
 
@@ -24,19 +24,19 @@ class AlertListenerService : WearableListenerService() {
     override fun onMessageReceived(messageEvent: MessageEvent) {
         Log.d("AlertListenerService", "Message received: ${messageEvent.path}")
         when (messageEvent.path) {
-            "/hr_alert" -> {
+            Constants.PATH_HR_ALERT -> {
                 val hr = String(messageEvent.data).toInt()
                 Log.d("AlertListenerService", "HR Alert: $hr BPM")
                 alertsRepository.addAlert(hr, "High HR")
                 showHighHrNotification(hr)
             }
-            "/sit_down" -> {
+            Constants.PATH_SIT_DOWN -> {
                 val hr = String(messageEvent.data).toInt()
                 Log.d("AlertListenerService", "Sit Down Alert: $hr BPM")
                 alertsRepository.addAlert(hr, "Sit Down")
                 showSitDownWarning(hr)
             }
-            "/live_hr" -> {
+            Constants.PATH_LIVE_HR -> {
                 val hr = String(messageEvent.data).toInt()
                 alertsRepository.updateLiveHr(hr)
             }
@@ -72,12 +72,12 @@ class AlertListenerService : WearableListenerService() {
         notificationManager.createNotificationChannel(channel)
 
         val sickModeIntent = Intent(this, AlertActionReceiver::class.java).apply {
-            action = "com.heart.sense.ACTION_SICK_MODE"
+            action = Constants.ACTION_SICK_MODE
         }
         val sickModePendingIntent = PendingIntent.getBroadcast(this, 1, sickModeIntent, PendingIntent.FLAG_IMMUTABLE)
 
         val ackIntent = Intent(this, AlertActionReceiver::class.java).apply {
-            action = "com.heart.sense.ACTION_ACKNOWLEDGE"
+            action = Constants.ACTION_ACKNOWLEDGE
         }
         val ackPendingIntent = PendingIntent.getBroadcast(this, 2, ackIntent, PendingIntent.FLAG_IMMUTABLE)
 

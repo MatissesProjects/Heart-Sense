@@ -5,6 +5,7 @@ import android.content.Context
 import android.content.Intent
 import android.app.NotificationManager
 import com.heart.sense.data.SettingsRepository
+import com.heart.sense.util.Constants
 import dagger.hilt.android.AndroidEntryPoint
 import kotlinx.coroutines.CoroutineScope
 import kotlinx.coroutines.Dispatchers
@@ -25,12 +26,12 @@ class AlertActionReceiver : BroadcastReceiver() {
         notificationManager.cancel(100)
 
         when (intent.action) {
-            "com.heart.sense.ACTION_SICK_MODE" -> {
+            Constants.ACTION_SICK_MODE -> {
                 scope.launch {
                     settingsRepository.updateSickMode(true)
                 }
             }
-            "com.heart.sense.ACTION_ACKNOWLEDGE" -> {
+            Constants.ACTION_ACKNOWLEDGE -> {
                 // Just dismiss, which we already did
             }
         }

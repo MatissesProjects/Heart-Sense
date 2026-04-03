@@ -2,6 +2,7 @@ package com.heart.sense.data
 
 import com.google.android.gms.wearable.DataClient
 import com.google.android.gms.wearable.PutDataMapRequest
+import com.heart.sense.util.Constants
 import kotlinx.coroutines.flow.first
 import kotlinx.coroutines.tasks.await
 import javax.inject.Inject
@@ -24,9 +25,9 @@ class SettingsRepository @Inject constructor(
     }
 
     private suspend fun sync(settings: Settings) {
-        val request = PutDataMapRequest.create("/settings").apply {
-            dataMap.putInt("highHrThreshold", settings.highHrThreshold)
-            dataMap.putBoolean("isSickMode", settings.isSickMode)
+        val request = PutDataMapRequest.create(Constants.PATH_SETTINGS).apply {
+            dataMap.putInt(Constants.KEY_HIGH_HR_THRESHOLD, settings.highHrThreshold)
+            dataMap.putBoolean(Constants.KEY_IS_SICK_MODE, settings.isSickMode)
         }.asPutDataRequest().setUrgent()
         
         try {
