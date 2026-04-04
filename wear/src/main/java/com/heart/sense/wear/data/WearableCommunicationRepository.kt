@@ -1,7 +1,7 @@
 package com.heart.sense.wear.data
 
+import com.google.android.gms.wearable.CapabilityClient
 import com.google.android.gms.wearable.MessageClient
-import com.google.android.gms.wearable.NodeClient
 import com.heart.sense.wear.util.Constants
 import kotlinx.coroutines.tasks.await
 import javax.inject.Inject
@@ -10,26 +10,33 @@ import javax.inject.Singleton
 @Singleton
 class WearableCommunicationRepository @Inject constructor(
     private val messageClient: MessageClient,
-    private val nodeClient: NodeClient
+    private val capabilityClient: CapabilityClient
 ) {
+    private companion object {
+        private const val PHONE_CAPABILITY = "heart_sense_phone"
+    }
+
     suspend fun sendHrAlert(hr: Int) {
-        val nodes = nodeClient.connectedNodes.await()
-        nodes.forEach { node ->
-            messageClient.sendMessage(node.id, Constants.PATH_HR_ALERT, hr.toString().toByteArray()).await()
-        }
+        sendMessageToPhone(Constants.PATH_HR_ALERT, hr.toString().toByteArray())
     }
 
     suspend fun sendSitDownWarning(hr: Int) {
-        val nodes = nodeClient.connectedNodes.await()
-        nodes.forEach { node ->
-            messageClient.sendMessage(node.id, Constants.PATH_SIT_DOWN, hr.toString().toByteArray()).await()
-        }
+        sendMessageToPhone(Constants.PATH_SIT_DOWN, hr.toString().toByteArray())
     }
 
     suspend fun sendLiveHr(hr: Int) {
-        val nodes = nodeClient.connectedNodes.await()
-        nodes.forEach { node ->
-            messageClient.sendMessage(node.id, Constants.PATH_LIVE_HR, hr.toString().toByteArray()).await()
+        sendMessageToPhone(Constants.PATH_LIVE_HR, hr.toString().toByteArray())
+    }
+
+    private suspend fun sendMessageToPhone(path: String, data: ByteArray) {
+        try {
+            val capabilityInfo = capabilityClient.getCapability(PHONE_CAPABILITY, CapabilityClient.FILTER_REACHABLE).await()
+            val nodes = capabilityInfo.nodes
+            nodes.forEach { node ->
+                messageClient.sendMessage(node.id, path, data).await()
+            }
+        } catch (e: Exception) {
+            // Handle error finding phone
         }
     }
 }

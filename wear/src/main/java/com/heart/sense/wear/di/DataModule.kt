@@ -3,8 +3,8 @@ package com.heart.sense.wear.di
 import android.content.Context
 import androidx.health.services.client.HealthServices
 import androidx.health.services.client.HealthServicesClient
+import com.google.android.gms.wearable.CapabilityClient
 import com.google.android.gms.wearable.MessageClient
-import com.google.android.gms.wearable.NodeClient
 import com.google.android.gms.wearable.Wearable
 import com.heart.sense.wear.data.SettingsDataStore
 import dagger.Module
@@ -38,7 +38,7 @@ object DataModule {
 
     @Provides
     @Singleton
-    fun provideNodeClient(@ApplicationContext context: Context): NodeClient {
-        return Wearable.getNodeClient(context)
+    fun provideCapabilityClient(@ApplicationContext context: Context): CapabilityClient {
+        return Wearable.getCapabilityClient(context)
     }
 }
