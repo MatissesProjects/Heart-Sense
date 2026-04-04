@@ -10,4 +10,6 @@
 | `006-sick-mode` | Health Context | Implement "Sick Mode" logic to adjust thresholds dynamically. | Completed |
 | `007-optimization` | Optimization | Consolidate logic and improve battery/comm efficiency. | Completed |
 | `008-sync-refinement` | Sync & UX | Debouncing, rotary support, and conflict resolution. | Completed |
-| `009-health-context-and-actions` | Advanced Context | Snooze, additional metrics, and emergency actions. | Active |
+| `009-health-context-and-actions` | Advanced Context | Snooze, additional metrics, and emergency actions. | Completed |
+| `010-illness-detection` | Illness Detection | Automated analysis of overnight health metric deviations. | Active |
+| `011-health-dashboard` | Health Dashboard | Visualize historical trends and alert triggers on phone. | Research |

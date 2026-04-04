@@ -12,5 +12,5 @@
 
 ## Phase 3: Advanced Health Metrics & Calibration
 - [x] **Task 3.1:** Implement "Baseline Calibration" storage in `SettingsDataStore`.
-- [ ] **Task 3.2:** Update `HealthServicesRepository` to request Respiratory Rate and Sleep Stages.
-- [ ] **Task 3.3:** Incorporate new metrics into `HeartRateEvaluator`.
+- [x] **Task 3.2:** Update `HealthServicesRepository` to request Respiratory Rate and Sleep Stages.
+- [x] **Task 3.3:** Incorporate new metrics into `HeartRateEvaluator`.
