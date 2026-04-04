@@ -8,13 +8,17 @@ import android.content.Intent
 import android.content.pm.ServiceInfo
 import android.os.Build
 import android.os.IBinder
+import android.util.Log
 import androidx.core.app.NotificationCompat
 import androidx.core.app.ServiceCompat
 import androidx.health.services.client.data.DataType
 import androidx.health.services.client.data.DataTypeAvailability
+import androidx.health.services.client.data.UserActivityState
 import com.heart.sense.wear.data.HealthServicesRepository
 import com.heart.sense.wear.data.MeasureUpdate
 import com.heart.sense.wear.data.SettingsDataStore
+import com.heart.sense.wear.util.HeartRateEvaluator
+import com.heart.sense.wear.util.MonitoringAction
 import dagger.hilt.android.AndroidEntryPoint
 import kotlinx.coroutines.*
 import kotlinx.coroutines.flow.first
@@ -55,7 +59,6 @@ class HealthMonitoringService : Service() {
     private fun startRealTimeMonitoring() {
         serviceScope.launch {
             val settings = settingsDataStore.settings.first()
-            var stableCount = 0
             
             healthServicesRepository.getMeasureData(DataType.HEART_RATE_BPM).collect { update ->
                 when (update) {
@@ -68,27 +71,21 @@ class HealthMonitoringService : Service() {
                         val manager = getSystemService(NotificationManager::class.java)
                         manager.notify(1, createNotification("Current HR: $hr BPM"))
 
-                        // Determine effective threshold based on Sick Mode
-                        val effectiveThreshold = if (settings.isSickMode) {
-                            settings.highHrThreshold - 10
-                        } else {
-                            settings.highHrThreshold
-                        }
+                        val action = HeartRateEvaluator.evaluate(
+                            latestHr = hr,
+                            activityState = UserActivityState.USER_ACTIVITY_PASSIVE, // HMS assumes stationary for now
+                            settings = settings,
+                            isWatchingCloser = true
+                        )
 
-                        // If HR is back to normal (with 10 BPM buffer) for 10 consecutive readings, we stop.
-                        if (hr <= effectiveThreshold - 10) {
-                            stableCount++
-                        } else {
-                            stableCount = 0
-                        }
-
-                        if (stableCount >= 10) {
+                        if (action is MonitoringAction.StopWatchingCloser) {
+                            Log.d("HealthMonitoring", "HR stabilized. Stopping HMS.")
                             stopSelf()
                         }
                     }
                     is MeasureUpdate.AvailabilityChanged -> {
                         if (update.availability == DataTypeAvailability.UNAVAILABLE_DEVICE_OFF_BODY) {
-                            // Device is off body, stop the foreground service.
+                            Log.d("HealthMonitoring", "Device off-body. Stopping HMS.")
                             stopSelf()
                         }
                     }
