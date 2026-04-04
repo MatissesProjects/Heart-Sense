@@ -18,7 +18,7 @@ import javax.inject.Inject
 @HiltViewModel
 class SettingsViewModel @Inject constructor(
     private val repository: SettingsRepository,
-    settingsDataStore: SettingsDataStore,
+    private val settingsDataStore: SettingsDataStore,
     private val alertsRepository: AlertsRepository
 ) : ViewModel() {
     
@@ -56,6 +56,17 @@ class SettingsViewModel @Inject constructor(
             } else {
                 repository.setSnooze(30)
             }
+        }
+    }
+
+    fun startCalibration() {
+        viewModelScope.launch {
+            settingsDataStore.startCalibration()
+            // Sync to watch
+            repository.updateSettings(settings.value.copy(
+                calibrationStatus = "CALIBRATING",
+                calibrationStartTime = System.currentTimeMillis()
+            ))
         }
     }
 

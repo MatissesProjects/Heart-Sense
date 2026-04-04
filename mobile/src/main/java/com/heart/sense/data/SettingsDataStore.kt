@@ -71,4 +71,12 @@ class SettingsDataStore @Inject constructor(private val context: Context) {
             preferences[LAST_UPDATED] = System.currentTimeMillis()
         }
     }
+
+    suspend fun startCalibration() {
+        context.dataStore.edit { preferences ->
+            preferences[CALIBRATION_STATUS] = "CALIBRATING"
+            preferences[CALIBRATION_START_TIME] = System.currentTimeMillis()
+            preferences[LAST_UPDATED] = System.currentTimeMillis()
+        }
+    }
 }
