@@ -46,7 +46,40 @@ class AlertListenerService : WearableListenerService() {
                 val hr = String(messageEvent.data).toInt()
                 alertsRepository.updateLiveHr(hr)
             }
+            Constants.PATH_ILLNESS_ALERT -> {
+                val data = String(messageEvent.data).split("|")
+                if (data.size >= 3) {
+                    showIllnessNotification(data[0], data[1].toInt(), data[2].toFloat())
+                }
+            }
         }
+    }
+
+    private fun showIllnessNotification(risk: String, hrElevation: Int, rrElevation: Float) {
+        val notificationManager = getSystemService(Context.NOTIFICATION_SERVICE) as NotificationManager
+        val channelId = "illness_alerts"
+        
+        val channel = NotificationChannel(
+            channelId,
+            "Health Trend Alerts",
+            NotificationManager.IMPORTANCE_DEFAULT
+        ).apply {
+            description = "Notifications when unusual health trends are detected overnight"
+        }
+        notificationManager.createNotificationChannel(channel)
+
+        val message = "Risk Level: $risk. HR elevation: +$hrElevation BPM, RR elevation: +${String.format("%.1f", rrElevation)} breaths/min."
+
+        val notification = NotificationCompat.Builder(this, channelId)
+            .setSmallIcon(android.R.drawable.ic_dialog_info)
+            .setContentTitle("Morning Health Check")
+            .setContentText(message)
+            .setStyle(NotificationCompat.BigTextStyle().bigText(message))
+            .setPriority(NotificationCompat.PRIORITY_DEFAULT)
+            .setAutoCancel(true)
+            .build()
+
+        notificationManager.notify(103, notification)
     }
 
     private fun showSitDownWarning(hr: Int) {

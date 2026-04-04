@@ -10,6 +10,7 @@ import androidx.health.services.client.data.*
 import com.heart.sense.wear.data.SettingsDataStore
 import com.heart.sense.wear.data.WearableCommunicationRepository
 import com.heart.sense.wear.data.CalibrationRepository
+import com.heart.sense.wear.data.OvernightDataRepository
 import com.heart.sense.wear.util.HeartRateEvaluator
 import com.heart.sense.wear.util.MonitoringAction
 import dagger.hilt.android.AndroidEntryPoint
@@ -31,6 +32,9 @@ class PassiveMonitoringService : PassiveListenerService() {
 
     @Inject
     lateinit var calibrationRepository: CalibrationRepository
+
+    @Inject
+    lateinit var overnightDataRepository: OvernightDataRepository
 
     private val scope = CoroutineScope(SupervisorJob() + Dispatchers.Main)
     
@@ -67,8 +71,17 @@ class PassiveMonitoringService : PassiveListenerService() {
     }
 
     override fun onUserActivityInfoReceived(userActivityInfo: UserActivityInfo) {
-        Log.d("PassiveMonitoring", "Activity State: ${userActivityInfo.userActivityState}")
-        lastActivityState = userActivityInfo.userActivityState
+        val newState = userActivityInfo.userActivityState
+        Log.d("PassiveMonitoring", "Activity State: $newState")
+        
+        // Detect sleep-to-awake transition
+        if (lastActivityState == UserActivityState.USER_ACTIVITY_ASLEEP && 
+            (newState == UserActivityState.USER_ACTIVITY_AWAKE || newState == UserActivityState.USER_ACTIVITY_PASSIVE)) {
+            Log.d("PassiveMonitoring", "User woke up. Triggering illness detection check.")
+            triggerIllnessDetection()
+        }
+
+        lastActivityState = newState
     }
 
     override fun onNewDataPointsReceived(dataPoints: DataPointContainer) {
@@ -78,18 +91,28 @@ class PassiveMonitoringService : PassiveListenerService() {
         }
         
         val hrDataPoints = dataPoints.getData(DataType.HEART_RATE_BPM)
+        val rrDataPoints = dataPoints.getData(DataType.RESPIRATORY_RATE)
+        
         if (hrDataPoints.isEmpty()) return
 
         val latestHr = hrDataPoints.last().value.toInt()
+        val latestRr = rrDataPoints.lastOrNull()?.value
+        
         Log.d("PassiveMonitoring", "New HR: $latestHr BPM, Activity: $lastActivityState")
 
         scope.launch {
+            // Store for overnight analysis
+            overnightDataRepository.storeMeasurement(
+                latestHr, 
+                latestRr, 
+                lastActivityState.id // Assuming .id exists or using mapping
+            )
+
             // Process for calibration
             calibrationRepository.processDataPoints(dataPoints)
 
             val isHMSActive = settingsDataStore.isMonitoringActive.first()
             if (isHMSActive) {
-                Log.d("PassiveMonitoring", "HMS is already active, skipping passive processing.")
                 return@launch
             }
 
@@ -98,22 +121,18 @@ class PassiveMonitoringService : PassiveListenerService() {
                 latestHr = latestHr,
                 activityState = lastActivityState,
                 settings = settings,
-                isWatchingCloser = false
+                isWatchingCloser = false,
+                respiratoryRate = latestRr
             )
 
             when (action) {
                 is MonitoringAction.StartWatchingCloser -> {
-                    Log.d("PassiveMonitoring", "Triggering High HR Alert and HMS")
                     triggerHighHrAlert(latestHr)
                 }
                 is MonitoringAction.TriggerCriticalAlert -> {
-                    Log.d("PassiveMonitoring", "Triggering CRITICAL HR Alert")
-                    scope.launch {
-                        wearableCommunicationRepository.sendCriticalHrAlert(action.hr)
-                    }
+                    wearableCommunicationRepository.sendCriticalHrAlert(action.hr)
                 }
                 is MonitoringAction.TriggerSitDownWarning -> {
-                    Log.d("PassiveMonitoring", "Triggering Sit Down Warning")
                     triggerSitDownWarning(action.hr)
                 }
                 else -> {}
@@ -121,10 +140,29 @@ class PassiveMonitoringService : PassiveListenerService() {
         }
     }
 
+    private fun triggerIllnessDetection() {
+        scope.launch {
+            val averages = overnightDataRepository.getOvernightAverages()
+            val settings = settingsDataStore.settings.first()
+            
+            val result = com.heart.sense.wear.util.IllnessEvaluator.evaluate(averages, settings)
+            if (result.risk != com.heart.sense.wear.util.IllnessRisk.NONE) {
+                Log.d("PassiveMonitoring", "Illness Risk Detected: ${result.risk}. Sending alert.")
+                wearableCommunicationRepository.sendIllnessAlert(
+                    risk = result.risk.name,
+                    hrElevation = result.hrElevation,
+                    rrElevation = result.rrElevation
+                )
+            }
+            
+            // Clean up old data after calculation
+            overnightDataRepository.deleteOldData()
+        }
+    }
+
     private fun triggerHighHrAlert(hr: Int) {
         val intent = Intent(this, HealthMonitoringService::class.java)
         startForegroundService(intent)
-        
         scope.launch {
             wearableCommunicationRepository.sendHrAlert(hr)
         }
