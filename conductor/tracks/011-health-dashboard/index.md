@@ -1,17 +1,19 @@
 # Track 011: Health Dashboard
 
 ## Summary
-Develop a comprehensive health dashboard on the phone to visualize historical trends and monitor baseline deviations.
+Develop a comprehensive health dashboard on the phone to visualize historical trends and monitor baseline deviations using the Vico charting library.
 
 ## Goals
--   [ ] Implement a 7-day trend view for RHR and Respiratory Rate.
--   [ ] Visualize Illness Alert triggers on the timeline.
--   [ ] Support manual baseline overrides.
+-   [ ] Integrate Vico charting library for Compose.
+-   [ ] Implement `DailyAverage` data model and repository.
+-   [ ] Create `HealthDashboard` UI component with 7-day trend visualization.
+-   [ ] Highlight alert-triggering deviations on the charts.
 
 ## Research Questions
-- [ ] How can we implement a 'Health Dashboard' on the phone that visualizes the last 7 days of Resting Heart Rate and Respiratory Rate trends, highlighting the deviations that triggered an Illness Alert?
-- [ ] What charting library is best for lightweight mobile data visualization (e.g., MPAndroidChart vs. Compose-specific libraries)?
+- [x] Which charting library is best for lightweight mobile data visualization? (Decision: Vico)
+- [x] How to store and retrieve historical daily averages in the phone module?
+- [ ] How can we design the UI to show these trends alongside the current watch status?
 
 ## Status
-- **Phase:** Research
-- **Progress:** 0%
+- **Phase:** Implementation
+- **Progress:** 10%

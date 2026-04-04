@@ -18,7 +18,7 @@ datastore = "1.1.1"
 composeCompiler = "2.0.0"
 playServicesCoroutines = "1.8.1"
 room = "2.6.1"
-vico = "2.0.0-beta.2"
+vico = "1.13.1"
 
 [libraries]
 androidx-core-ktx = { group = "androidx.core", name = "core-ktx", version.ref = "coreKtx" }

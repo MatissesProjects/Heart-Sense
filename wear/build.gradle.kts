@@ -8,12 +8,12 @@ plugins {
 
 android {
     namespace = "com.heart.sense.wear"
-    compileSdk = 34
+    compileSdk = 35
 
     defaultConfig {
         applicationId = "com.heart.sense" // Same as mobile for Data Layer pairing
         minSdk = 30 // Wear OS 3.0+
-        targetSdk = 34
+        targetSdk = 35
         versionCode = 1
         versionName = "1.0"
 

@@ -4,12 +4,16 @@ import androidx.lifecycle.ViewModel
 import androidx.lifecycle.viewModelScope
 import com.heart.sense.data.Alert
 import com.heart.sense.data.AlertsRepository
+import com.heart.sense.data.DailyAverage
+import com.heart.sense.data.DailyAverageRepository
 import com.heart.sense.data.Settings
 import com.heart.sense.data.SettingsDataStore
 import com.heart.sense.data.SettingsRepository
 import dagger.hilt.android.lifecycle.HiltViewModel
+import kotlinx.coroutines.flow.MutableStateFlow
 import kotlinx.coroutines.flow.SharingStarted
 import kotlinx.coroutines.flow.StateFlow
+import kotlinx.coroutines.flow.asStateFlow
 import kotlinx.coroutines.flow.map
 import kotlinx.coroutines.flow.stateIn
 import kotlinx.coroutines.launch
@@ -19,7 +23,8 @@ import javax.inject.Inject
 class SettingsViewModel @Inject constructor(
     private val repository: SettingsRepository,
     private val settingsDataStore: SettingsDataStore,
-    private val alertsRepository: AlertsRepository
+    private val alertsRepository: AlertsRepository,
+    private val dailyAverageRepository: DailyAverageRepository
 ) : ViewModel() {
     
     val settings: StateFlow<Settings> = settingsDataStore.settings.stateIn(
@@ -30,6 +35,19 @@ class SettingsViewModel @Inject constructor(
 
     val alerts: StateFlow<List<Alert>> = alertsRepository.alerts
     val liveHr: StateFlow<Int?> = alertsRepository.liveHr
+
+    private val _dailyAverages = MutableStateFlow<List<DailyAverage>>(emptyList())
+    val dailyAverages: StateFlow<List<DailyAverage>> = _dailyAverages.asStateFlow()
+
+    init {
+        refreshDailyAverages()
+    }
+
+    fun refreshDailyAverages() {
+        viewModelScope.launch {
+            _dailyAverages.value = dailyAverageRepository.getDailyAverages(7)
+        }
+    }
     
     val isWatchConnected: StateFlow<Boolean> = alertsRepository.lastMessageTimestamp.map { timestamp ->
         System.currentTimeMillis() - timestamp < 60000 // Connected if seen in last 60 seconds
