@@ -28,11 +28,12 @@ class SettingsListenerService : WearableListenerService() {
                 val threshold = dataMap.getInt(Constants.KEY_HIGH_HR_THRESHOLD)
                 val isSick = dataMap.getBoolean(Constants.KEY_IS_SICK_MODE)
                 val timestamp = dataMap.getLong(Constants.KEY_LAST_UPDATED)
+                val snoozeUntil = dataMap.getLong(Constants.KEY_SNOOZE_UNTIL)
                 
                 scope.launch {
                     val current = settingsDataStore.settings.first()
                     if (timestamp > current.lastUpdated) {
-                        settingsDataStore.updateSettings(threshold, isSick, timestamp)
+                        settingsDataStore.updateSettings(threshold, isSick, timestamp, snoozeUntil)
                     }
                 }
             }

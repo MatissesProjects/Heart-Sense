@@ -25,8 +25,15 @@ class SettingsRepository @Inject constructor(
     suspend fun updateSettings(settings: Settings) {
         val timestamp = System.currentTimeMillis()
         val updated = settings.copy(lastUpdated = timestamp)
-        settingsDataStore.updateSettings(updated.highHrThreshold, updated.isSickMode, updated.lastUpdated)
+        settingsDataStore.updateSettings(updated.highHrThreshold, updated.isSickMode, updated.lastUpdated, updated.snoozeUntil)
         debouncedSync(updated)
+    }
+
+    suspend fun setSnooze(durationMinutes: Int) {
+        val until = System.currentTimeMillis() + (durationMinutes * 60 * 1000)
+        settingsDataStore.setSnooze(until)
+        val current = settingsDataStore.settings.first()
+        debouncedSync(current)
     }
 
     suspend fun updateSickMode(isSick: Boolean) {
@@ -49,6 +56,7 @@ class SettingsRepository @Inject constructor(
             dataMap.putInt(Constants.KEY_HIGH_HR_THRESHOLD, settings.highHrThreshold)
             dataMap.putBoolean(Constants.KEY_IS_SICK_MODE, settings.isSickMode)
             dataMap.putLong(Constants.KEY_LAST_UPDATED, settings.lastUpdated)
+            dataMap.putLong(Constants.KEY_SNOOZE_UNTIL, settings.snoozeUntil)
         }.asPutDataRequest().setUrgent()
         
         try {

@@ -24,23 +24,29 @@ object HeartRateEvaluator {
         isWatchingCloser: Boolean,
         stableCount: Int = 0
     ): MonitoringAction {
-        // 1. Suppress all alerts if user is asleep
-        if (activityState == UserActivityState.USER_ACTIVITY_ASLEEP) {
-            return if (isWatchingCloser) MonitoringAction.StopWatchingCloser else MonitoringAction.None
-        }
-
         val threshold = settings.effectiveThreshold
         val criticalThreshold = threshold + CRITICAL_OFFSET
         val isStationary = activityState == UserActivityState.USER_ACTIVITY_PASSIVE
         val isExercising = activityState == UserActivityState.USER_ACTIVITY_EXERCISE
 
-        // 2. Critical HR Check: Trigger immediate alert if HR is extremely high, 
+        // 1. Critical HR Check: Trigger immediate alert if HR is extremely high, 
         // regardless of activity (unless exercising where it might be expected, but even then 160+ is a lot)
+        // Critical alerts BYPASS snooze for safety.
         if (latestHr > criticalThreshold && !isExercising) {
             return MonitoringAction.TriggerCriticalAlert(latestHr)
         }
 
-        // 3. Logic for stopping high-resolution monitoring (HMS)
+        // 2. Check snooze state - prevents normal alerts during snooze
+        if (settings.isSnoozed) {
+            return MonitoringAction.None
+        }
+
+        // 3. Suppress normal alerts if user is asleep
+        if (activityState == UserActivityState.USER_ACTIVITY_ASLEEP) {
+            return if (isWatchingCloser) MonitoringAction.StopWatchingCloser else MonitoringAction.None
+        }
+
+        // 4. Logic for stopping high-resolution monitoring (HMS)
         if (isWatchingCloser) {
             // Stop if user starts exercising (HR expected to be high)
             if (isExercising) {
@@ -54,7 +60,7 @@ object HeartRateEvaluator {
             return MonitoringAction.None
         }
 
-        // 4. Logic for triggering actions from background monitoring (PMS)
+        // 5. Logic for triggering actions from background monitoring (PMS)
         
         // High HR while stationary -> Immediate escalation
         if (isStationary && latestHr > threshold) {
