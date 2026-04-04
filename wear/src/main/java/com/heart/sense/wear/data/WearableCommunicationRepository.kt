@@ -20,6 +20,10 @@ class WearableCommunicationRepository @Inject constructor(
         sendMessageToPhone(Constants.PATH_HR_ALERT, hr.toString().toByteArray())
     }
 
+    suspend fun sendCriticalHrAlert(hr: Int) {
+        sendMessageToPhone(Constants.PATH_CRITICAL_HR, hr.toString().toByteArray())
+    }
+
     suspend fun sendSitDownWarning(hr: Int) {
         sendMessageToPhone(Constants.PATH_SIT_DOWN, hr.toString().toByteArray())
     }

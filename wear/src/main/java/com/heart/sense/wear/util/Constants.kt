@@ -4,6 +4,7 @@ object Constants {
     // Wearable Data Layer Paths
     const val PATH_SETTINGS = "/settings"
     const val PATH_HR_ALERT = "/hr_alert"
+    const val PATH_CRITICAL_HR = "/critical_hr"
     const val PATH_SIT_DOWN = "/sit_down"
     const val PATH_LIVE_HR = "/live_hr"
 
