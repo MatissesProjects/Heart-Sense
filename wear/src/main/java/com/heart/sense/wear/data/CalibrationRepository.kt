@@ -4,8 +4,6 @@ import android.util.Log
 import androidx.health.services.client.data.DataPointContainer
 import androidx.health.services.client.data.DataType
 import androidx.health.services.client.data.UserActivityState
-import com.heart.sense.wear.util.Constants
-import kotlinx.coroutines.*
 import kotlinx.coroutines.flow.MutableStateFlow
 import kotlinx.coroutines.flow.first
 import javax.inject.Inject
@@ -15,32 +13,36 @@ import javax.inject.Singleton
 class CalibrationRepository @Inject constructor(
     private val settingsDataStore: SettingsDataStore
 ) {
-    private const val CALIBRATION_DURATION_MILLIS = 48 * 60 * 60 * 1000L
-    private const val WINDOW_MILLIS = 10 * 60 * 1000L
-    private const val MIN_SAMPLES_PER_WINDOW = 5
+    companion object {
+        private const val CALIBRATION_DURATION_MILLIS = 48 * 60 * 60 * 1000L
+        private const val WINDOW_MILLIS = 10 * 60 * 1000L
+        private const val MIN_SAMPLES_PER_WINDOW = 5
+    }
 
     private val _samples = MutableStateFlow<List<CalibrationSample>>(emptyList())
+    private var lastActivityState: UserActivityState = UserActivityState.USER_ACTIVITY_UNKNOWN
     
     data class CalibrationSample(
         val timestamp: Long,
         val heartRate: Int
     )
 
+    fun updateActivityState(state: UserActivityState) {
+        lastActivityState = state
+    }
+
     suspend fun processDataPoints(dataPoints: DataPointContainer) {
         val hrData = dataPoints.getData(DataType.HEART_RATE_BPM)
-        val activityInfo = dataPoints.userActivityInfo ?: return
-        
         if (hrData.isEmpty()) return
         
         val settings = settingsDataStore.settings.first()
         if (!settings.isCalibrating) return
 
         val latestHr = hrData.last().value.toInt()
-        val activityState = activityInfo.userActivityState
 
         // Only collect during resting/passive states
-        if (activityState == UserActivityState.USER_ACTIVITY_PASSIVE || 
-            activityState == UserActivityState.USER_ACTIVITY_ASLEEP) {
+        if (lastActivityState == UserActivityState.USER_ACTIVITY_PASSIVE || 
+            lastActivityState == UserActivityState.USER_ACTIVITY_ASLEEP) {
             
             val newSample = CalibrationSample(System.currentTimeMillis(), latestHr)
             _samples.value = _samples.value + newSample

@@ -55,10 +55,7 @@ class HealthServicesRepository @Inject constructor(
     suspend fun startPassiveMonitoring(serviceClass: Class<out PassiveListenerService>) {
         val config = PassiveListenerConfig.builder()
             .setDataTypes(setOf(
-                DataType.HEART_RATE_BPM,
-                DataType.USER_ACTIVITY_STATE,
-                DataType.RESPIRATORY_RATE,
-                DataType.SLEEP_STAGE
+                DataType.HEART_RATE_BPM
             ))
             .setShouldUserActivityInfoBeRequested(true)
             .build()

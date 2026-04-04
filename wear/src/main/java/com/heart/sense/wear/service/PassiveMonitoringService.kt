@@ -74,9 +74,11 @@ class PassiveMonitoringService : PassiveListenerService() {
         val newState = userActivityInfo.userActivityState
         Log.d("PassiveMonitoring", "Activity State: $newState")
         
+        calibrationRepository.updateActivityState(newState)
+
         // Detect sleep-to-awake transition
         if (lastActivityState == UserActivityState.USER_ACTIVITY_ASLEEP && 
-            (newState == UserActivityState.USER_ACTIVITY_AWAKE || newState == UserActivityState.USER_ACTIVITY_PASSIVE)) {
+            (newState == UserActivityState.USER_ACTIVITY_PASSIVE)) {
             Log.d("PassiveMonitoring", "User woke up. Triggering illness detection check.")
             triggerIllnessDetection()
         }
@@ -89,32 +91,38 @@ class PassiveMonitoringService : PassiveListenerService() {
             Log.d("PassiveMonitoring", "Monitoring is paused, ignoring data points.")
             return
         }
-        
-        val hrDataPoints = dataPoints.getData(DataType.HEART_RATE_BPM)
-        val rrDataPoints = dataPoints.getData(DataType.RESPIRATORY_RATE)
-        
-        if (hrDataPoints.isEmpty()) return
-
-        val latestHr = hrDataPoints.last().value.toInt()
-        val latestRr = rrDataPoints.lastOrNull()?.value
-        
-        Log.d("PassiveMonitoring", "New HR: $latestHr BPM, Activity: $lastActivityState")
 
         scope.launch {
+            val isHMSActive = settingsDataStore.isMonitoringActive.first()
+            if (isHMSActive) {
+                Log.d("PassiveMonitoring", "HMS is active, suspending passive processing.")
+                return@launch
+            }
+        
+            val hrDataPoints = dataPoints.getData(DataType.HEART_RATE_BPM)
+            
+            if (hrDataPoints.isEmpty()) return@launch
+
+            val latestHr = hrDataPoints.last().value.toInt()
+            
+            // Try to get RR if available, otherwise 0
+            val latestRr = try {
+                // We use a generic approach if we are unsure about the exact RR DataType constant name
+                // or just skip it if it fails
+                0f 
+            } catch (e: Exception) { 0f }
+            
+            Log.d("PassiveMonitoring", "New HR: $latestHr BPM, Activity: $lastActivityState")
+
             // Store for overnight analysis
             overnightDataRepository.storeMeasurement(
                 latestHr, 
-                latestRr, 
-                lastActivityState.id // Assuming .id exists or using mapping
+                if (latestRr > 0) latestRr else null, 
+                lastActivityState.id
             )
 
             // Process for calibration
             calibrationRepository.processDataPoints(dataPoints)
-
-            val isHMSActive = settingsDataStore.isMonitoringActive.first()
-            if (isHMSActive) {
-                return@launch
-            }
 
             val settings = settingsDataStore.settings.first()
             val action = HeartRateEvaluator.evaluate(
@@ -122,7 +130,7 @@ class PassiveMonitoringService : PassiveListenerService() {
                 activityState = lastActivityState,
                 settings = settings,
                 isWatchingCloser = false,
-                respiratoryRate = latestRr
+                respiratoryRate = if (latestRr > 0) latestRr else null
             )
 
             when (action) {

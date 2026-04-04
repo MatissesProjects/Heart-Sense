@@ -4,6 +4,8 @@ import android.os.Bundle
 import androidx.activity.ComponentActivity
 import androidx.activity.compose.setContent
 import androidx.compose.foundation.layout.*
+import androidx.compose.foundation.gestures.scrollBy
+import androidx.compose.foundation.focusable
 import androidx.compose.runtime.*
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
@@ -11,9 +13,15 @@ import androidx.compose.ui.unit.dp
 import androidx.compose.ui.focus.FocusRequester
 import androidx.compose.ui.focus.focusRequester
 import androidx.compose.ui.input.rotary.onRotaryScrollEvent
+import androidx.compose.ui.graphics.Color
 import androidx.wear.compose.material.*
+import androidx.wear.compose.material.Icon
+import androidx.compose.material.icons.Icons
+import androidx.compose.material.icons.filled.KeyboardArrowDown
+import androidx.compose.material.icons.filled.KeyboardArrowUp
 import androidx.lifecycle.lifecycleScope
 import androidx.health.services.client.data.DataType
+import androidx.health.services.client.data.DataPoint
 import com.heart.sense.wear.data.WearableCommunicationRepository
 import com.heart.sense.wear.data.HealthServicesRepository
 import com.heart.sense.wear.data.Settings
@@ -68,7 +76,8 @@ class MainActivity : ComponentActivity() {
             
             val currentHr = when (val update = measureUpdate) {
                 is com.heart.sense.wear.data.MeasureUpdate.DataReceived -> {
-                    update.container.getData(DataType.HEART_RATE_BPM).lastOrNull()?.value?.toInt()
+                    val hrDataPoints = update.container.getData(DataType.HEART_RATE_BPM)
+                    hrDataPoints.lastOrNull()?.value?.toInt()
                 }
                 else -> null
             }
@@ -122,8 +131,8 @@ class MainActivity : ComponentActivity() {
                                 valueRange = 60f..180f,
                                 steps = 24,
                                 enabled = !settings.isCalibrating,
-                                decreaseIcon = { Icon(android.R.drawable.ic_media_previous, "Decrease") },
-                                increaseIcon = { Icon(android.R.drawable.ic_media_next, "Increase") }
+                                decreaseIcon = { Icon(Icons.Default.KeyboardArrowDown, "Decrease") },
+                                increaseIcon = { Icon(Icons.Default.KeyboardArrowUp, "Increase") }
                             )
                         }
                     }
@@ -147,7 +156,7 @@ class MainActivity : ComponentActivity() {
                             Text(
                                 if (isSnoozed) "Snoozed (${settings.snoozeRemainingMinutes}m)" else "Snooze",
                                 style = MaterialTheme.typography.caption2,
-                                color = if (isSnoozed) androidx.compose.ui.graphics.Color.Red else androidx.compose.ui.graphics.Color.Unspecified
+                                color = if (isSnoozed) Color.Red else Color.Unspecified
                             )
                             Spacer(modifier = Modifier.width(8.dp))
                             Switch(
@@ -175,8 +184,7 @@ class MainActivity : ComponentActivity() {
                     if (!settings.isCalibrating && !settings.isCalibrated) {
                         item {
                             Button(onClick = { 
-                                scope.launch { settingsRepository.updateThreshold(settings.highHrThreshold) // Logic to trigger start can be added to repository
-                                    // Or call startCalibration directly if exposed
+                                scope.launch {
                                     settingsDataStore.startCalibration()
                                 }
                             }, modifier = Modifier.fillMaxWidth()) {
@@ -222,7 +230,7 @@ class MainActivity : ComponentActivity() {
                 }
                 Text("Calibrating (${durationHours}h)", style = MaterialTheme.typography.caption2)
             } else {
-                Text("✅ Calibrated", color = androidx.compose.ui.graphics.Color.Green, style = MaterialTheme.typography.caption1)
+                Text("✅ Calibrated", color = Color.Green, style = MaterialTheme.typography.caption1)
                 Text("RHR: ${settings.restingHr} BPM", style = MaterialTheme.typography.caption2)
             }
         }

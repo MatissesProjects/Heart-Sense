@@ -45,6 +45,7 @@ dependencies {
     implementation(platform(libs.androidx.compose.bom))
     implementation(libs.androidx.ui)
     implementation(libs.androidx.ui.tooling.preview)
+    implementation("androidx.compose.material:material-icons-extended")
     
     // Wear OS Specific
     implementation("androidx.wear.compose:compose-material:1.3.1")

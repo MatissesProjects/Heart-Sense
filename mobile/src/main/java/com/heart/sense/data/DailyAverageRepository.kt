@@ -20,7 +20,7 @@ class DailyAverageRepository @Inject constructor(
     private val settingsDataStore: SettingsDataStore
 ) {
     suspend fun storeBatch(measurements: List<OvernightMeasurement>) {
-        measurements.forEach { dao.insert(it) }
+        dao.insertAll(measurements)
     }
 
     suspend fun getDailyAverages(days: Int = 7): List<DailyAverage> {

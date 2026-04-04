@@ -54,12 +54,20 @@ object WearableModule {
             context,
             HeartSenseDatabase::class.java,
             "heart_sense_db"
-        ).build()
+        )
+        .fallbackToDestructiveMigration()
+        .build()
     }
 
     @Provides
     @Singleton
     fun provideOvernightMeasurementDao(database: HeartSenseDatabase): OvernightMeasurementDao {
         return database.overnightMeasurementDao()
+    }
+
+    @Provides
+    @Singleton
+    fun provideAlertDao(database: HeartSenseDatabase): com.heart.sense.data.db.AlertDao {
+        return database.alertDao()
     }
 }

@@ -66,6 +66,8 @@ class HealthMonitoringService : Service() {
         return START_STICKY
     }
 
+    private var lastNotifiedHr = 0
+
     private fun startRealTimeMonitoring() {
         serviceScope.launch {
             val settings = settingsDataStore.settings.first()
@@ -77,9 +79,12 @@ class HealthMonitoringService : Service() {
                         if (hrDataPoints.isEmpty()) return@collect
                         val hr = hrDataPoints.last().value.toInt()
                         
-                        // Update notification with latest HR
-                        val manager = getSystemService(NotificationManager::class.java)
-                        manager.notify(1, createNotification("Current HR: $hr BPM"))
+                        // Update notification only if HR changed significantly (> 2 BPM)
+                        if (kotlin.math.abs(hr - lastNotifiedHr) >= 2) {
+                            val manager = getSystemService(NotificationManager::class.java)
+                            manager.notify(1, createNotification("Current HR: $hr BPM"))
+                            lastNotifiedHr = hr
+                        }
 
                         val action = HeartRateEvaluator.evaluate(
                             latestHr = hr,

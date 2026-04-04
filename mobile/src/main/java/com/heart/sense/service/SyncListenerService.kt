@@ -10,6 +10,8 @@ import dagger.hilt.android.AndroidEntryPoint
 import kotlinx.coroutines.CoroutineScope
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.SupervisorJob
+import kotlinx.coroutines.channels.Channel
+import kotlinx.coroutines.flow.receiveAsFlow
 import kotlinx.coroutines.launch
 import javax.inject.Inject
 
@@ -20,33 +22,50 @@ class SyncListenerService : WearableListenerService() {
     lateinit var dailyAverageRepository: DailyAverageRepository
 
     private val scope = CoroutineScope(SupervisorJob() + Dispatchers.IO)
+    private val syncChannel = Channel<List<OvernightMeasurement>>(Channel.RENDEZVOUS)
+
+    override fun onCreate() {
+        super.onCreate()
+        // Start the consumer that processes batches sequentially
+        scope.launch {
+            syncChannel.receiveAsFlow().collect { measurements ->
+                try {
+                    dailyAverageRepository.storeBatch(measurements)
+                    Log.d("SyncListenerService", "Stored ${measurements.size} measurements sequentially")
+                } catch (e: Exception) {
+                    Log.e("SyncListenerService", "Failed to store batch", e)
+                }
+            }
+        }
+    }
 
     override fun onMessageReceived(messageEvent: MessageEvent) {
         if (messageEvent.path == Constants.PATH_SYNC_BATCH) {
             val data = String(messageEvent.data)
-            Log.d("SyncListenerService", "Received sync batch: ${data.length} chars")
             
             scope.launch {
-                val measurements = data.split("\n").mapNotNull { line ->
-                    try {
-                        val parts = line.split("|")
-                        if (parts.size >= 4) {
-                            OvernightMeasurement(
-                                timestamp = parts[0].toLong(),
-                                heartRate = parts[1].toInt(),
-                                respiratoryRate = parts[2].toFloatOrNull(),
-                                activityState = parts[3].toInt()
-                            )
-                        } else null
-                    } catch (e: Exception) {
-                        null
-                    }
-                }
-                
+                val measurements = parseBatch(data)
                 if (measurements.isNotEmpty()) {
-                    dailyAverageRepository.storeBatch(measurements)
-                    Log.d("SyncListenerService", "Stored ${measurements.size} measurements")
+                    syncChannel.send(measurements)
                 }
+            }
+        }
+    }
+
+    private fun parseBatch(data: String): List<OvernightMeasurement> {
+        return data.split("\n").mapNotNull { line ->
+            try {
+                val parts = line.split("|")
+                if (parts.size >= 4) {
+                    OvernightMeasurement(
+                        timestamp = parts[0].toLong(),
+                        heartRate = parts[1].toInt(),
+                        respiratoryRate = parts[2].toFloatOrNull(),
+                        activityState = parts[3].toInt()
+                    )
+                } else null
+            } catch (e: Exception) {
+                null
             }
         }
     }

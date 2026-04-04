@@ -37,7 +37,7 @@ class WearableCommunicationRepository @Inject constructor(
         sendMessageToPhone(Constants.PATH_ILLNESS_ALERT, data.toByteArray())
     }
 
-    private suspend fun sendMessageToPhone(path: String, data: ByteArray) {
+    suspend fun sendMessageToPhone(path: String, data: ByteArray) {
         try {
             val capabilityInfo = capabilityClient.getCapability(PHONE_CAPABILITY, CapabilityClient.FILTER_REACHABLE).await()
             val nodes = capabilityInfo.nodes

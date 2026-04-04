@@ -65,6 +65,28 @@ class SettingsDataStore @Inject constructor(
         }
     }
 
+    suspend fun updateSettings(
+        highHrThreshold: Int, 
+        isSickMode: Boolean, 
+        timestamp: Long, 
+        snoozeUntil: Long,
+        calibrationStatus: String,
+        restingHr: Int,
+        respiratoryRate: Float,
+        calibrationStartTime: Long
+    ) {
+        context.dataStore.edit { preferences ->
+            preferences[HIGH_HR_THRESHOLD] = highHrThreshold
+            preferences[IS_SICK_MODE] = isSickMode
+            preferences[LAST_UPDATED] = timestamp
+            preferences[SNOOZE_UNTIL] = snoozeUntil
+            preferences[CALIBRATION_STATUS] = calibrationStatus
+            preferences[RESTING_HR] = restingHr
+            preferences[RESPIRATORY_RATE] = respiratoryRate
+            preferences[CALIBRATION_START_TIME] = calibrationStartTime
+        }
+    }
+
     suspend fun setMonitoringActive(active: Boolean) {
         context.dataStore.edit { preferences ->
             preferences[IS_MONITORING_ACTIVE] = active

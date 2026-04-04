@@ -10,6 +10,9 @@ interface OvernightMeasurementDao {
     @Insert(onConflict = OnConflictStrategy.REPLACE)
     suspend fun insert(measurement: OvernightMeasurement)
 
+    @Insert(onConflict = OnConflictStrategy.REPLACE)
+    suspend fun insertAll(measurements: List<OvernightMeasurement>)
+
     @Query("SELECT * FROM overnight_measurements WHERE timestamp >= :startTime AND timestamp <= :endTime ORDER BY timestamp ASC")
     suspend fun getMeasurementsInRange(startTime: Long, endTime: Long): List<OvernightMeasurement>
 
