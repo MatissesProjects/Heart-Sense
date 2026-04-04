@@ -11,7 +11,11 @@ import androidx.compose.ui.unit.dp
 import androidx.wear.compose.material.Button
 import androidx.wear.compose.material.Text
 import androidx.wear.compose.material.Switch
+import androidx.wear.compose.material.InlineSlider
 import androidx.wear.compose.material.MaterialTheme
+import androidx.wear.compose.material.Icon
+import androidx.wear.compose.material.ScalingLazyColumn
+import androidx.wear.compose.material.rememberScalingLazyListState
 import androidx.lifecycle.lifecycleScope
 import androidx.health.services.client.data.DataType
 import com.heart.sense.wear.data.WearableCommunicationRepository
@@ -39,6 +43,9 @@ class MainActivity : ComponentActivity() {
     @Inject
     lateinit var settingsDataStore: com.heart.sense.wear.data.SettingsDataStore
 
+    @Inject
+    lateinit var settingsRepository: com.heart.sense.wear.data.SettingsRepository
+
     private val permissionLauncher = registerForActivityResult(
         ActivityResultContracts.RequestMultiplePermissions()
     ) { result ->
@@ -54,6 +61,7 @@ class MainActivity : ComponentActivity() {
 
         setContent {
             val scope = rememberCoroutineScope()
+            val listState = rememberScalingLazyListState()
             val measureFlow = remember { healthServicesRepository.getMeasureData(DataType.HEART_RATE_BPM) }
             val measureUpdate by measureFlow.collectAsState(initial = null)
             
@@ -75,21 +83,56 @@ class MainActivity : ComponentActivity() {
             }
 
             HeartSenseTheme {
-                Box(modifier = Modifier.fillMaxSize(), contentAlignment = Alignment.Center) {
-                    Column(horizontalAlignment = Alignment.CenterHorizontally) {
+                ScalingLazyColumn(
+                    modifier = Modifier.fillMaxSize(),
+                    state = listState,
+                    horizontalAlignment = Alignment.CenterHorizontally
+                ) {
+                    item {
                         Text("HR: ${currentHr ?: "--"} BPM", style = MaterialTheme.typography.title1)
-                        Text("Threshold: ${settings.highHrThreshold} BPM", style = MaterialTheme.typography.body2)
-                        
+                    }
+                    
+                    item {
+                        Column(horizontalAlignment = Alignment.CenterHorizontally) {
+                            Text("Threshold: ${settings.highHrThreshold}", style = MaterialTheme.typography.caption2)
+                            InlineSlider(
+                                value = settings.highHrThreshold.toFloat(),
+                                onValueChange = { 
+                                    scope.launch { settingsRepository.updateThreshold(it.toInt()) }
+                                },
+                                valueRange = 60f..180f,
+                                steps = 24,
+                                decreaseIcon = { Icon(android.R.drawable.ic_media_previous, "Decrease") },
+                                increaseIcon = { Icon(android.R.drawable.ic_media_next, "Increase") }
+                            )
+                        }
+                    }
+
+                    item {
+                        Row(verticalAlignment = Alignment.CenterVertically) {
+                            Text("Sick Mode", style = MaterialTheme.typography.caption2)
+                            Spacer(modifier = Modifier.width(8.dp))
+                            Switch(
+                                checked = settings.isSickMode,
+                                onCheckedChange = { 
+                                    scope.launch { settingsRepository.toggleSickMode(it) }
+                                }
+                            )
+                        }
+                    }
+
+                    item {
                         Row(verticalAlignment = Alignment.CenterVertically) {
                             Text("Stream", style = MaterialTheme.typography.caption2)
+                            Spacer(modifier = Modifier.width(8.dp))
                             Switch(
                                 checked = isStreaming,
                                 onCheckedChange = { isStreaming = it }
                             )
                         }
+                    }
 
-                        Spacer(modifier = Modifier.height(4.dp))
-
+                    item {
                         Button(onClick = {
                             currentHr?.let { hr ->
                                 scope.launch {
