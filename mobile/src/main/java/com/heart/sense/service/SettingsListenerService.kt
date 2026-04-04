@@ -27,7 +27,7 @@ class SettingsListenerService : WearableListenerService() {
                 val dataMap = DataMapItem.fromDataItem(event.dataItem).dataMap
                 val threshold = dataMap.getInt(Constants.KEY_HIGH_HR_THRESHOLD)
                 val isSick = dataMap.getBoolean(Constants.KEY_IS_SICK_MODE)
-                val timestamp = dataMap.getLong("last_updated")
+                val timestamp = dataMap.getLong(Constants.KEY_LAST_UPDATED)
                 
                 scope.launch {
                     val current = settingsDataStore.settings.first()

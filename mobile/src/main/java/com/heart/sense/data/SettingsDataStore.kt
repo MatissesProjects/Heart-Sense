@@ -4,6 +4,7 @@ import android.content.Context
 import androidx.datastore.core.DataStore
 import androidx.datastore.preferences.core.*
 import androidx.datastore.preferences.preferencesDataStore
+import com.heart.sense.util.Constants
 import kotlinx.coroutines.flow.Flow
 import kotlinx.coroutines.flow.map
 import javax.inject.Inject
@@ -13,9 +14,9 @@ private val Context.dataStore: DataStore<Preferences> by preferencesDataStore(na
 
 @Singleton
 class SettingsDataStore @Inject constructor(private val context: Context) {
-    private val HIGH_HR_THRESHOLD = intPreferencesKey("high_hr_threshold")
-    private val IS_SICK_MODE = booleanPreferencesKey("is_sick_mode")
-    private val LAST_UPDATED = longPreferencesKey("last_updated")
+    private val HIGH_HR_THRESHOLD = intPreferencesKey(Constants.KEY_HIGH_HR_THRESHOLD)
+    private val IS_SICK_MODE = booleanPreferencesKey(Constants.KEY_IS_SICK_MODE)
+    private val LAST_UPDATED = longPreferencesKey(Constants.KEY_LAST_UPDATED)
 
     val settings: Flow<Settings> = context.dataStore.data.map { preferences ->
         Settings(

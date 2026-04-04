@@ -11,6 +11,7 @@ object Constants {
     // Data Map Keys
     const val KEY_HIGH_HR_THRESHOLD = "highHrThreshold"
     const val KEY_IS_SICK_MODE = "isSickMode"
+    const val KEY_LAST_UPDATED = "lastUpdated"
 
     // Intent Actions
     const val ACTION_SICK_MODE = "com.heart.sense.ACTION_SICK_MODE"

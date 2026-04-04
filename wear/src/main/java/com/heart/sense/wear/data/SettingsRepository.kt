@@ -50,7 +50,7 @@ class SettingsRepository @Inject constructor(
         val request = PutDataMapRequest.create(Constants.PATH_SETTINGS).apply {
             dataMap.putInt(Constants.KEY_HIGH_HR_THRESHOLD, settings.highHrThreshold)
             dataMap.putBoolean(Constants.KEY_IS_SICK_MODE, settings.isSickMode)
-            dataMap.putLong("last_updated", settings.lastUpdated)
+            dataMap.putLong(Constants.KEY_LAST_UPDATED, settings.lastUpdated)
         }.asPutDataRequest().setUrgent()
         
         try {
