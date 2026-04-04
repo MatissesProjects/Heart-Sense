@@ -5,6 +5,7 @@ import com.heart.sense.wear.data.Settings
 
 sealed class MonitoringAction {
     object None : MonitoringAction()
+    object Calibrating : MonitoringAction()
     data class TriggerAlert(val hr: Int) : MonitoringAction()
     data class TriggerCriticalAlert(val hr: Int) : MonitoringAction()
     data class TriggerSitDownWarning(val hr: Int) : MonitoringAction()
@@ -16,6 +17,7 @@ object HeartRateEvaluator {
     
     private const val STABILITY_REQUIRED_COUNT = 10
     private const val CRITICAL_OFFSET = 40
+    private const val CALIBRATION_DURATION_MILLIS = 48 * 60 * 60 * 1000L // 48 hours
 
     fun evaluate(
         latestHr: Int,
@@ -30,23 +32,35 @@ object HeartRateEvaluator {
         val isExercising = activityState == UserActivityState.USER_ACTIVITY_EXERCISE
 
         // 1. Critical HR Check: Trigger immediate alert if HR is extremely high, 
-        // regardless of activity (unless exercising where it might be expected, but even then 160+ is a lot)
-        // Critical alerts BYPASS snooze for safety.
+        // regardless of activity (unless exercising where it might be expected).
+        // Critical alerts BYPASS snooze and calibration for safety.
         if (latestHr > criticalThreshold && !isExercising) {
             return MonitoringAction.TriggerCriticalAlert(latestHr)
         }
 
-        // 2. Check snooze state - prevents normal alerts during snooze
+        // 2. Check calibration status
+        if (settings.isCalibrating) {
+            // Check if calibration time is up
+            val elapsed = System.currentTimeMillis() - settings.calibrationStartTime
+            if (elapsed >= CALIBRATION_DURATION_MILLIS) {
+                // Should return an action to complete calibration, 
+                // but for now just return Calibrating. The logic to transition 
+                // should be in the service/manager.
+            }
+            return MonitoringAction.Calibrating
+        }
+
+        // 3. Check snooze state - prevents normal alerts during snooze
         if (settings.isSnoozed) {
             return MonitoringAction.None
         }
 
-        // 3. Suppress normal alerts if user is asleep
+        // 4. Suppress normal alerts if user is asleep
         if (activityState == UserActivityState.USER_ACTIVITY_ASLEEP) {
             return if (isWatchingCloser) MonitoringAction.StopWatchingCloser else MonitoringAction.None
         }
 
-        // 4. Logic for stopping high-resolution monitoring (HMS)
+        // 5. Logic for stopping high-resolution monitoring (HMS)
         if (isWatchingCloser) {
             // Stop if user starts exercising (HR expected to be high)
             if (isExercising) {
@@ -60,7 +74,7 @@ object HeartRateEvaluator {
             return MonitoringAction.None
         }
 
-        // 5. Logic for triggering actions from background monitoring (PMS)
+        // 6. Logic for triggering actions from background monitoring (PMS)
         
         // High HR while stationary -> Immediate escalation
         if (isStationary && latestHr > threshold) {
