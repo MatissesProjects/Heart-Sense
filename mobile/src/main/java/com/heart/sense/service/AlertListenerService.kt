@@ -30,6 +30,12 @@ class AlertListenerService : WearableListenerService() {
                 alertsRepository.addAlert(hr, "High HR")
                 showHighHrNotification(hr)
             }
+            Constants.PATH_CRITICAL_HR -> {
+                val hr = String(messageEvent.data).toInt()
+                Log.d("AlertListenerService", "Critical HR Alert: $hr BPM")
+                alertsRepository.addAlert(hr, "CRITICAL HR")
+                showCriticalHrNotification(hr)
+            }
             Constants.PATH_SIT_DOWN -> {
                 val hr = String(messageEvent.data).toInt()
                 Log.d("AlertListenerService", "Sit Down Alert: $hr BPM")
@@ -56,6 +62,33 @@ class AlertListenerService : WearableListenerService() {
             .build()
 
         notificationManager.notify(101, notification)
+    }
+
+    private fun showCriticalHrNotification(hr: Int) {
+        val notificationManager = getSystemService(Context.NOTIFICATION_SERVICE) as NotificationManager
+        val channelId = "critical_hr_alerts"
+        
+        val channel = NotificationChannel(
+            channelId,
+            "CRITICAL Heart Rate Alerts",
+            NotificationManager.IMPORTANCE_HIGH
+        ).apply {
+            description = "URGENT notifications for extremely high heart rate"
+            enableVibration(true)
+            setVibrationPattern(longArrayOf(0, 500, 200, 500))
+        }
+        notificationManager.createNotificationChannel(channel)
+
+        val notification = NotificationCompat.Builder(this, channelId)
+            .setSmallIcon(android.R.drawable.ic_dialog_alert)
+            .setContentTitle("CRITICAL HR ALERT")
+            .setContentText("Your heart rate is EXTREMELY HIGH: $hr BPM. Please rest immediately.")
+            .setPriority(NotificationCompat.PRIORITY_MAX)
+            .setCategory(NotificationCompat.CATEGORY_ALARM)
+            .setAutoCancel(true)
+            .build()
+
+        notificationManager.notify(102, notification)
     }
 
     private fun showHighHrNotification(hr: Int) {
