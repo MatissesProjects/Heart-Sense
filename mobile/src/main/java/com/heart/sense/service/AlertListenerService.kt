@@ -53,12 +53,18 @@ class AlertListenerService : WearableListenerService() {
         val notificationManager = getSystemService(Context.NOTIFICATION_SERVICE) as NotificationManager
         val channelId = "high_hr_alerts"
         
+        val snoozeIntent = Intent(this, AlertActionReceiver::class.java).apply {
+            action = Constants.ACTION_SNOOZE
+        }
+        val snoozePendingIntent = PendingIntent.getBroadcast(this, 3, snoozeIntent, PendingIntent.FLAG_IMMUTABLE)
+
         val notification = NotificationCompat.Builder(this, channelId)
             .setSmallIcon(android.R.drawable.ic_dialog_info)
             .setContentTitle("Please Sit Down")
             .setContentText("You are sick and your HR is $hr BPM. Please rest.")
             .setPriority(NotificationCompat.PRIORITY_HIGH)
             .setAutoCancel(true)
+            .addAction(android.R.drawable.ic_lock_idle_alarm, "Snooze 30m", snoozePendingIntent)
             .build()
 
         notificationManager.notify(101, notification)
@@ -79,6 +85,11 @@ class AlertListenerService : WearableListenerService() {
         }
         notificationManager.createNotificationChannel(channel)
 
+        val emergencyIntent = Intent(this, AlertActionReceiver::class.java).apply {
+            action = Constants.ACTION_EMERGENCY_CONTACT
+        }
+        val emergencyPendingIntent = PendingIntent.getBroadcast(this, 4, emergencyIntent, PendingIntent.FLAG_IMMUTABLE)
+
         val notification = NotificationCompat.Builder(this, channelId)
             .setSmallIcon(android.R.drawable.ic_dialog_alert)
             .setContentTitle("CRITICAL HR ALERT")
@@ -86,6 +97,7 @@ class AlertListenerService : WearableListenerService() {
             .setPriority(NotificationCompat.PRIORITY_MAX)
             .setCategory(NotificationCompat.CATEGORY_ALARM)
             .setAutoCancel(true)
+            .addAction(android.R.drawable.stat_sys_phone_call, "EMERGENCY CONTACT", emergencyPendingIntent)
             .build()
 
         notificationManager.notify(102, notification)
@@ -109,10 +121,15 @@ class AlertListenerService : WearableListenerService() {
         }
         val sickModePendingIntent = PendingIntent.getBroadcast(this, 1, sickModeIntent, PendingIntent.FLAG_IMMUTABLE)
 
-        val ackIntent = Intent(this, AlertActionReceiver::class.java).apply {
-            action = Constants.ACTION_ACKNOWLEDGE
+        val exerciseIntent = Intent(this, AlertActionReceiver::class.java).apply {
+            action = Constants.ACTION_FALSE_POSITIVE_EXERCISE
         }
-        val ackPendingIntent = PendingIntent.getBroadcast(this, 2, ackIntent, PendingIntent.FLAG_IMMUTABLE)
+        val exercisePendingIntent = PendingIntent.getBroadcast(this, 5, exerciseIntent, PendingIntent.FLAG_IMMUTABLE)
+
+        val snoozeIntent = Intent(this, AlertActionReceiver::class.java).apply {
+            action = Constants.ACTION_SNOOZE
+        }
+        val snoozePendingIntent = PendingIntent.getBroadcast(this, 6, snoozeIntent, PendingIntent.FLAG_IMMUTABLE)
 
         val notification = NotificationCompat.Builder(this, channelId)
             .setSmallIcon(android.R.drawable.ic_dialog_alert)
@@ -121,7 +138,8 @@ class AlertListenerService : WearableListenerService() {
             .setPriority(NotificationCompat.PRIORITY_HIGH)
             .setAutoCancel(true)
             .addAction(android.R.drawable.ic_menu_edit, "I'm Sick", sickModePendingIntent)
-            .addAction(android.R.drawable.ic_delete, "Acknowledge", ackPendingIntent)
+            .addAction(android.R.drawable.ic_lock_idle_alarm, "Snooze", snoozePendingIntent)
+            .addAction(android.R.drawable.ic_media_play, "Exercising", exercisePendingIntent)
             .build()
 
         notificationManager.notify(100, notification)

@@ -1,7 +1,9 @@
 package com.heart.sense.wear.service
 
+import android.content.Intent
 import com.google.android.gms.wearable.DataEventBuffer
 import com.google.android.gms.wearable.DataMapItem
+import com.google.android.gms.wearable.MessageEvent
 import com.google.android.gms.wearable.WearableListenerService
 import com.heart.sense.wear.data.SettingsDataStore
 import com.heart.sense.wear.util.Constants
@@ -37,6 +39,13 @@ class SettingsListenerService : WearableListenerService() {
                     }
                 }
             }
+        }
+    }
+
+    override fun onMessageReceived(messageEvent: MessageEvent) {
+        if (messageEvent.path == Constants.PATH_STOP_HMS) {
+            val intent = Intent(this, HealthMonitoringService::class.java)
+            stopService(intent)
         }
     }
 }
