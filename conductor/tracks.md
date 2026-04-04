@@ -9,4 +9,5 @@
 | `005-alerts` | Alerting System | Implement cross-device communication and UI notifications. | Completed |
 | `006-sick-mode` | Health Context | Implement "Sick Mode" logic to adjust thresholds dynamically. | Completed |
 | `007-optimization` | Optimization | Consolidate logic and improve battery/comm efficiency. | Completed |
-| `008-sync-refinement` | Sync & UX | Debouncing, rotary support, and conflict resolution. | Active |
+| `008-sync-refinement` | Sync & UX | Debouncing, rotary support, and conflict resolution. | Completed |
+| `009-health-context-and-actions` | Advanced Context | Snooze, additional metrics, and emergency actions. | Active |
