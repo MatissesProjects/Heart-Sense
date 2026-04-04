@@ -12,8 +12,10 @@ object Constants {
     const val KEY_HIGH_HR_THRESHOLD = "highHrThreshold"
     const val KEY_IS_SICK_MODE = "isSickMode"
     const val KEY_LAST_UPDATED = "lastUpdated"
+    const val KEY_SNOOZE_UNTIL = "snoozeUntil"
 
     // Intent Actions
     const val ACTION_SICK_MODE = "com.heart.sense.ACTION_SICK_MODE"
     const val ACTION_ACKNOWLEDGE = "com.heart.sense.ACTION_ACKNOWLEDGE"
+    const val ACTION_SNOOZE = "com.heart.sense.ACTION_SNOOZE"
 }
