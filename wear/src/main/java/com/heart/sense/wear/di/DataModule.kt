@@ -4,6 +4,7 @@ import android.content.Context
 import androidx.health.services.client.HealthServices
 import androidx.health.services.client.HealthServicesClient
 import com.google.android.gms.wearable.CapabilityClient
+import com.google.android.gms.wearable.DataClient
 import com.google.android.gms.wearable.MessageClient
 import com.google.android.gms.wearable.Wearable
 import com.heart.sense.wear.data.SettingsDataStore
@@ -34,6 +35,12 @@ object DataModule {
     @Singleton
     fun provideMessageClient(@ApplicationContext context: Context): MessageClient {
         return Wearable.getMessageClient(context)
+    }
+
+    @Provides
+    @Singleton
+    fun provideDataClient(@ApplicationContext context: Context): DataClient {
+        return Wearable.getDataClient(context)
     }
 
     @Provides
