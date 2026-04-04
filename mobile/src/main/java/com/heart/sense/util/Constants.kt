@@ -8,6 +8,7 @@ object Constants {
     const val PATH_SIT_DOWN = "/sit_down"
     const val PATH_LIVE_HR = "/live_hr"
     const val PATH_STOP_HMS = "/stop_hms"
+    const val PATH_ILLNESS_ALERT = "/illness_alert"
 
     // Data Map Keys
     const val KEY_HIGH_HR_THRESHOLD = "highHrThreshold"
