@@ -20,6 +20,10 @@ class WearableCommunicationRepository @Inject constructor(
         sendMessageToWatch(Constants.PATH_STOP_HMS, byteArrayOf())
     }
 
+    suspend fun requestMeasurementSync() {
+        sendMessageToWatch(Constants.PATH_REQUEST_SYNC, byteArrayOf())
+    }
+
     private suspend fun sendMessageToWatch(path: String, data: ByteArray) {
         try {
             val capabilityInfo = capabilityClient.getCapability(WATCH_CAPABILITY, CapabilityClient.FILTER_REACHABLE).await()

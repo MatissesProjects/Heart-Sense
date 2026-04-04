@@ -5,6 +5,7 @@ import com.heart.sense.data.db.OvernightMeasurementDao
 import kotlinx.coroutines.flow.Flow
 import kotlinx.coroutines.flow.MutableStateFlow
 import kotlinx.coroutines.flow.asStateFlow
+import kotlinx.coroutines.flow.first
 import kotlinx.coroutines.flow.map
 import java.time.Instant
 import java.time.LocalDate
@@ -33,16 +34,20 @@ class DailyAverageRepository @Inject constructor(
             Instant.ofEpochMilli(it.timestamp).atZone(ZoneId.systemDefault()).toLocalDate() 
         }
 
+        val threshold = settingsDataStore.settings.first().highHrThreshold
+
         return grouped.map { (date, dailySamples) ->
             val hrSamples = dailySamples.map { it.heartRate }.filter { it > 0 }
             val rrSamples = dailySamples.mapNotNull { it.respiratoryRate }.filter { it > 0f }
+            val alertTriggered = hrSamples.any { it >= threshold }
 
             DailyAverage(
                 date = date,
                 avgHr = if (hrSamples.isNotEmpty()) hrSamples.average().toInt() else 0,
                 avgRr = if (rrSamples.isNotEmpty()) rrSamples.average().toFloat() else 0f,
                 sampleCount = dailySamples.size,
-                isAlertTriggered = false // Simplified for now
+                isAlertTriggered = alertTriggered,
+                alertType = if (alertTriggered) "High HR" else null
             )
         }.sortedBy { it.date }
     }

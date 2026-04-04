@@ -6,6 +6,7 @@ import com.google.android.gms.wearable.DataMapItem
 import com.google.android.gms.wearable.MessageEvent
 import com.google.android.gms.wearable.WearableListenerService
 import com.heart.sense.wear.data.SettingsDataStore
+import com.heart.sense.wear.data.OvernightDataRepository
 import com.heart.sense.wear.util.Constants
 import dagger.hilt.android.AndroidEntryPoint
 import kotlinx.coroutines.CoroutineScope
@@ -20,6 +21,9 @@ class SettingsListenerService : WearableListenerService() {
 
     @Inject
     lateinit var settingsDataStore: SettingsDataStore
+
+    @Inject
+    lateinit var overnightDataRepository: OvernightDataRepository
 
     private val scope = CoroutineScope(SupervisorJob() + Dispatchers.Main)
 
@@ -43,9 +47,16 @@ class SettingsListenerService : WearableListenerService() {
     }
 
     override fun onMessageReceived(messageEvent: MessageEvent) {
-        if (messageEvent.path == Constants.PATH_STOP_HMS) {
-            val intent = Intent(this, HealthMonitoringService::class.java)
-            stopService(intent)
+        when (messageEvent.path) {
+            Constants.PATH_STOP_HMS -> {
+                val intent = Intent(this, HealthMonitoringService::class.java)
+                stopService(intent)
+            }
+            Constants.PATH_REQUEST_SYNC -> {
+                scope.launch {
+                    overnightDataRepository.syncMeasurementsToPhone()
+                }
+            }
         }
     }
 }

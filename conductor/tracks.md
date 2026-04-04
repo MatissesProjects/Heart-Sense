@@ -12,5 +12,5 @@
 | `008-sync-refinement` | Sync & UX | Debouncing, rotary support, and conflict resolution. | Completed |
 | `009-health-context-and-actions` | Advanced Context | Snooze, additional metrics, and emergency actions. | Completed |
 | `010-illness-detection` | Illness Detection | Automated analysis of overnight health metric deviations. | Completed |
-| `011-health-dashboard` | Health Dashboard | Visualize historical trends and alert triggers on phone. | Research |
-| `012-measurement-sync` | Measurement Sync | Efficient bulk data transfer from watch to phone. | Active |
+| `011-health-dashboard` | Health Dashboard | Visualize historical trends and alert triggers on phone. | Completed |
+| `012-measurement-sync` | Measurement Sync | Efficient bulk data transfer from watch to phone. | Completed |

@@ -2,12 +2,14 @@ package com.heart.sense.wear.data
 
 import com.heart.sense.wear.data.db.OvernightMeasurement
 import com.heart.sense.wear.data.db.OvernightMeasurementDao
+import com.heart.sense.wear.util.Constants
 import javax.inject.Inject
 import javax.inject.Singleton
 
 @Singleton
 class OvernightDataRepository @Inject constructor(
-    private val dao: OvernightMeasurementDao
+    private val dao: OvernightMeasurementDao,
+    private val communicationRepository: WearableCommunicationRepository
 ) {
     suspend fun storeMeasurement(heartRate: Int, respiratoryRate: Float?, activityState: Int) {
         val measurement = OvernightMeasurement(
@@ -36,8 +38,29 @@ class OvernightDataRepository @Inject constructor(
         )
     }
 
+    suspend fun syncMeasurementsToPhone() {
+        val endTime = System.currentTimeMillis()
+        val startTime = endTime - (24 * 60 * 60 * 1000L) // Last 24 hours
+        
+        val measurements = dao.getMeasurementsInRange(startTime, endTime)
+        if (measurements.isEmpty()) return
+
+        // Batch size of 50
+        val batchSize = 50
+        for (i in measurements.indices step batchSize) {
+            val end = minOf(i + batchSize, measurements.size)
+            val batch = measurements.subList(i, end)
+            
+            // Format: timestamp|hr|rr|activity
+            val serialized = batch.joinToString("\n") { m ->
+                "${m.timestamp}|${m.heartRate}|${m.respiratoryRate ?: 0f}|${m.activityState}"
+            }
+            
+            communicationRepository.sendMessageToPhone(Constants.PATH_SYNC_BATCH, serialized.toByteArray())
+        }
+    }
+
     suspend fun deleteOldData() {
-        // Keep only last 24 hours of raw data to save space on watch
         val dayAgo = System.currentTimeMillis() - (24 * 60 * 60 * 1000L)
         dao.deleteOldMeasurements(dayAgo)
     }
