@@ -29,7 +29,18 @@
             <intent-filter>
                 <action android:name="com.google.android.gms.wearable.MESSAGE_RECEIVED" />
                 <data android:scheme="wear" android:host="*" android:pathPrefix="/hr_alert" />
+                <data android:scheme="wear" android:host="*" android:pathPrefix="/critical_hr" />
                 <data android:scheme="wear" android:host="*" android:pathPrefix="/sit_down" />
+                <data android:scheme="wear" android:host="*" android:pathPrefix="/live_hr" />
+            </intent-filter>
+        </service>
+
+        <service
+            android:name=".service.SettingsListenerService"
+            android:exported="true">
+            <intent-filter>
+                <action android:name="com.google.android.gms.wearable.DATA_CHANGED" />
+                <data android:scheme="wear" android:host="*" android:pathPrefix="/settings" />
             </intent-filter>
         </service>
 
