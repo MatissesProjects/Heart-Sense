@@ -9,6 +9,7 @@ import androidx.health.services.client.PassiveListenerService
 import androidx.health.services.client.data.*
 import com.heart.sense.wear.data.SettingsDataStore
 import com.heart.sense.wear.data.WearableCommunicationRepository
+import com.heart.sense.wear.data.CalibrationRepository
 import com.heart.sense.wear.util.HeartRateEvaluator
 import com.heart.sense.wear.util.MonitoringAction
 import dagger.hilt.android.AndroidEntryPoint
@@ -27,6 +28,9 @@ class PassiveMonitoringService : PassiveListenerService() {
 
     @Inject
     lateinit var wearableCommunicationRepository: WearableCommunicationRepository
+
+    @Inject
+    lateinit var calibrationRepository: CalibrationRepository
 
     private val scope = CoroutineScope(SupervisorJob() + Dispatchers.Main)
     
@@ -80,6 +84,9 @@ class PassiveMonitoringService : PassiveListenerService() {
         Log.d("PassiveMonitoring", "New HR: $latestHr BPM, Activity: $lastActivityState")
 
         scope.launch {
+            // Process for calibration
+            calibrationRepository.processDataPoints(dataPoints)
+
             val isHMSActive = settingsDataStore.isMonitoringActive.first()
             if (isHMSActive) {
                 Log.d("PassiveMonitoring", "HMS is already active, skipping passive processing.")
