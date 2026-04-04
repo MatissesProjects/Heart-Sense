@@ -99,6 +99,12 @@ class PassiveMonitoringService : PassiveListenerService() {
                     Log.d("PassiveMonitoring", "Triggering High HR Alert and HMS")
                     triggerHighHrAlert(latestHr)
                 }
+                is MonitoringAction.TriggerCriticalAlert -> {
+                    Log.d("PassiveMonitoring", "Triggering CRITICAL HR Alert")
+                    scope.launch {
+                        wearableCommunicationRepository.sendCriticalHrAlert(action.hr)
+                    }
+                }
                 is MonitoringAction.TriggerSitDownWarning -> {
                     Log.d("PassiveMonitoring", "Triggering Sit Down Warning")
                     triggerSitDownWarning(action.hr)

@@ -17,6 +17,7 @@ import androidx.health.services.client.data.UserActivityState
 import com.heart.sense.wear.data.HealthServicesRepository
 import com.heart.sense.wear.data.MeasureUpdate
 import com.heart.sense.wear.data.SettingsDataStore
+import com.heart.sense.wear.data.WearableCommunicationRepository
 import com.heart.sense.wear.util.HeartRateEvaluator
 import com.heart.sense.wear.util.MonitoringAction
 import dagger.hilt.android.AndroidEntryPoint
@@ -33,8 +34,13 @@ class HealthMonitoringService : Service() {
     @Inject
     lateinit var settingsDataStore: SettingsDataStore
 
+    @Inject
+    lateinit var wearableCommunicationRepository: WearableCommunicationRepository
+
     private val serviceJob = SupervisorJob()
     private val serviceScope = CoroutineScope(Dispatchers.Main + serviceJob)
+    
+    private var stableCount = 0
 
     override fun onStartCommand(intent: Intent?, flags: Int, startId: Int): Int {
         createNotificationChannel()
@@ -79,12 +85,27 @@ class HealthMonitoringService : Service() {
                             latestHr = hr,
                             activityState = UserActivityState.USER_ACTIVITY_PASSIVE, // HMS assumes stationary for now
                             settings = settings,
-                            isWatchingCloser = true
+                            isWatchingCloser = true,
+                            stableCount = stableCount
                         )
 
-                        if (action is MonitoringAction.StopWatchingCloser) {
-                            Log.d("HealthMonitoring", "HR stabilized. Stopping HMS.")
-                            stopSelf()
+                        when (action) {
+                            is MonitoringAction.StopWatchingCloser -> {
+                                Log.d("HealthMonitoring", "HR stabilized or activity changed. Stopping HMS.")
+                                stopSelf()
+                            }
+                            is MonitoringAction.TriggerCriticalAlert -> {
+                                Log.d("HealthMonitoring", "CRITICAL HR detected in HMS!")
+                                wearableCommunicationRepository.sendCriticalHrAlert(action.hr)
+                            }
+                            else -> {
+                                // Update stableCount for next evaluation
+                                if (hr <= settings.effectiveThreshold - 10) {
+                                    stableCount++
+                                } else {
+                                    stableCount = 0
+                                }
+                            }
                         }
                     }
                     is MeasureUpdate.AvailabilityChanged -> {
