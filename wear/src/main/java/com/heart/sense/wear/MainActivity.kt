@@ -8,6 +8,9 @@ import androidx.compose.runtime.*
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.unit.dp
+import androidx.compose.ui.focus.FocusRequester
+import androidx.compose.ui.focus.focusRequester
+import androidx.compose.ui.input.rotary.onRotaryScrollEvent
 import androidx.wear.compose.material.Button
 import androidx.wear.compose.material.Text
 import androidx.wear.compose.material.Switch
@@ -62,6 +65,8 @@ class MainActivity : ComponentActivity() {
         setContent {
             val scope = rememberCoroutineScope()
             val listState = rememberScalingLazyListState()
+            val focusRequester = remember { FocusRequester() }
+            
             val measureFlow = remember { healthServicesRepository.getMeasureData(DataType.HEART_RATE_BPM) }
             val measureUpdate by measureFlow.collectAsState(initial = null)
             
@@ -82,9 +87,23 @@ class MainActivity : ComponentActivity() {
                 }
             }
 
+            // Request focus for rotary input
+            LaunchedEffect(Unit) {
+                focusRequester.requestFocus()
+            }
+
             HeartSenseTheme {
                 ScalingLazyColumn(
-                    modifier = Modifier.fillMaxSize(),
+                    modifier = Modifier
+                        .fillMaxSize()
+                        .onRotaryScrollEvent {
+                            scope.launch {
+                                listState.scrollBy(it.verticalScrollPixels)
+                            }
+                            true
+                        }
+                        .focusRequester(focusRequester)
+                        .focusable(),
                     state = listState,
                     horizontalAlignment = Alignment.CenterHorizontally
                 ) {
