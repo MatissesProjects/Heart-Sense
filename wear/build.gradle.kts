@@ -57,6 +57,11 @@ dependencies {
     implementation(libs.androidx.datastore.preferences)
     implementation(libs.kotlinx.coroutines.play.services)
     implementation("org.jetbrains.kotlinx:kotlinx-coroutines-guava:1.8.1")
+
+    // Room
+    implementation(libs.androidx.room.runtime)
+    implementation(libs.androidx.room.ktx)
+    ksp(libs.androidx.room.compiler)
     
     // Hilt
     implementation(libs.hilt.android)

@@ -3,11 +3,14 @@ package com.heart.sense.wear.di
 import android.content.Context
 import androidx.health.services.client.HealthServices
 import androidx.health.services.client.HealthServicesClient
+import androidx.room.Room
 import com.google.android.gms.wearable.CapabilityClient
 import com.google.android.gms.wearable.DataClient
 import com.google.android.gms.wearable.MessageClient
 import com.google.android.gms.wearable.Wearable
 import com.heart.sense.wear.data.SettingsDataStore
+import com.heart.sense.wear.data.db.HeartSenseDatabase
+import com.heart.sense.wear.data.db.OvernightMeasurementDao
 import dagger.Module
 import dagger.Provides
 import dagger.hilt.InstallIn
@@ -47,5 +50,21 @@ object DataModule {
     @Singleton
     fun provideCapabilityClient(@ApplicationContext context: Context): CapabilityClient {
         return Wearable.getCapabilityClient(context)
+    }
+
+    @Provides
+    @Singleton
+    fun provideDatabase(@ApplicationContext context: Context): HeartSenseDatabase {
+        return Room.databaseBuilder(
+            context,
+            HeartSenseDatabase::class.java,
+            "heart_sense_db"
+        ).build()
+    }
+
+    @Provides
+    @Singleton
+    fun provideOvernightMeasurementDao(database: HeartSenseDatabase): OvernightMeasurementDao {
+        return database.overnightMeasurementDao()
     }
 }
