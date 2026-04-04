@@ -142,6 +142,26 @@ class MainActivity : ComponentActivity() {
 
                     item {
                         Row(verticalAlignment = Alignment.CenterVertically) {
+                            val isSnoozed = settings.isSnoozed
+                            Text(
+                                if (isSnoozed) "Snoozed (${settings.snoozeRemainingMinutes}m)" else "Snooze",
+                                style = MaterialTheme.typography.caption2,
+                                color = if (isSnoozed) androidx.compose.ui.graphics.Color.Red else androidx.compose.ui.graphics.Color.Unspecified
+                            )
+                            Spacer(modifier = Modifier.width(8.dp))
+                            Switch(
+                                checked = isSnoozed,
+                                onCheckedChange = { 
+                                    scope.launch { 
+                                        if (it) settingsRepository.setSnooze(30) else settingsRepository.updateThreshold(settings.highHrThreshold) // Toggle clear via threshold sync
+                                    }
+                                }
+                            )
+                        }
+                    }
+
+                    item {
+                        Row(verticalAlignment = Alignment.CenterVertically) {
                             Text("Stream", style = MaterialTheme.typography.caption2)
                             Spacer(modifier = Modifier.width(8.dp))
                             Switch(

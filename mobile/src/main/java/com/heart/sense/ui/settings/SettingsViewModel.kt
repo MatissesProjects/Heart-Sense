@@ -48,6 +48,17 @@ class SettingsViewModel @Inject constructor(
         }
     }
 
+    fun toggleSnooze() {
+        viewModelScope.launch {
+            val current = settings.value
+            if (current.isSnoozed) {
+                repository.updateSettings(current.copy(snoozeUntil = 0L))
+            } else {
+                repository.setSnooze(30)
+            }
+        }
+    }
+
     fun testAlert() {
         alertsRepository.addAlert((70..150).random(), "Test Alert")
     }

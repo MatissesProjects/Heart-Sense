@@ -33,10 +33,10 @@ fun SettingsScreen(
         Card(modifier = Modifier.fillMaxWidth(), colors = CardDefaults.cardColors(
             containerColor = if (isConnected) MaterialTheme.colorScheme.primaryContainer else MaterialTheme.colorScheme.surfaceVariant
         )) {
-            Row(
+            Column(
                 modifier = Modifier.padding(16.dp),
-                verticalAlignment = Alignment.CenterVertically,
-                horizontalArrangement = Arrangement.Center
+                horizontalAlignment = Alignment.CenterHorizontally,
+                verticalArrangement = Arrangement.spacedBy(8.dp)
             ) {
                 val statusText = when {
                     isConnected && liveHr != null -> "Watch Connected: $liveHr BPM"
@@ -49,19 +49,21 @@ fun SettingsScreen(
                     modifier = Modifier.fillMaxWidth(),
                     textAlign = androidx.compose.ui.text.style.TextAlign.Center
                 )
+
+                if (settings.isSnoozed) {
+                    Text(
+                        text = "ALERTS SNOOZED: ${settings.snoozeRemainingMinutes}m left",
+                        color = MaterialTheme.colorScheme.error,
+                        style = MaterialTheme.typography.bodyMedium
+                    )
+                }
             }
         }
         
         Card(modifier = Modifier.fillMaxWidth()) {
             Column(modifier = Modifier.padding(16.dp), verticalArrangement = Arrangement.spacedBy(8.dp)) {
                 Text("Threshold: ${settings.highHrThreshold} bpm")
-                Slider(
-                    value = settings.highHrThreshold.toFloat(),
-                    onValueChange = { viewModel.updateThreshold(it.toInt()) },
-                    valueRange = 60f..180f,
-                    steps = 24
-                )
-                
+// ...
                 Row(
                     verticalAlignment = Alignment.CenterVertically,
                     horizontalArrangement = Arrangement.spacedBy(8.dp)
@@ -71,6 +73,16 @@ fun SettingsScreen(
                         checked = settings.isSickMode,
                         onCheckedChange = { viewModel.toggleSickMode(it) }
                     )
+                }
+
+                Button(
+                    onClick = { viewModel.toggleSnooze() },
+                    modifier = Modifier.fillMaxWidth(),
+                    colors = ButtonDefaults.buttonColors(
+                        containerColor = if (settings.isSnoozed) MaterialTheme.colorScheme.secondary else MaterialTheme.colorScheme.primary
+                    )
+                ) {
+                    Text(if (settings.isSnoozed) "Clear Snooze" else "Snooze Alerts (30m)")
                 }
             }
         }
