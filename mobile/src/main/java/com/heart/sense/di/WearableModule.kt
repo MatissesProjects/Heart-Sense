@@ -1,8 +1,11 @@
 package com.heart.sense.di
 
 import android.content.Context
+import androidx.room.Room
 import com.google.android.gms.wearable.*
 import com.heart.sense.data.SettingsDataStore
+import com.heart.sense.data.db.HeartSenseDatabase
+import com.heart.sense.data.db.OvernightMeasurementDao
 import dagger.Module
 import dagger.Provides
 import dagger.hilt.InstallIn
@@ -42,5 +45,21 @@ object WearableModule {
     @Singleton
     fun provideNodeClient(@ApplicationContext context: Context): NodeClient {
         return Wearable.getNodeClient(context)
+    }
+
+    @Provides
+    @Singleton
+    fun provideDatabase(@ApplicationContext context: Context): HeartSenseDatabase {
+        return Room.databaseBuilder(
+            context,
+            HeartSenseDatabase::class.java,
+            "heart_sense_db"
+        ).build()
+    }
+
+    @Provides
+    @Singleton
+    fun provideOvernightMeasurementDao(database: HeartSenseDatabase): OvernightMeasurementDao {
+        return database.overnightMeasurementDao()
     }
 }
