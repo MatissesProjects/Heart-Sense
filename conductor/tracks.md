@@ -8,3 +8,4 @@
 | `004-active-monitor` | Watching Closer | Implement Foreground Service and MeasureClient for real-time tracking. | Completed |
 | `005-alerts` | Alerting System | Implement cross-device communication and UI notifications. | Completed |
 | `006-sick-mode` | Health Context | Implement "Sick Mode" logic to adjust thresholds dynamically. | Completed |
+| `007-optimization` | Optimization | Consolidate logic and improve battery/comm efficiency. | Active |
