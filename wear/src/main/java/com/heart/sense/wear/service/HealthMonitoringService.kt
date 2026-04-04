@@ -40,6 +40,10 @@ class HealthMonitoringService : Service() {
         createNotificationChannel()
         val notification = createNotification("Monitoring Heart Rate...")
         
+        serviceScope.launch {
+            settingsDataStore.setMonitoringActive(true)
+        }
+
         ServiceCompat.startForeground(
             this,
             1,
@@ -118,5 +122,8 @@ class HealthMonitoringService : Service() {
     override fun onDestroy() {
         super.onDestroy()
         serviceJob.cancel()
+        runBlocking {
+            settingsDataStore.setMonitoringActive(false)
+        }
     }
 }

@@ -80,6 +80,12 @@ class PassiveMonitoringService : PassiveListenerService() {
         Log.d("PassiveMonitoring", "New HR: $latestHr BPM, Activity: $lastActivityState")
 
         scope.launch {
+            val isHMSActive = settingsDataStore.isMonitoringActive.first()
+            if (isHMSActive) {
+                Log.d("PassiveMonitoring", "HMS is already active, skipping passive processing.")
+                return@launch
+            }
+
             val settings = settingsDataStore.settings.first()
             val action = HeartRateEvaluator.evaluate(
                 latestHr = latestHr,

@@ -19,6 +19,7 @@ class SettingsDataStore @Inject constructor(
 ) {
     private val HIGH_HR_THRESHOLD = intPreferencesKey("high_hr_threshold")
     private val IS_SICK_MODE = booleanPreferencesKey("is_sick_mode")
+    private val IS_MONITORING_ACTIVE = booleanPreferencesKey("is_monitoring_active")
 
     val settings: Flow<Settings> = context.dataStore.data.map { preferences ->
         Settings(
@@ -27,10 +28,20 @@ class SettingsDataStore @Inject constructor(
         )
     }
 
+    val isMonitoringActive: Flow<Boolean> = context.dataStore.data.map { preferences ->
+        preferences[IS_MONITORING_ACTIVE] ?: false
+    }
+
     suspend fun updateSettings(highHrThreshold: Int, isSickMode: Boolean) {
         context.dataStore.edit { preferences ->
             preferences[HIGH_HR_THRESHOLD] = highHrThreshold
             preferences[IS_SICK_MODE] = isSickMode
+        }
+    }
+
+    suspend fun setMonitoringActive(active: Boolean) {
+        context.dataStore.edit { preferences ->
+            preferences[IS_MONITORING_ACTIVE] = active
         }
     }
 }
