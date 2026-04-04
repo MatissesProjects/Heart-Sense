@@ -23,16 +23,18 @@ class SettingsRepository @Inject constructor(
     private var syncJob: Job? = null
 
     suspend fun updateThreshold(threshold: Int) {
+        val timestamp = System.currentTimeMillis()
         val current = settingsDataStore.settings.first()
-        val updated = current.copy(highHrThreshold = threshold)
-        settingsDataStore.updateSettings(updated.highHrThreshold, updated.isSickMode)
+        val updated = current.copy(highHrThreshold = threshold, lastUpdated = timestamp)
+        settingsDataStore.updateSettings(updated.highHrThreshold, updated.isSickMode, updated.lastUpdated)
         debouncedSync(updated)
     }
 
     suspend fun toggleSickMode(isSick: Boolean) {
+        val timestamp = System.currentTimeMillis()
         val current = settingsDataStore.settings.first()
-        val updated = current.copy(isSickMode = isSick)
-        settingsDataStore.updateSettings(updated.highHrThreshold, updated.isSickMode)
+        val updated = current.copy(isSickMode = isSick, lastUpdated = timestamp)
+        settingsDataStore.updateSettings(updated.highHrThreshold, updated.isSickMode, updated.lastUpdated)
         debouncedSync(updated)
     }
 
@@ -48,6 +50,7 @@ class SettingsRepository @Inject constructor(
         val request = PutDataMapRequest.create(Constants.PATH_SETTINGS).apply {
             dataMap.putInt(Constants.KEY_HIGH_HR_THRESHOLD, settings.highHrThreshold)
             dataMap.putBoolean(Constants.KEY_IS_SICK_MODE, settings.isSickMode)
+            dataMap.putLong("last_updated", settings.lastUpdated)
         }.asPutDataRequest().setUrgent()
         
         try {

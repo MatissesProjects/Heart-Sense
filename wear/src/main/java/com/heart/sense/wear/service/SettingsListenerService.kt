@@ -9,6 +9,7 @@ import dagger.hilt.android.AndroidEntryPoint
 import kotlinx.coroutines.CoroutineScope
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.SupervisorJob
+import kotlinx.coroutines.flow.first
 import kotlinx.coroutines.launch
 import javax.inject.Inject
 
@@ -26,9 +27,13 @@ class SettingsListenerService : WearableListenerService() {
                 val dataMap = DataMapItem.fromDataItem(event.dataItem).dataMap
                 val threshold = dataMap.getInt(Constants.KEY_HIGH_HR_THRESHOLD)
                 val isSick = dataMap.getBoolean(Constants.KEY_IS_SICK_MODE)
+                val timestamp = dataMap.getLong("last_updated")
                 
                 scope.launch {
-                    settingsDataStore.updateSettings(threshold, isSick)
+                    val current = settingsDataStore.settings.first()
+                    if (timestamp > current.lastUpdated) {
+                        settingsDataStore.updateSettings(threshold, isSick, timestamp)
+                    }
                 }
             }
         }
