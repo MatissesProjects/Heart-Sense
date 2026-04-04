@@ -11,18 +11,12 @@ import androidx.compose.ui.unit.dp
 import androidx.compose.ui.focus.FocusRequester
 import androidx.compose.ui.focus.focusRequester
 import androidx.compose.ui.input.rotary.onRotaryScrollEvent
-import androidx.wear.compose.material.Button
-import androidx.wear.compose.material.Text
-import androidx.wear.compose.material.Switch
-import androidx.wear.compose.material.InlineSlider
-import androidx.wear.compose.material.MaterialTheme
-import androidx.wear.compose.material.Icon
-import androidx.wear.compose.material.ScalingLazyColumn
-import androidx.wear.compose.material.rememberScalingLazyListState
+import androidx.wear.compose.material.*
 import androidx.lifecycle.lifecycleScope
 import androidx.health.services.client.data.DataType
 import com.heart.sense.wear.data.WearableCommunicationRepository
 import com.heart.sense.wear.data.HealthServicesRepository
+import com.heart.sense.wear.data.Settings
 import com.heart.sense.wear.service.PassiveMonitoringService
 import com.heart.sense.wear.ui.theme.HeartSenseTheme
 import dagger.hilt.android.AndroidEntryPoint
@@ -70,7 +64,7 @@ class MainActivity : ComponentActivity() {
             val measureFlow = remember { healthServicesRepository.getMeasureData(DataType.HEART_RATE_BPM) }
             val measureUpdate by measureFlow.collectAsState(initial = null)
             
-            val settings by settingsDataStore.settings.collectAsState(initial = com.heart.sense.wear.data.Settings())
+            val settings by settingsDataStore.settings.collectAsState(initial = Settings())
             
             val currentHr = when (val update = measureUpdate) {
                 is com.heart.sense.wear.data.MeasureUpdate.DataReceived -> {
@@ -110,6 +104,12 @@ class MainActivity : ComponentActivity() {
                     item {
                         Text("HR: ${currentHr ?: "--"} BPM", style = MaterialTheme.typography.title1)
                     }
+
+                    if (settings.isCalibrating || settings.isCalibrated) {
+                        item {
+                            CalibrationProgressItem(settings)
+                        }
+                    }
                     
                     item {
                         Column(horizontalAlignment = Alignment.CenterHorizontally) {
@@ -121,6 +121,7 @@ class MainActivity : ComponentActivity() {
                                 },
                                 valueRange = 60f..180f,
                                 steps = 24,
+                                enabled = !settings.isCalibrating,
                                 decreaseIcon = { Icon(android.R.drawable.ic_media_previous, "Decrease") },
                                 increaseIcon = { Icon(android.R.drawable.ic_media_next, "Increase") }
                             )
@@ -153,7 +154,7 @@ class MainActivity : ComponentActivity() {
                                 checked = isSnoozed,
                                 onCheckedChange = { 
                                     scope.launch { 
-                                        if (it) settingsRepository.setSnooze(30) else settingsRepository.updateThreshold(settings.highHrThreshold) // Toggle clear via threshold sync
+                                        if (it) settingsRepository.setSnooze(30) else settingsRepository.updateThreshold(settings.highHrThreshold)
                                     }
                                 }
                             )
@@ -171,6 +172,19 @@ class MainActivity : ComponentActivity() {
                         }
                     }
 
+                    if (!settings.isCalibrating && !settings.isCalibrated) {
+                        item {
+                            Button(onClick = { 
+                                scope.launch { settingsRepository.updateThreshold(settings.highHrThreshold) // Logic to trigger start can be added to repository
+                                    // Or call startCalibration directly if exposed
+                                    settingsDataStore.startCalibration()
+                                }
+                            }, modifier = Modifier.fillMaxWidth()) {
+                                Text("Start Calibration", style = MaterialTheme.typography.caption2)
+                            }
+                        }
+                    }
+
                     item {
                         Button(onClick = {
                             currentHr?.let { hr ->
@@ -183,6 +197,33 @@ class MainActivity : ComponentActivity() {
                         }
                     }
                 }
+            }
+        }
+    }
+
+    @Composable
+    fun CalibrationProgressItem(settings: Settings) {
+        val durationHours = if (settings.isCalibrating) {
+            (System.currentTimeMillis() - settings.calibrationStartTime) / (1000 * 60 * 60)
+        } else {
+            0L
+        }
+        val totalHours = 48f
+        
+        Column(horizontalAlignment = Alignment.CenterHorizontally, modifier = Modifier.padding(8.dp)) {
+            if (settings.isCalibrating) {
+                Box(contentAlignment = Alignment.Center, modifier = Modifier.size(40.dp)) {
+                    CircularProgressIndicator(
+                        progress = (durationHours.toFloat() / totalHours).coerceIn(0f, 1f),
+                        modifier = Modifier.fillMaxSize(),
+                        strokeWidth = 3.dp
+                    )
+                    Text("${(durationHours.toFloat() / totalHours * 100).toInt()}%", style = MaterialTheme.typography.caption3)
+                }
+                Text("Calibrating (${durationHours}h)", style = MaterialTheme.typography.caption2)
+            } else {
+                Text("✅ Calibrated", color = androidx.compose.ui.graphics.Color.Green, style = MaterialTheme.typography.caption1)
+                Text("RHR: ${settings.restingHr} BPM", style = MaterialTheme.typography.caption2)
             }
         }
     }
