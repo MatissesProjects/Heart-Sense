@@ -61,7 +61,8 @@ class SyncListenerService : WearableListenerService() {
                         timestamp = parts[0].toLong(),
                         heartRate = parts[1].toInt(),
                         respiratoryRate = parts[2].toFloatOrNull(),
-                        activityState = parts[3].toInt()
+                        activityState = parts[3].toInt(),
+                        rrIntervals = if (parts.size >= 5) parts[4] else null
                     )
                 } else null
             } catch (e: Exception) {

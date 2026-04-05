@@ -18,7 +18,6 @@ import com.patrykandpatrick.vico.compose.chart.line.lineChart
 import com.patrykandpatrick.vico.compose.component.shapeComponent
 import com.patrykandpatrick.vico.compose.component.textComponent
 import com.patrykandpatrick.vico.core.chart.decoration.ThresholdLine
-import com.patrykandpatrick.vico.core.component.shape.Shapes
 import com.patrykandpatrick.vico.core.entry.ChartEntryModelProducer
 import com.patrykandpatrick.vico.core.entry.FloatEntry
 import java.time.format.DateTimeFormatter
@@ -43,9 +42,9 @@ fun HealthDashboard(
         
         Spacer(modifier = Modifier.height(24.dp))
         
-        Text("Respiratory Rate (BRPM)", style = MaterialTheme.typography.titleMedium, fontWeight = FontWeight.Bold)
+        Text("HRV (RMSSD ms)", style = MaterialTheme.typography.titleMedium, fontWeight = FontWeight.Bold)
         Spacer(modifier = Modifier.height(8.dp))
-        RrChart(dailyAverages)
+        HrvChart(dailyAverages)
 
         Spacer(modifier = Modifier.height(24.dp))
 
@@ -94,12 +93,12 @@ fun HrChart(dailyAverages: List<DailyAverage>, settings: Settings) {
 }
 
 @Composable
-fun RrChart(dailyAverages: List<DailyAverage>) {
+fun HrvChart(dailyAverages: List<DailyAverage>) {
     val modelProducer = remember { ChartEntryModelProducer() }
     
     LaunchedEffect(dailyAverages) {
         val entries = dailyAverages.mapIndexed { index, average ->
-            FloatEntry(index.toFloat(), average.avgRr)
+            FloatEntry(index.toFloat(), average.hrvRmssd)
         }
         modelProducer.setEntries(entries)
     }
@@ -124,9 +123,9 @@ fun SummaryHeader() {
         horizontalArrangement = Arrangement.SpaceBetween
     ) {
         Text("Date", modifier = Modifier.weight(1f), fontWeight = FontWeight.Bold)
-        Text("HR", modifier = Modifier.weight(1f), fontWeight = FontWeight.Bold)
-        Text("RR", modifier = Modifier.weight(1f), fontWeight = FontWeight.Bold)
-        Text("Status", modifier = Modifier.weight(1.5f), fontWeight = FontWeight.Bold)
+        Text("HR", modifier = Modifier.weight(0.8f), fontWeight = FontWeight.Bold)
+        Text("HRV", modifier = Modifier.weight(0.8f), fontWeight = FontWeight.Bold)
+        Text("Status", modifier = Modifier.weight(1.2f), fontWeight = FontWeight.Bold)
     }
 }
 
@@ -143,8 +142,8 @@ fun DailyAverageRow(average: DailyAverage) {
         verticalAlignment = Alignment.CenterVertically
     ) {
         Text(average.date.format(DateTimeFormatter.ofPattern("MMM dd")), modifier = Modifier.weight(1f))
-        Text("${average.avgHr}", modifier = Modifier.weight(1f))
-        Text("%.1f".format(average.avgRr), modifier = Modifier.weight(1f))
+        Text("${average.avgHr}", modifier = Modifier.weight(0.8f))
+        Text("${average.hrvRmssd.toInt()}", modifier = Modifier.weight(0.8f))
         
         val statusText = if (average.isAlertTriggered) {
             average.alertType ?: "Alert"
@@ -155,7 +154,7 @@ fun DailyAverageRow(average: DailyAverage) {
         
         Text(
             statusText,
-            modifier = Modifier.weight(1.5f),
+            modifier = Modifier.weight(1.2f),
             color = statusColor,
             fontWeight = FontWeight.SemiBold
         )

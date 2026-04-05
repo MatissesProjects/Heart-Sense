@@ -5,18 +5,20 @@ import com.heart.sense.wear.data.db.OvernightMeasurementDao
 import com.heart.sense.wear.util.Constants
 import javax.inject.Inject
 import javax.inject.Singleton
+import kotlin.math.sqrt
 
 @Singleton
 class OvernightDataRepository @Inject constructor(
     private val dao: OvernightMeasurementDao,
     private val communicationRepository: WearableCommunicationRepository
 ) {
-    suspend fun storeMeasurement(heartRate: Int, respiratoryRate: Float?, activityState: Int) {
+    suspend fun storeMeasurement(heartRate: Int, respiratoryRate: Float?, activityState: Int, rrIntervals: List<Long>? = null) {
         val measurement = OvernightMeasurement(
             timestamp = System.currentTimeMillis(),
             heartRate = heartRate,
             respiratoryRate = respiratoryRate,
-            activityState = activityState
+            activityState = activityState,
+            rrIntervals = rrIntervals?.joinToString(",")
         )
         dao.insert(measurement)
     }
@@ -26,16 +28,33 @@ class OvernightDataRepository @Inject constructor(
         val startTime = endTime - (hours * 60 * 60 * 1000L)
         
         val measurements = dao.getMeasurementsInRange(startTime, endTime)
-        if (measurements.isEmpty()) return OvernightAverages(0, 0f, 0)
+        if (measurements.isEmpty()) return OvernightAverages(0, 0f, 0, 0f)
 
         val hrSamples = measurements.map { it.heartRate }.filter { it > 0 }
         val rrSamples = measurements.mapNotNull { it.respiratoryRate }.filter { it > 0 }
+        
+        // Extract all RR intervals for HRV calculation
+        val allRrIntervals = measurements.mapNotNull { it.rrIntervals }
+            .flatMap { it.split(",").mapNotNull { s -> s.toLongOrNull() } }
 
         return OvernightAverages(
             avgHr = if (hrSamples.isNotEmpty()) hrSamples.average().toInt() else 0,
             avgRr = if (rrSamples.isNotEmpty()) rrSamples.average().toFloat() else 0f,
-            sampleCount = measurements.size
+            sampleCount = measurements.size,
+            hrvRmssd = calculateRMSSD(allRrIntervals)
         )
+    }
+
+    private fun calculateRMSSD(intervals: List<Long>): Float {
+        if (intervals.size < 2) return 0f
+        
+        var sumSquaredDiffs = 0.0
+        for (i in 0 until intervals.size - 1) {
+            val diff = (intervals[i+1] - intervals[i]).toDouble()
+            sumSquaredDiffs += diff * diff
+        }
+        
+        return sqrt(sumSquaredDiffs / (intervals.size - 1)).toFloat()
     }
 
     suspend fun syncMeasurementsToPhone() {
@@ -51,9 +70,9 @@ class OvernightDataRepository @Inject constructor(
             val end = minOf(i + batchSize, measurements.size)
             val batch = measurements.subList(i, end)
             
-            // Format: timestamp|hr|rr|activity
+            // Format: timestamp|hr|rr|activity|rrIntervals
             val serialized = batch.joinToString("\n") { m ->
-                "${m.timestamp}|${m.heartRate}|${m.respiratoryRate ?: 0f}|${m.activityState}"
+                "${m.timestamp}|${m.heartRate}|${m.respiratoryRate ?: 0f}|${m.activityState}|${m.rrIntervals ?: ""}"
             }
             
             communicationRepository.sendMessageToPhone(Constants.PATH_SYNC_BATCH, serialized.toByteArray())
@@ -69,5 +88,6 @@ class OvernightDataRepository @Inject constructor(
 data class OvernightAverages(
     val avgHr: Int,
     val avgRr: Float,
-    val sampleCount: Int
+    val sampleCount: Int,
+    val hrvRmssd: Float
 )

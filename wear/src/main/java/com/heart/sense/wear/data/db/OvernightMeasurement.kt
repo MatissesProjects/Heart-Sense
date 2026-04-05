@@ -9,5 +9,6 @@ data class OvernightMeasurement(
     val timestamp: Long,
     val heartRate: Int,
     val respiratoryRate: Float?,
-    val activityState: Int // Store UserActivityState as Int
+    val activityState: Int, // Store UserActivityState as Int
+    val rrIntervals: String? = null // Store as JSON list of Long (ms)
 )

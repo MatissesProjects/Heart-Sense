@@ -103,22 +103,30 @@ class PassiveMonitoringService : PassiveListenerService() {
             
             if (hrDataPoints.isEmpty()) return@launch
 
-            val latestHr = hrDataPoints.last().value.toInt()
+            val latestDataPoint = hrDataPoints.last()
+            val latestHr = latestDataPoint.value.toInt()
+            
+            // Extract RR intervals from metadata if available
+            // Key: "androidx.health.services.client.data.DataPoint.HEART_RATE_RR_INTERVALS"
+            val rrIntervals = try {
+                latestDataPoint.metadata.getLongArray("androidx.health.services.client.data.DataPoint.HEART_RATE_RR_INTERVALS")?.toList()
+            } catch (e: Exception) {
+                null
+            }
             
             // Try to get RR if available, otherwise 0
             val latestRr = try {
-                // We use a generic approach if we are unsure about the exact RR DataType constant name
-                // or just skip it if it fails
                 0f 
             } catch (e: Exception) { 0f }
             
-            Log.d("PassiveMonitoring", "New HR: $latestHr BPM, Activity: $lastActivityState")
+            Log.d("PassiveMonitoring", "New HR: $latestHr BPM, RR Intervals: ${rrIntervals?.size ?: 0}")
 
             // Store for overnight analysis
             overnightDataRepository.storeMeasurement(
                 latestHr, 
                 if (latestRr > 0) latestRr else null, 
-                lastActivityState.id
+                lastActivityState.id,
+                rrIntervals
             )
 
             // Process for calibration

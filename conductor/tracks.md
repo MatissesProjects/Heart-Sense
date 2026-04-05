@@ -14,7 +14,7 @@
 | `010-illness-detection` | Illness Detection | Automated analysis of overnight health metric deviations. | Completed |
 | `011-health-dashboard` | Health Dashboard | Visualize historical trends and alert triggers on phone. | Completed |
 | `012-measurement-sync` | Measurement Sync | Efficient bulk data transfer from watch to phone. | Completed |
-| `013-hrv-tracking` | HRV Analytics | RMSSD calculation and overnight variability trends. | Planned |
+| `013-hrv-tracking` | HRV Analytics | RMSSD calculation and overnight variability trends. | Completed |
 | `014-ecg-afib` | ECG & AFib | Prompt for manual ECG on irregular rhythm detection. | Planned |
 | `015-ai-baseline` | AI Baseline | On-device adaptive thresholds using historical metrics. | Planned |
 | `016-emergency-response`| Emergency Response | Automated escalation to contacts during critical events. | Planned |
