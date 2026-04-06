@@ -23,6 +23,7 @@ fun SettingsScreen(
     val liveHr by viewModel.liveHr.collectAsState()
     val isConnected by viewModel.isWatchConnected.collectAsState()
     val dailyAverages by viewModel.dailyAverages.collectAsState()
+    val aiBaseline by viewModel.aiBaseline.collectAsState()
 
     val calibrationDurationHours = if (settings.isCalibrating) {
         (System.currentTimeMillis() - settings.calibrationStartTime) / (1000 * 60 * 60)
@@ -132,6 +133,23 @@ fun SettingsScreen(
         item {
             Button(onClick = { viewModel.testAlert() }) {
                 Text("Send Test Alert")
+            }
+        }
+
+        item {
+            Card(modifier = Modifier.fillMaxWidth()) {
+                Column(modifier = Modifier.padding(16.dp), verticalArrangement = Arrangement.spacedBy(8.dp)) {
+                    Text("Adaptive Health Baseline", style = MaterialTheme.typography.titleMedium, fontWeight = FontWeight.Bold)
+                    Text("Your current AI Baseline Resting HR is $aiBaseline BPM. This is used to automatically set your alert thresholds.", style = MaterialTheme.typography.bodySmall)
+                    
+                    Button(
+                        onClick = { viewModel.recalculateBaseline() },
+                        modifier = Modifier.fillMaxWidth(),
+                        enabled = dailyAverages.size >= 1
+                    ) {
+                        Text("Recalculate Baseline (7-Day)")
+                    }
+                }
             }
         }
 

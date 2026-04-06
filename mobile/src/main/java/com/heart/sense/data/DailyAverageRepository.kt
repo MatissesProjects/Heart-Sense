@@ -58,6 +58,36 @@ class DailyAverageRepository @Inject constructor(
         }.sortedBy { it.date }
     }
 
+    suspend fun calculateAdaptiveBaseline(): Int {
+        val averages = getDailyAverages(7)
+        if (averages.isEmpty()) return 0
+        
+        // Simple weighted moving average (more weight to recent days)
+        val validAverages = averages.filter { it.avgHr > 0 }
+        if (validAverages.isEmpty()) return 0
+        
+        var weightedSum = 0.0
+        var weightTotal = 0.0
+        
+        validAverages.forEachIndexed { index, dailyAverage ->
+            val weight = (index + 1).toDouble()
+            weightedSum += dailyAverage.avgHr * weight
+            weightTotal += weight
+        }
+        
+        return (weightedSum / weightTotal).toInt()
+    }
+
+    suspend fun getBaselineDeviation(): Float {
+        val currentBaseline = calculateAdaptiveBaseline()
+        val settings = settingsDataStore.settings.first()
+        val lastStoredRhr = settings.restingHr
+        
+        if (lastStoredRhr == 0 || currentBaseline == 0) return 0f
+        
+        return (currentBaseline - lastStoredRhr).toFloat() / lastStoredRhr
+    }
+
     private fun calculateRMSSD(intervals: List<Long>): Float {
         if (intervals.size < 2) return 0f
         

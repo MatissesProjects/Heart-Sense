@@ -17,10 +17,35 @@ import kotlinx.coroutines.launch
 @Singleton
 class SettingsRepository @Inject constructor(
     private val dataClient: DataClient,
-    private val settingsDataStore: SettingsDataStore
+    private val settingsDataStore: SettingsDataStore,
+    private val dailyAverageRepository: DailyAverageRepository,
+    private val alertsRepository: AlertsRepository
 ) {
     private val scope = CoroutineScope(Dispatchers.IO)
     private var syncJob: Job? = null
+
+    suspend fun refreshAdaptiveBaseline() {
+        val newBaseline = dailyAverageRepository.calculateAdaptiveBaseline()
+        if (newBaseline == 0) return
+
+        val deviation = dailyAverageRepository.getBaselineDeviation()
+        if (kotlin.math.abs(deviation) > 0.15f) {
+            alertsRepository.addAlert(newBaseline, "Significant Baseline Shift (${(deviation * 100).toInt()}%)")
+        }
+
+        val current = settingsDataStore.settings.first()
+        val baseThreshold = if (current.isSickMode) 20 else 30
+        val newThreshold = newBaseline + baseThreshold
+
+        val updated = current.copy(
+            restingHr = newBaseline,
+            highHrThreshold = newThreshold,
+            lastUpdated = System.currentTimeMillis()
+        )
+        
+        settingsDataStore.updateSettings(updated)
+        debouncedSync(updated)
+    }
 
     suspend fun updateSettings(settings: Settings) {
         val timestamp = System.currentTimeMillis()

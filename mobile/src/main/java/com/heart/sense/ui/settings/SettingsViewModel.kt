@@ -39,8 +39,20 @@ class SettingsViewModel @Inject constructor(
     private val _dailyAverages = MutableStateFlow<List<DailyAverage>>(emptyList())
     val dailyAverages: StateFlow<List<DailyAverage>> = _dailyAverages.asStateFlow()
 
+    val aiBaseline: StateFlow<Int> = settingsDataStore.settings.map { it.restingHr }.stateIn(
+        scope = viewModelScope,
+        started = SharingStarted.WhileSubscribed(5000),
+        initialValue = 0
+    )
+
     init {
         refreshDailyAverages()
+    }
+
+    fun recalculateBaseline() {
+        viewModelScope.launch {
+            repository.refreshAdaptiveBaseline()
+        }
     }
 
     fun refreshDailyAverages() {
