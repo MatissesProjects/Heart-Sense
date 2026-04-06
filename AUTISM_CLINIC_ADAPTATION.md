@@ -57,6 +57,18 @@ Sudden changes in physical activity can indicate agitation or a need for a chang
 -   **Pacing Detection:** Detect repetitive walking patterns (pacing) within a confined area using a combination of step counts and orientation changes.
 -   **Proactive Support:** If pacing is detected alongside elevated HR, the system can suggest a calming activity before the behavior escalates.
 
+### 7. Predictive Stress AI (Precursor Detection)
+Modern clinical research suggests that physiological "precursors" appear minutes before visible stress behaviors.
+-   **Mechanism:** Combine Heart Rate, HRV, and (if hardware supported) Electrodermal Activity (EDA) into a multi-modal stress score.
+-   **Forecasting:** Use on-device machine learning (e.g., TensorFlow Lite) to identify trends that historically precede meltdowns, providing a "10-minute warning" to caregivers.
+-   **Personalization:** The AI model should "learn" the specific physiological signature of stress for each individual user over a 14-day baseline period.
+
+### 8. Environmental & Contextual Correlation
+Sensory triggers (noise, light) are often the root cause of stress in an Autism clinic.
+-   **Mechanism:** Use the watch's microphone to monitor **Ambient Noise Levels** (dB) and the ambient light sensor.
+-   **Correlation:** Automatically correlate noise "spikes" with Heart Rate increases.
+-   **Insight:** "User's heart rate spiked 20% immediately following a 90dB noise event." This provides clinicians with actionable data to modify the environment.
+
 ---
 
 ## 🛠 Technical Implementation Roadmap
