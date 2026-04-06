@@ -1,10 +1,15 @@
 package com.heart.sense.wear.service
 
+import android.app.Notification
+import android.app.NotificationChannel
+import android.app.NotificationManager
+import android.app.PendingIntent
 import android.content.BroadcastReceiver
 import android.content.Context
 import android.content.Intent
 import android.content.IntentFilter
 import android.util.Log
+import androidx.core.app.NotificationCompat
 import androidx.health.services.client.PassiveListenerService
 import androidx.health.services.client.data.*
 import com.heart.sense.wear.data.SettingsDataStore
@@ -13,6 +18,8 @@ import com.heart.sense.wear.data.CalibrationRepository
 import com.heart.sense.wear.data.OvernightDataRepository
 import com.heart.sense.wear.util.HeartRateEvaluator
 import com.heart.sense.wear.util.MonitoringAction
+import com.heart.sense.wear.util.RhythmEvaluator
+import com.heart.sense.wear.util.RhythmState
 import dagger.hilt.android.AndroidEntryPoint
 import kotlinx.coroutines.CoroutineScope
 import kotlinx.coroutines.Dispatchers
@@ -63,6 +70,7 @@ class PassiveMonitoringService : PassiveListenerService() {
             addAction(Intent.ACTION_SCREEN_ON)
         }
         registerReceiver(receiver, filter)
+        createNotificationChannel()
     }
 
     override fun onDestroy() {
@@ -107,24 +115,28 @@ class PassiveMonitoringService : PassiveListenerService() {
             val latestHr = latestDataPoint.value.toInt()
             
             // Extract RR intervals from metadata if available
-            // Key: "androidx.health.services.client.data.DataPoint.HEART_RATE_RR_INTERVALS"
             val rrIntervals = try {
                 latestDataPoint.metadata.getLongArray("androidx.health.services.client.data.DataPoint.HEART_RATE_RR_INTERVALS")?.toList()
             } catch (e: Exception) {
                 null
             }
             
-            // Try to get RR if available, otherwise 0
-            val latestRr = try {
-                0f 
-            } catch (e: Exception) { 0f }
-            
             Log.d("PassiveMonitoring", "New HR: $latestHr BPM, RR Intervals: ${rrIntervals?.size ?: 0}")
+
+            // Rhythm evaluation (only if stationary)
+            if (lastActivityState == UserActivityState.USER_ACTIVITY_PASSIVE || 
+                lastActivityState == UserActivityState.USER_ACTIVITY_ASLEEP) {
+                val rhythmState = RhythmEvaluator.evaluate(rrIntervals)
+                if (rhythmState == RhythmState.IRREGULAR) {
+                    Log.w("PassiveMonitoring", "Irregular rhythm detected!")
+                    triggerIrregularRhythmAlert()
+                }
+            }
 
             // Store for overnight analysis
             overnightDataRepository.storeMeasurement(
                 latestHr, 
-                if (latestRr > 0) latestRr else null, 
+                null, // RR Placeholder
                 lastActivityState.id,
                 rrIntervals
             )
@@ -138,7 +150,7 @@ class PassiveMonitoringService : PassiveListenerService() {
                 activityState = lastActivityState,
                 settings = settings,
                 isWatchingCloser = false,
-                respiratoryRate = if (latestRr > 0) latestRr else null
+                respiratoryRate = null
             )
 
             when (action) {
@@ -188,5 +200,46 @@ class PassiveMonitoringService : PassiveListenerService() {
         scope.launch {
             wearableCommunicationRepository.sendSitDownWarning(hr)
         }
+    }
+
+    private fun triggerIrregularRhythmAlert() {
+        val notificationManager = getSystemService(Context.NOTIFICATION_SERVICE) as NotificationManager
+        notificationManager.notify(200, createIrregularRhythmNotification())
+        
+        scope.launch {
+            wearableCommunicationRepository.sendIrregularRhythmAlert()
+        }
+    }
+
+    private fun createNotificationChannel() {
+        val channel = NotificationChannel(
+            "rhythm_alerts",
+            "Heart Rhythm Alerts",
+            NotificationManager.IMPORTANCE_HIGH
+        )
+        val manager = getSystemService(NotificationManager::class.java)
+        manager.createNotificationChannel(channel)
+    }
+
+    private fun createIrregularRhythmNotification(): Notification {
+        val ecgIntent = packageManager.getLaunchIntentForPackage("com.fitbit.ecg")
+        val pendingIntent = if (ecgIntent != null) {
+            PendingIntent.getActivity(this, 0, ecgIntent, PendingIntent.FLAG_IMMUTABLE)
+        } else {
+            null
+        }
+
+        val builder = NotificationCompat.Builder(this, "rhythm_alerts")
+            .setContentTitle("Irregular Rhythm")
+            .setContentText("A possible irregular heart rhythm was detected. Please take an ECG.")
+            .setSmallIcon(android.R.drawable.ic_dialog_alert)
+            .setPriority(NotificationCompat.PRIORITY_HIGH)
+            .setAutoCancel(true)
+
+        if (pendingIntent != null) {
+            builder.addAction(android.R.drawable.ic_media_play, "Launch ECG", pendingIntent)
+        }
+
+        return builder.build()
     }
 }

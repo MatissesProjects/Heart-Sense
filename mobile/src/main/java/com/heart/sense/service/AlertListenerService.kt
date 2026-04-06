@@ -52,7 +52,30 @@ class AlertListenerService : WearableListenerService() {
                     showIllnessNotification(data[0], data[1].toInt(), data[2].toFloat())
                 }
             }
+            Constants.PATH_IRREGULAR_RHYTHM -> {
+                Log.d("AlertListenerService", "Irregular Rhythm Alert received")
+                alertsRepository.addAlert(0, "Irregular Rhythm") // Use 0 or current live HR
+                showIrregularRhythmNotification()
+            }
         }
+    }
+
+    private fun showIrregularRhythmNotification() {
+        val notificationManager = getSystemService(Context.NOTIFICATION_SERVICE) as NotificationManager
+        val channelId = "illness_alerts"
+        
+        val message = "A possible irregular heart rhythm was detected by your watch. Please use the ECG app on your watch to verify."
+
+        val notification = NotificationCompat.Builder(this, channelId)
+            .setSmallIcon(android.R.drawable.ic_dialog_alert)
+            .setContentTitle("Irregular Rhythm Detected")
+            .setContentText(message)
+            .setStyle(NotificationCompat.BigTextStyle().bigText(message))
+            .setPriority(NotificationCompat.PRIORITY_HIGH)
+            .setAutoCancel(true)
+            .build()
+
+        notificationManager.notify(104, notification)
     }
 
     private fun showIllnessNotification(risk: String, hrElevation: Int, rrElevation: Float) {

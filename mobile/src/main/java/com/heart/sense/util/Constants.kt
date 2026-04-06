@@ -7,9 +7,11 @@ object Constants {
     const val PATH_CRITICAL_HR = "/critical_hr"
     const val PATH_SIT_DOWN = "/sit_down"
     const val PATH_LIVE_HR = "/live_hr"
-    const val PATH_STOP_HMS = "/stop_hms"
     const val PATH_ILLNESS_ALERT = "/illness_alert"
+    const val PATH_IRREGULAR_RHYTHM = "/irregular_rhythm"
+    const val PATH_STOP_HMS = "/stop_hms"
     const val PATH_REQUEST_SYNC = "/request_sync"
+
     const val PATH_SYNC_BATCH = "/sync_batch"
 
     // Data Map Keys

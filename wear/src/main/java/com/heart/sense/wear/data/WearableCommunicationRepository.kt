@@ -37,6 +37,10 @@ class WearableCommunicationRepository @Inject constructor(
         sendMessageToPhone(Constants.PATH_ILLNESS_ALERT, data.toByteArray())
     }
 
+    suspend fun sendIrregularRhythmAlert() {
+        sendMessageToPhone(Constants.PATH_IRREGULAR_RHYTHM, byteArrayOf())
+    }
+
     suspend fun sendMessageToPhone(path: String, data: ByteArray) {
         try {
             val capabilityInfo = capabilityClient.getCapability(PHONE_CAPABILITY, CapabilityClient.FILTER_REACHABLE).await()
