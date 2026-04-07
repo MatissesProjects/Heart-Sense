@@ -17,8 +17,8 @@
 | `013-hrv-tracking` | HRV Analytics | RMSSD calculation and overnight variability trends. | Completed |
 | `014-ecg-afib` | ECG & AFib | Prompt for manual ECG on irregular rhythm detection. | Completed |
 | `015-ai-baseline` | AI Baseline | On-device adaptive thresholds using historical metrics. | Completed |
-| `016-emergency-response`| Emergency Response | Automated escalation to contacts during critical events. | In Progress |
-| `017-health-connect` | Health Connect | Bi-directional sync with Google Health Connect ecosystem. | Planned |
+| `016-emergency-response`| Emergency Response | Automated escalation to contacts during critical events. | Completed |
+| `017-health-connect` | Health Connect | Bi-directional sync with Google Health Connect ecosystem. | In Progress |
 | `018-autism-clinic-features` | Autism Clinic | Features for stress detection, event tagging, and clinician support. | Planned |
 | `019-motion-analytics` | Motion & Fidgeting | Tracking repetitive hand movements and stimming behaviors via IMU. | Planned |
 | `020-behavioral-patterns` | Behavioral Recognition| Detecting pacing, sudden agitation, and activity transitions. | Planned |

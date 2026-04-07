@@ -6,6 +6,7 @@ import com.heart.sense.data.Alert
 import com.heart.sense.data.AlertsRepository
 import com.heart.sense.data.DailyAverage
 import com.heart.sense.data.DailyAverageRepository
+import com.heart.sense.data.HealthConnectRepository
 import com.heart.sense.data.Settings
 import com.heart.sense.data.SettingsDataStore
 import com.heart.sense.data.SettingsRepository
@@ -24,7 +25,8 @@ class SettingsViewModel @Inject constructor(
     private val repository: SettingsRepository,
     private val settingsDataStore: SettingsDataStore,
     private val alertsRepository: AlertsRepository,
-    private val dailyAverageRepository: DailyAverageRepository
+    private val dailyAverageRepository: DailyAverageRepository,
+    private val healthConnectRepository: HealthConnectRepository
 ) : ViewModel() {
     
     val settings: StateFlow<Settings> = settingsDataStore.settings.stateIn(
@@ -32,6 +34,26 @@ class SettingsViewModel @Inject constructor(
         started = SharingStarted.WhileSubscribed(5000),
         initialValue = Settings()
     )
+
+    private val _healthConnectPermissionsGranted = MutableStateFlow(false)
+    val healthConnectPermissionsGranted: StateFlow<Boolean> = _healthConnectPermissionsGranted.asStateFlow()
+
+    val healthConnectPermissions = healthConnectRepository.permissions
+
+    fun checkHealthConnectPermissions() {
+        viewModelScope.launch {
+            _healthConnectPermissionsGranted.value = healthConnectRepository.hasAllPermissions()
+        }
+    }
+
+    fun syncAllToHealthConnect() {
+        viewModelScope.launch {
+            val averages = dailyAverageRepository.getDailyAverages(30)
+            averages.forEach { 
+                healthConnectRepository.writeDailyAverage(it)
+            }
+        }
+    }
 
     val alerts: StateFlow<List<Alert>> = alertsRepository.alerts
     val liveHr: StateFlow<Int?> = alertsRepository.liveHr

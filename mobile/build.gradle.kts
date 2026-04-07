@@ -50,6 +50,7 @@ dependencies {
     implementation(libs.androidx.material3)
     implementation(libs.androidx.datastore.preferences)
     implementation(libs.kotlinx.coroutines.play.services)
+    implementation(libs.androidx.health.connect)
     
     // Room
     implementation(libs.androidx.room.runtime)

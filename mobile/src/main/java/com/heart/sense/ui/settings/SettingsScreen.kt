@@ -10,6 +10,8 @@ import androidx.hilt.navigation.compose.hiltViewModel
 import androidx.compose.foundation.lazy.LazyColumn
 import androidx.compose.foundation.lazy.items
 import androidx.compose.ui.text.font.FontWeight
+import androidx.activity.compose.rememberLauncherForActivityResult
+import androidx.health.connect.client.PermissionController
 import com.heart.sense.ui.dashboard.HealthDashboard
 import com.heart.sense.data.Settings
 import java.time.format.DateTimeFormatter
@@ -24,6 +26,17 @@ fun SettingsScreen(
     val isConnected by viewModel.isWatchConnected.collectAsState()
     val dailyAverages by viewModel.dailyAverages.collectAsState()
     val aiBaseline by viewModel.aiBaseline.collectAsState()
+    val healthPermissionsGranted by viewModel.healthConnectPermissionsGranted.collectAsState()
+
+    val permissionLauncher = rememberLauncherForActivityResult(
+        PermissionController.createRequestPermissionResultContract()
+    ) {
+        viewModel.checkHealthConnectPermissions()
+    }
+
+    LaunchedEffect(Unit) {
+        viewModel.checkHealthConnectPermissions()
+    }
 
     val calibrationDurationHours = if (settings.isCalibrating) {
         (System.currentTimeMillis() - settings.calibrationStartTime) / (1000 * 60 * 60)
@@ -131,6 +144,25 @@ fun SettingsScreen(
         }
 
         item {
+            EmergencyResponseCard(
+                settings = settings,
+                onUpdate = { name, phone, countdown, enabled ->
+                    viewModel.updateEmergencySettings(name, phone, countdown, enabled)
+                }
+            )
+        }
+
+        item {
+            HealthConnectCard(
+                permissionsGranted = healthPermissionsGranted,
+                onRequestPermissions = { 
+                    permissionLauncher.launch(viewModel.healthConnectPermissions)
+                },
+                onSync = { viewModel.syncAllToHealthConnect() }
+            )
+        }
+
+        item {
             Button(onClick = { viewModel.testAlert() }) {
                 Text("Send Test Alert")
             }
@@ -171,6 +203,40 @@ fun SettingsScreen(
         
         items(alerts) { alert ->
             AlertItem(alert)
+        }
+    }
+}
+
+@Composable
+fun HealthConnectCard(
+    permissionsGranted: Boolean,
+    onRequestPermissions: () -> Unit,
+    onSync: () -> Unit
+) {
+    Card(modifier = Modifier.fillMaxWidth()) {
+        Column(modifier = Modifier.padding(16.dp), verticalArrangement = Arrangement.spacedBy(8.dp)) {
+            Text("Health Connect", style = MaterialTheme.typography.titleMedium, fontWeight = FontWeight.Bold)
+            Text(
+                "Sync your heart rate and health data with the Android ecosystem.",
+                style = MaterialTheme.typography.bodySmall
+            )
+            
+            if (!permissionsGranted) {
+                Button(
+                    onClick = onRequestPermissions,
+                    modifier = Modifier.fillMaxWidth()
+                ) {
+                    Text("Grant Permissions")
+                }
+            } else {
+                Row(verticalAlignment = Alignment.CenterVertically, horizontalArrangement = Arrangement.spacedBy(8.dp)) {
+                    Text("✅ Connected", color = MaterialTheme.colorScheme.primary)
+                    Spacer(modifier = Modifier.weight(1f))
+                    Button(onClick = onSync) {
+                        Text("Sync Now")
+                    }
+                }
+            }
         }
     }
 }
