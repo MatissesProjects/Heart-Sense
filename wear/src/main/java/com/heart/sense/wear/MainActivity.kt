@@ -27,6 +27,8 @@ import com.heart.sense.wear.data.HealthServicesRepository
 import com.heart.sense.wear.data.Settings
 import com.heart.sense.wear.service.PassiveMonitoringService
 import com.heart.sense.wear.ui.theme.HeartSenseTheme
+import com.heart.sense.wear.ui.biofeedback.BiofeedbackScreen
+import com.heart.sense.wear.util.HapticFeedbackHelper
 import dagger.hilt.android.AndroidEntryPoint
 import kotlinx.coroutines.launch
 import javax.inject.Inject
@@ -50,6 +52,9 @@ class MainActivity : ComponentActivity() {
 
     @Inject
     lateinit var settingsRepository: com.heart.sense.wear.data.SettingsRepository
+
+    @Inject
+    lateinit var hapticHelper: HapticFeedbackHelper
 
     private val permissionLauncher = registerForActivityResult(
         ActivityResultContracts.RequestMultiplePermissions()
@@ -83,6 +88,7 @@ class MainActivity : ComponentActivity() {
             }
             
             var isStreaming by remember { mutableStateOf(false) }
+            var showBiofeedback by remember { mutableStateOf(intent.getBooleanExtra("show_biofeedback", false)) }
 
             LaunchedEffect(currentHr, isStreaming) {
                 if (isStreaming && currentHr != null) {
@@ -96,112 +102,125 @@ class MainActivity : ComponentActivity() {
             }
 
             HeartSenseTheme {
-                ScalingLazyColumn(
-                    modifier = Modifier
-                        .fillMaxSize()
-                        .onRotaryScrollEvent {
-                            scope.launch {
-                                listState.scrollBy(it.verticalScrollPixels)
-                            }
-                            true
-                        }
-                        .focusRequester(focusRequester)
-                        .focusable(),
-                    state = listState,
-                    horizontalAlignment = Alignment.CenterHorizontally
-                ) {
-                    item {
-                        Text("HR: ${currentHr ?: "--"} BPM", style = MaterialTheme.typography.title1)
-                    }
-
-                    if (settings.isCalibrating || settings.isCalibrated) {
-                        item {
-                            CalibrationProgressItem(settings)
-                        }
-                    }
-                    
-                    item {
-                        Column(horizontalAlignment = Alignment.CenterHorizontally) {
-                            Text("Threshold: ${settings.highHrThreshold}", style = MaterialTheme.typography.caption2)
-                            InlineSlider(
-                                value = settings.highHrThreshold.toFloat(),
-                                onValueChange = { 
-                                    scope.launch { settingsRepository.updateThreshold(it.toInt()) }
-                                },
-                                valueRange = 60f..180f,
-                                steps = 24,
-                                enabled = !settings.isCalibrating,
-                                decreaseIcon = { Icon(Icons.Default.KeyboardArrowDown, "Decrease") },
-                                increaseIcon = { Icon(Icons.Default.KeyboardArrowUp, "Increase") }
-                            )
-                        }
-                    }
-
-                    item {
-                        Row(verticalAlignment = Alignment.CenterVertically) {
-                            Text("Sick Mode", style = MaterialTheme.typography.caption2)
-                            Spacer(modifier = Modifier.width(8.dp))
-                            Switch(
-                                checked = settings.isSickMode,
-                                onCheckedChange = { 
-                                    scope.launch { settingsRepository.toggleSickMode(it) }
+                if (showBiofeedback) {
+                    BiofeedbackScreen(
+                        hapticHelper = hapticHelper,
+                        onFinish = { showBiofeedback = false }
+                    )
+                } else {
+                    ScalingLazyColumn(
+                        modifier = Modifier
+                            .fillMaxSize()
+                            .onRotaryScrollEvent {
+                                scope.launch {
+                                    listState.scrollBy(it.verticalScrollPixels)
                                 }
-                            )
+                                true
+                            }
+                            .focusRequester(focusRequester)
+                            .focusable(),
+                        state = listState,
+                        horizontalAlignment = Alignment.CenterHorizontally
+                    ) {
+                        item {
+                            Text("HR: ${currentHr ?: "--"} BPM", style = MaterialTheme.typography.title1)
                         }
-                    }
 
-                    item {
-                        Row(verticalAlignment = Alignment.CenterVertically) {
-                            val isSnoozed = settings.isSnoozed
-                            Text(
-                                if (isSnoozed) "Snoozed (${settings.snoozeRemainingMinutes}m)" else "Snooze",
-                                style = MaterialTheme.typography.caption2,
-                                color = if (isSnoozed) Color.Red else Color.Unspecified
-                            )
-                            Spacer(modifier = Modifier.width(8.dp))
-                            Switch(
-                                checked = isSnoozed,
-                                onCheckedChange = { 
-                                    scope.launch { 
-                                        if (it) settingsRepository.setSnooze(30) else settingsRepository.updateThreshold(settings.highHrThreshold)
+                        if (settings.isCalibrating || settings.isCalibrated) {
+                            item {
+                                CalibrationProgressItem(settings)
+                            }
+                        }
+                        
+                        item {
+                            Column(horizontalAlignment = Alignment.CenterHorizontally) {
+                                Text("Threshold: ${settings.highHrThreshold}", style = MaterialTheme.typography.caption2)
+                                InlineSlider(
+                                    value = settings.highHrThreshold.toFloat(),
+                                    onValueChange = { 
+                                        scope.launch { settingsRepository.updateThreshold(it.toInt()) }
+                                    },
+                                    valueRange = 60f..180f,
+                                    steps = 24,
+                                    enabled = !settings.isCalibrating,
+                                    decreaseIcon = { Icon(Icons.Default.KeyboardArrowDown, "Decrease") },
+                                    increaseIcon = { Icon(Icons.Default.KeyboardArrowUp, "Increase") }
+                                )
+                            }
+                        }
+
+                        item {
+                            Row(verticalAlignment = Alignment.CenterVertically) {
+                                Text("Sick Mode", style = MaterialTheme.typography.caption2)
+                                Spacer(modifier = Modifier.width(8.dp))
+                                Switch(
+                                    checked = settings.isSickMode,
+                                    onCheckedChange = { 
+                                        scope.launch { settingsRepository.toggleSickMode(it) }
+                                    }
+                                )
+                            }
+                        }
+
+                        item {
+                            Row(verticalAlignment = Alignment.CenterVertically) {
+                                val isSnoozed = settings.isSnoozed
+                                Text(
+                                    if (isSnoozed) "Snoozed (${settings.snoozeRemainingMinutes}m)" else "Snooze",
+                                    style = MaterialTheme.typography.caption2,
+                                    color = if (isSnoozed) Color.Red else Color.Unspecified
+                                )
+                                Spacer(modifier = Modifier.width(8.dp))
+                                Switch(
+                                    checked = isSnoozed,
+                                    onCheckedChange = { 
+                                        scope.launch { 
+                                            if (it) settingsRepository.setSnooze(30) else settingsRepository.updateThreshold(settings.highHrThreshold)
+                                        }
+                                    }
+                                )
+                            }
+                        }
+
+                        item {
+                            Row(verticalAlignment = Alignment.CenterVertically) {
+                                Text("Stream", style = MaterialTheme.typography.caption2)
+                                Spacer(modifier = Modifier.width(8.dp))
+                                Switch(
+                                    checked = isStreaming,
+                                    onCheckedChange = { isStreaming = it }
+                                )
+                            }
+                        }
+
+                        if (!settings.isCalibrating && !settings.isCalibrated) {
+                            item {
+                                Button(onClick = { 
+                                    scope.launch {
+                                        settingsDataStore.startCalibration()
+                                    }
+                                }, modifier = Modifier.fillMaxWidth()) {
+                                    Text("Start Calibration", style = MaterialTheme.typography.caption2)
+                                }
+                            }
+                        }
+
+                        item {
+                            Button(onClick = { showBiofeedback = true }, modifier = Modifier.fillMaxWidth()) {
+                                Text("Calming Exercise", style = MaterialTheme.typography.caption2)
+                            }
+                        }
+
+                        item {
+                            Button(onClick = {
+                                currentHr?.let { hr ->
+                                    scope.launch {
+                                        wearableCommunicationRepository.sendHrAlert(hr)
                                     }
                                 }
-                            )
-                        }
-                    }
-
-                    item {
-                        Row(verticalAlignment = Alignment.CenterVertically) {
-                            Text("Stream", style = MaterialTheme.typography.caption2)
-                            Spacer(modifier = Modifier.width(8.dp))
-                            Switch(
-                                checked = isStreaming,
-                                onCheckedChange = { isStreaming = it }
-                            )
-                        }
-                    }
-
-                    if (!settings.isCalibrating && !settings.isCalibrated) {
-                        item {
-                            Button(onClick = { 
-                                scope.launch {
-                                    settingsDataStore.startCalibration()
-                                }
-                            }, modifier = Modifier.fillMaxWidth()) {
-                                Text("Start Calibration", style = MaterialTheme.typography.caption2)
+                            }) {
+                                Text("Send Alert")
                             }
-                        }
-                    }
-
-                    item {
-                        Button(onClick = {
-                            currentHr?.let { hr ->
-                                scope.launch {
-                                    wearableCommunicationRepository.sendHrAlert(hr)
-                                }
-                            }
-                        }) {
-                            Text("Send Alert")
                         }
                     }
                 }
@@ -240,6 +259,7 @@ class MainActivity : ComponentActivity() {
         val permissions = mutableListOf(
             Manifest.permission.BODY_SENSORS,
             Manifest.permission.ACTIVITY_RECOGNITION,
+            Manifest.permission.RECORD_AUDIO
         )
         if (android.os.Build.VERSION.SDK_INT >= android.os.Build.VERSION_CODES.TIRAMISU) {
             permissions.add(Manifest.permission.POST_NOTIFICATIONS)
