@@ -177,4 +177,9 @@ class SettingsViewModel @Inject constructor(
             repository.updateSettings(updated)
         }
     }
+
+    fun generateReport(context: android.content.Context): android.net.Uri? {
+        val generator = com.heart.sense.util.ReportGenerator(context)
+        return generator.generateCsvReport(alerts.value, dailyAverages.value)
+    }
 }

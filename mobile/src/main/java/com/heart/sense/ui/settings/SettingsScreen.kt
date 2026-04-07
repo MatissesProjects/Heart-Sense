@@ -31,11 +31,20 @@ fun SettingsScreen(
     val healthPermissionsGranted by viewModel.healthConnectPermissionsGranted.collectAsState()
 
     var showCaregiverDashboard by remember { mutableStateOf(false) }
+    var showReportScreen by remember { mutableStateOf(false) }
 
     if (showCaregiverDashboard) {
         com.heart.sense.ui.caregiver.LocalDashboard(
             viewModel = viewModel,
             onBack = { showCaregiverDashboard = false }
+        )
+        return
+    }
+
+    if (showReportScreen) {
+        com.heart.sense.ui.reports.ReportScreen(
+            viewModel = viewModel,
+            onBack = { showReportScreen = false }
         )
         return
     }
@@ -193,6 +202,25 @@ fun SettingsScreen(
         }
 
         item {
+            Card(
+                modifier = Modifier.fillMaxWidth(),
+                onClick = { showReportScreen = true }
+            ) {
+                Row(
+                    modifier = Modifier.padding(16.dp),
+                    verticalAlignment = Alignment.CenterVertically,
+                    horizontalArrangement = Arrangement.SpaceBetween
+                ) {
+                    Column(modifier = Modifier.weight(1f)) {
+                        Text("Clinical Reporting", style = MaterialTheme.typography.titleMedium, fontWeight = FontWeight.Bold)
+                        Text("Generate and share summary reports for clinicians.", style = MaterialTheme.typography.bodySmall)
+                    }
+                    Icon(imageVector = Icons.AutoMirrored.Filled.KeyboardArrowRight, contentDescription = null)
+                }
+            }
+        }
+
+        item {
             HealthConnectCard(
                 permissionsGranted = healthPermissionsGranted,
                 onRequestPermissions = { 
@@ -256,7 +284,7 @@ fun BehavioralDetectionCard(
     onUpdate: (Boolean, Boolean) -> Unit
 ) {
     Card(modifier = Modifier.fillMaxWidth()) {
-        Column(modifier = Modifier.padding(16.dp), verticalArrangement = Arrangement.spacedBy(12.dp)) {
+        Column(modifier = Modifier.padding(12.dp), verticalArrangement = Arrangement.spacedBy(12.dp)) {
             Text("Behavioral Detection", style = MaterialTheme.typography.titleMedium, fontWeight = FontWeight.Bold)
             Text(
                 "Detect complex behaviors like pacing or sudden agitation by combining motion data and heart rate.",
