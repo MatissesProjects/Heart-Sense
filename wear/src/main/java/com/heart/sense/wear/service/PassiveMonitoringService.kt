@@ -24,6 +24,7 @@ import com.heart.sense.wear.util.RhythmState
 import com.heart.sense.wear.util.StressEvaluator
 import com.heart.sense.wear.util.StressRisk
 import com.heart.sense.wear.util.FidgetDetector
+import com.heart.sense.wear.util.PacingDetector
 import dagger.hilt.android.AndroidEntryPoint
 import kotlinx.coroutines.CoroutineScope
 import kotlinx.coroutines.Dispatchers
@@ -55,6 +56,7 @@ class PassiveMonitoringService : PassiveListenerService() {
     private var lastActivityState: UserActivityState = UserActivityState.USER_ACTIVITY_UNKNOWN
     private var isPaused: Boolean = false
     private var currentMotionScore: Float = 0f
+    private var lastHr: Int = 0
 
     private val receiver = object : BroadcastReceiver() {
         override fun onReceive(context: Context?, intent: Intent?) {
@@ -110,6 +112,18 @@ class PassiveMonitoringService : PassiveListenerService() {
         }
 
         lastActivityState = newState
+
+        // Pacing Detection (Sub-task 1)
+        scope.launch {
+            val settings = settingsDataStore.settings.first()
+            if (settings.detectPacing) {
+                val isPacing = PacingDetector.process(newState, lastHr, settings.restingHr)
+                if (isPacing) {
+                    Log.w("PassiveMonitoring", "Pacing Detected! State: $newState, HR: $lastHr")
+                    wearableCommunicationRepository.sendBehavioralAlert("Pacing", "Repetitive back-and-forth movement detected")
+                }
+            }
+        }
     }
 
     override fun onNewDataPointsReceived(dataPoints: DataPointContainer) {
@@ -131,6 +145,7 @@ class PassiveMonitoringService : PassiveListenerService() {
 
             val latestDataPoint = hrDataPoints.last()
             val latestHr = latestDataPoint.value.toInt()
+            lastHr = latestHr
             
             // Extract RR intervals from metadata if available
             val rrIntervals = try {
@@ -140,6 +155,20 @@ class PassiveMonitoringService : PassiveListenerService() {
             }
             
             Log.d("PassiveMonitoring", "New HR: $latestHr BPM, RR Intervals: ${rrIntervals?.size ?: 0}")
+
+            val settings = settingsDataStore.settings.first()
+
+            // Sudden Agitation Detection (Sub-task 2)
+            if (settings.detectAgitation) {
+                val isSuddenAgitation = (lastActivityState == UserActivityState.USER_ACTIVITY_PASSIVE || 
+                                        lastActivityState == UserActivityState.USER_ACTIVITY_ASLEEP) &&
+                                        latestHr > settings.restingHr + 30
+                
+                if (isSuddenAgitation) {
+                    Log.w("PassiveMonitoring", "Sudden Agitation Detected! HR: $latestHr")
+                    wearableCommunicationRepository.sendBehavioralAlert("Agitation", "Sudden HR spike while transitioning from rest")
+                }
+            }
 
             // Rhythm evaluation (only if stationary)
             if (lastActivityState == UserActivityState.USER_ACTIVITY_PASSIVE || 
@@ -159,8 +188,6 @@ class PassiveMonitoringService : PassiveListenerService() {
                 rrIntervals = rrIntervals,
                 motionIntensity = currentMotionScore
             )
-
-            val settings = settingsDataStore.settings.first()
 
             // Stress Evaluation (Autism Clinic Feature)
             val currentRmssd = StressEvaluator.calculateRmssd(rrIntervals)

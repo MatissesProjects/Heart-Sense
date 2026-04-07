@@ -77,6 +77,12 @@ class AlertHandler @Inject constructor(
         notificationHelper.showStressNotification(risk, hrDelta)
     }
 
+    fun handleBehavioralAlert(type: String, details: String) {
+        Log.d("AlertHandler", "Behavioral Alert: $type - $details")
+        alertsRepository.addAlert(0, "Behavior ($type)")
+        notificationHelper.showBehavioralNotification(type, details)
+    }
+
     fun handleLiveHrUpdate(hr: Int) {
         alertsRepository.updateLiveHr(hr)
     }

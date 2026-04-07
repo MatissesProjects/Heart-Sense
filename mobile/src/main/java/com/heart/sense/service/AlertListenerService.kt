@@ -48,6 +48,12 @@ class AlertListenerService : WearableListenerService() {
                     alertHandler.handleStressAlert(data[0], data[1].toInt(), data[2].toFloat())
                 }
             }
+            Constants.PATH_BEHAVIORAL_ALERT -> {
+                val data = String(messageEvent.data).split("|")
+                if (data.size >= 2) {
+                    alertHandler.handleBehavioralAlert(data[0], data[1])
+                }
+            }
         }
     }
 }

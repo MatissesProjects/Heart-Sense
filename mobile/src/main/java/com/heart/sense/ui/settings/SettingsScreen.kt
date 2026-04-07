@@ -211,6 +211,52 @@ fun SettingsScreen(
 }
 
 @Composable
+fun BehavioralDetectionCard(
+    settings: Settings,
+    onUpdate: (Boolean, Boolean) -> Unit
+) {
+    Card(modifier = Modifier.fillMaxWidth()) {
+        Column(modifier = Modifier.padding(16.dp), verticalArrangement = Arrangement.spacedBy(12.dp)) {
+            Text("Behavioral Detection", style = MaterialTheme.typography.titleMedium, fontWeight = FontWeight.Bold)
+            Text(
+                "Detect complex behaviors like pacing or sudden agitation by combining motion data and heart rate.",
+                style = MaterialTheme.typography.bodySmall
+            )
+
+            Row(
+                modifier = Modifier.fillMaxWidth(),
+                horizontalArrangement = Arrangement.SpaceBetween,
+                verticalAlignment = Alignment.CenterVertically
+            ) {
+                Column(modifier = Modifier.weight(1f)) {
+                    Text("Detect Pacing", style = MaterialTheme.typography.bodyLarge)
+                    Text("Identify repetitive back-and-forth movement.", style = MaterialTheme.typography.bodySmall)
+                }
+                Switch(
+                    checked = settings.detectPacing,
+                    onCheckedChange = { onUpdate(it, settings.detectAgitation) }
+                )
+            }
+
+            Row(
+                modifier = Modifier.fillMaxWidth(),
+                horizontalArrangement = Arrangement.SpaceBetween,
+                verticalAlignment = Alignment.CenterVertically
+            ) {
+                Column(modifier = Modifier.weight(1f)) {
+                    Text("Detect Agitation", style = MaterialTheme.typography.bodyLarge)
+                    Text("Alert on sudden transitions with HR spikes.", style = MaterialTheme.typography.bodySmall)
+                }
+                Switch(
+                    checked = settings.detectAgitation,
+                    onCheckedChange = { onUpdate(settings.detectPacing, it) }
+                )
+            }
+        }
+    }
+}
+
+@Composable
 fun HealthConnectCard(
     permissionsGranted: Boolean,
     onRequestPermissions: () -> Unit,

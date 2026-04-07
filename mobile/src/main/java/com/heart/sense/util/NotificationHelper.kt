@@ -23,6 +23,8 @@ class NotificationHelper(private val context: Context) {
         const val ID_ILLNESS = 103
         const val ID_IRREGULAR_RHYTHM = 104
         const val ID_STRESS = 105
+        const val ID_PACING = 106
+        const val ID_AGITATION = 107
     }
 
     fun showHighHrNotification(hr: Int) {
@@ -130,6 +132,25 @@ class NotificationHelper(private val context: Context) {
             .build()
 
         notificationManager.notify(ID_STRESS, notification)
+    }
+
+    fun showBehavioralNotification(type: String, details: String) {
+        createHighHrChannel()
+
+        val id = if (type == "Pacing") ID_PACING else ID_AGITATION
+        val title = if (type == "Pacing") "Pacing Detected" else "Sudden Agitation"
+        val message = "$details. Consider checking in or suggesting a calming activity."
+
+        val notification = NotificationCompat.Builder(context, CHANNEL_HIGH_HR)
+            .setSmallIcon(android.R.drawable.ic_dialog_info)
+            .setContentTitle(title)
+            .setContentText(message)
+            .setStyle(NotificationCompat.BigTextStyle().bigText(message))
+            .setPriority(NotificationCompat.PRIORITY_HIGH)
+            .setAutoCancel(true)
+            .build()
+
+        notificationManager.notify(id, notification)
     }
 
     private fun createActionPendingIntent(action: String, requestCode: Int): PendingIntent {

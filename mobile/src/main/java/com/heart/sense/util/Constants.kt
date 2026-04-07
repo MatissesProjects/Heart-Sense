@@ -12,6 +12,7 @@ object Constants {
     const val PATH_STOP_HMS = "/stop_hms"
     const val PATH_REQUEST_SYNC = "/request_sync"
     const val PATH_STRESS_ALERT = "/stress_alert"
+    const val PATH_BEHAVIORAL_ALERT = "/behavioral_alert"
 
     const val PATH_SYNC_BATCH = "/sync_batch"
 
@@ -28,6 +29,8 @@ object Constants {
     const val KEY_EMERGENCY_CONTACT_PHONE = "emergencyContactPhone"
     const val KEY_EMERGENCY_COUNTDOWN = "emergencyCountdown"
     const val KEY_EMERGENCY_ENABLED = "emergencyEnabled"
+    const val KEY_DETECT_PACING = "detectPacing"
+    const val KEY_DETECT_AGITATION = "detectAgitation"
 
     // Intent Actions
     const val ACTION_SICK_MODE = "com.heart.sense.ACTION_SICK_MODE"

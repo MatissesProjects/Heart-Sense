@@ -12,7 +12,9 @@ data class Settings(
     val emergencyContactName: String = "",
     val emergencyContactPhone: String = "",
     val emergencyCountdownSeconds: Int = 30,
-    val isEmergencyEnabled: Boolean = false
+    val isEmergencyEnabled: Boolean = false,
+    val detectPacing: Boolean = false,
+    val detectAgitation: Boolean = false
 ) {
     val isSnoozed: Boolean
         get() = System.currentTimeMillis() < snoozeUntil

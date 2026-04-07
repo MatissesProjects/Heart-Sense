@@ -26,6 +26,8 @@ class SettingsDataStore @Inject constructor(private val context: Context) {
     private val EMERGENCY_CONTACT_PHONE = stringPreferencesKey(Constants.KEY_EMERGENCY_CONTACT_PHONE)
     private val EMERGENCY_COUNTDOWN = intPreferencesKey(Constants.KEY_EMERGENCY_COUNTDOWN)
     private val EMERGENCY_ENABLED = booleanPreferencesKey(Constants.KEY_EMERGENCY_ENABLED)
+    private val DETECT_PACING = booleanPreferencesKey(Constants.KEY_DETECT_PACING)
+    private val DETECT_AGITATION = booleanPreferencesKey(Constants.KEY_DETECT_AGITATION)
 
     val settings: Flow<Settings> = context.dataStore.data.map { preferences ->
         Settings(
@@ -40,7 +42,9 @@ class SettingsDataStore @Inject constructor(private val context: Context) {
             emergencyContactName = preferences[EMERGENCY_CONTACT_NAME] ?: "",
             emergencyContactPhone = preferences[EMERGENCY_CONTACT_PHONE] ?: "",
             emergencyCountdownSeconds = preferences[EMERGENCY_COUNTDOWN] ?: 30,
-            isEmergencyEnabled = preferences[EMERGENCY_ENABLED] ?: false
+            isEmergencyEnabled = preferences[EMERGENCY_ENABLED] ?: false,
+            detectPacing = preferences[DETECT_PACING] ?: false,
+            detectAgitation = preferences[DETECT_AGITATION] ?: false
         )
     }
 
@@ -58,6 +62,8 @@ class SettingsDataStore @Inject constructor(private val context: Context) {
             preferences[EMERGENCY_CONTACT_PHONE] = settings.emergencyContactPhone
             preferences[EMERGENCY_COUNTDOWN] = settings.emergencyCountdownSeconds
             preferences[EMERGENCY_ENABLED] = settings.isEmergencyEnabled
+            preferences[DETECT_PACING] = settings.detectPacing
+            preferences[DETECT_AGITATION] = settings.detectAgitation
         }
     }
 

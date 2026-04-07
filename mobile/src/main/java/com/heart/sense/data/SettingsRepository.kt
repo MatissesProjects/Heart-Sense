@@ -90,6 +90,8 @@ class SettingsRepository @Inject constructor(
             dataMap.putString(Constants.KEY_EMERGENCY_CONTACT_PHONE, settings.emergencyContactPhone)
             dataMap.putInt(Constants.KEY_EMERGENCY_COUNTDOWN, settings.emergencyCountdownSeconds)
             dataMap.putBoolean(Constants.KEY_EMERGENCY_ENABLED, settings.isEmergencyEnabled)
+            dataMap.putBoolean(Constants.KEY_DETECT_PACING, settings.detectPacing)
+            dataMap.putBoolean(Constants.KEY_DETECT_AGITATION, settings.detectAgitation)
         }.asPutDataRequest().setUrgent()
         
         try {

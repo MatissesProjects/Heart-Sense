@@ -146,4 +146,14 @@ class SettingsViewModel @Inject constructor(
             repository.updateSettings(updated)
         }
     }
+
+    fun updateBehavioralSettings(pacing: Boolean, agitation: Boolean) {
+        viewModelScope.launch {
+            val updated = settings.value.copy(
+                detectPacing = pacing,
+                detectAgitation = agitation
+            )
+            repository.updateSettings(updated)
+        }
+    }
 }
