@@ -1,4 +1,6 @@
 <?xml version="1.0" encoding="utf-8"?>
 <resources>
     <string name="app_name">Heart Sense</string>
+    <string name="shortcut_tag_sensory">Tag Sensory</string>
+    <string name="shortcut_tag_sensory_long">Tag a sensory overload event</string>
 </resources>

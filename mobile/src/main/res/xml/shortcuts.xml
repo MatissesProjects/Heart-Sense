@@ -1,0 +1,26 @@
+<?xml version="1.0" encoding="utf-8"?>
+<shortcuts xmlns:android="http://schemas.android.com/apk/res/android">
+    <capability android:name="actions.intent.CREATE_NOTE">
+        <intent
+            android:action="android.intent.action.VIEW"
+            android:targetPackage="com.heart.sense"
+            android:targetClass="com.heart.sense.MainActivity">
+            <parameter
+                android:name="note.text"
+                android:key="tag_text"/>
+        </intent>
+    </capability>
+
+    <!-- Custom Shortcut for "Tag sensory overload" -->
+    <shortcut
+        android:shortcutId="tag_sensory"
+        android:enabled="true"
+        android:shortcutShortLabel="@string/shortcut_tag_sensory"
+        android:shortcutLongLabel="@string/shortcut_tag_sensory_long">
+        <capability-binding android:key="actions.intent.CREATE_NOTE">
+            <parameter-binding
+                android:key="note.text"
+                android:value="sensory overload"/>
+        </capability-binding>
+    </shortcut>
+</shortcuts>

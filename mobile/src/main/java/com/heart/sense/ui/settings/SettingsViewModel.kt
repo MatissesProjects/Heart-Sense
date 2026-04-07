@@ -151,6 +151,17 @@ class SettingsViewModel @Inject constructor(
         alertsRepository.tagAlert(alertId, tag)
     }
 
+    fun tagLatestAlert(tag: String) {
+        viewModelScope.launch {
+            val latest = alerts.value.firstOrNull()
+            if (latest != null) {
+                alertsRepository.tagAlert(latest.id, tag)
+            }
+            // Also broadcast to nearby devices if connected
+            localSyncRepository.sendData(com.heart.sense.data.NearbyPayload(0, "VOICE_TAG:$tag"))
+        }
+    }
+
     fun updateEmergencySettings(
         name: String,
         phone: String,
