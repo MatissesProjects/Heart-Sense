@@ -1,11 +1,11 @@
-package com.heart.sense.data
+package com.heart.sense.wear.data
 
 import androidx.health.services.client.HealthServicesClient
 import androidx.health.services.client.MeasureClient
 import androidx.health.services.client.data.DataType
 import androidx.health.services.client.data.DeltaDataType
 import io.mockk.mockk
-import io.mockk.verify
+import io.mockk.every
 import kotlinx.coroutines.ExperimentalCoroutinesApi
 import kotlinx.coroutines.test.runTest
 import org.junit.Before
@@ -22,7 +22,7 @@ class HealthServicesRepositoryTest {
     fun setup() {
         healthServicesClient = mockk(relaxed = true)
         measureClient = mockk(relaxed = true)
-        io.mockk.every { healthServicesClient.measureClient } returns measureClient
+        every { healthServicesClient.measureClient } returns measureClient
         repository = HealthServicesRepository(healthServicesClient)
     }
 

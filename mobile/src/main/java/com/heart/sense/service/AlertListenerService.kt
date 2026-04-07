@@ -45,7 +45,8 @@ class AlertListenerService : WearableListenerService() {
             Constants.PATH_STRESS_ALERT -> {
                 val data = String(messageEvent.data).split("|")
                 if (data.size >= 3) {
-                    alertHandler.handleStressAlert(data[0], data[1].toInt(), data[2].toFloat())
+                    val trigger = if (data.size >= 4 && data[3].isNotEmpty()) data[3] else null
+                    alertHandler.handleStressAlert(data[0], data[1].toInt(), data[2].toFloat(), trigger)
                 }
             }
             Constants.PATH_BEHAVIORAL_ALERT -> {

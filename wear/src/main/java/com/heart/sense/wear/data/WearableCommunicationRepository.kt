@@ -41,8 +41,8 @@ class WearableCommunicationRepository @Inject constructor(
         sendMessageToPhone(Constants.PATH_IRREGULAR_RHYTHM, byteArrayOf())
     }
 
-    suspend fun sendStressAlert(risk: String, hrDelta: Int, hrvDelta: Float) {
-        val data = "$risk|$hrDelta|$hrvDelta"
+    suspend fun sendStressAlert(risk: String, hrDelta: Int, hrvDelta: Float, trigger: String? = null) {
+        val data = "$risk|$hrDelta|$hrvDelta|${trigger ?: ""}"
         sendMessageToPhone(Constants.PATH_STRESS_ALERT, data.toByteArray())
     }
 

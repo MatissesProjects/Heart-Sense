@@ -7,14 +7,25 @@ enum class StressRisk {
     CALM, MILD, MODERATE, HIGH
 }
 
+data class StressContext(
+    val currentLux: Float = 0f,
+    val currentDb: Int = 0,
+    val isSuddenNoise: Boolean = false,
+    val isSuddenLight: Boolean = false
+)
+
 data class StressDetectionResult(
     val risk: StressRisk,
     val hrDelta: Int,
     val hrvDelta: Float,
-    val score: Int
+    val score: Int,
+    val trigger: String? = null
 )
 
 object StressEvaluator {
+    private var lastLux = 0f
+    private var lastDb = 0
+
     /**
      * Calculates RMSSD from a list of RR intervals in milliseconds.
      */
@@ -23,26 +34,22 @@ object StressEvaluator {
         
         var sumSquaredDiffs = 0.0
         for (i in 0 until rrIntervals.size - 1) {
-            val diff = rrIntervals[i+1] - rrIntervals[i]
-            sumSquaredDiffs += (diff * diff).toDouble()
+            val diff = (rrIntervals[i+1] - rrIntervals[i]).toDouble()
+            sumSquaredDiffs += diff * diff
         }
         
-        return Math.sqrt(sumSquaredDiffs / (rrIntervals.size - 1)).toFloat()
+        return Math.sqrt(sumSquaredDiffs / (intervals.size - 1)).toFloat()
     }
 
     /**
-     * Evaluates real-time stress based on current HR/HRV vs. baseline.
-     * 
-     * @param currentHr Current Heart Rate (BPM)
-     * @param currentRmssd Current RMSSD (ms)
-     * @param settings User settings including baseline resting HR and HRV
-     * @param activityState Current user activity state
+     * Evaluates real-time stress based on current HR/HRV vs. baseline and environmental triggers.
      */
     fun evaluate(
         currentHr: Int,
         currentRmssd: Float,
         settings: Settings,
-        activityState: androidx.health.services.client.data.UserActivityState
+        activityState: androidx.health.services.client.data.UserActivityState,
+        envContext: StressContext = StressContext()
     ): StressDetectionResult {
         // Only evaluate stress when stationary (Passive or Asleep)
         val isMoving = activityState != androidx.health.services.client.data.UserActivityState.USER_ACTIVITY_PASSIVE &&
@@ -58,16 +65,26 @@ object StressEvaluator {
         val hrvBaseline = 40f // Default if not yet tracked in settings
         val hrvDelta = currentRmssd - hrvBaseline
 
-        // Calculate stress score (0-100)
-        // HR: 3 points per BPM above resting
-        val hrScore = (hrDelta * 3).coerceIn(0, 60)
-        
-        // HRV: 2 points per ms drop below baseline
+        // Calculate physiological score (0-80)
+        val hrScore = (hrDelta * 3).coerceIn(0, 50)
         val hrvScore = if (hrvDelta < 0) {
-            (Math.abs(hrvDelta) * 2).toInt().coerceIn(0, 40)
+            (Math.abs(hrvDelta) * 2).toInt().coerceIn(0, 30)
         } else 0
 
-        val totalScore = hrScore + hrvScore
+        // Environmental Boost (0-20 points)
+        var envScore = 0
+        var trigger: String? = null
+
+        if (envContext.isSuddenNoise) {
+            envScore += 15
+            trigger = "Sudden Noise"
+        }
+        if (envContext.isSuddenLight) {
+            envScore += 10
+            trigger = if (trigger != null) "Multiple Triggers" else "Bright Light"
+        }
+
+        val totalScore = hrScore + hrvScore + envScore
 
         val risk = when {
             totalScore >= 70 -> StressRisk.HIGH
@@ -76,6 +93,6 @@ object StressEvaluator {
             else -> StressRisk.CALM
         }
 
-        return StressDetectionResult(risk, hrDelta, hrvDelta, totalScore)
+        return StressDetectionResult(risk, hrDelta, hrvDelta, totalScore, trigger)
     }
 }

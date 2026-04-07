@@ -82,6 +82,28 @@ class PassiveMonitoringService : PassiveListenerService() {
         registerReceiver(receiver, filter)
         createNotificationChannel()
         startMotionTracking()
+        startEnvironmentalTracking()
+    }
+
+    private fun startEnvironmentalTracking() {
+        scope.launch {
+            environmentalSensorRepository.getLightData().collect { lux ->
+                if (lux > currentLux + 200 && currentLux > 0) {
+                    isSuddenLight = true
+                    scope.launch { kotlinx.coroutines.delay(5000); isSuddenLight = false }
+                }
+                currentLux = lux
+            }
+        }
+        scope.launch {
+            environmentalSensorRepository.getNoiseData().collect { db ->
+                if (db > currentDb + 15 && currentDb > 0) {
+                    isSuddenNoise = true
+                    scope.launch { kotlinx.coroutines.delay(5000); isSuddenNoise = false }
+                }
+                currentDb = db
+            }
+        }
     }
 
     private fun startMotionTracking() {
@@ -199,11 +221,12 @@ class PassiveMonitoringService : PassiveListenerService() {
             )
 
             if (stressResult.risk == StressRisk.MODERATE || stressResult.risk == StressRisk.HIGH) {
-                Log.w("PassiveMonitoring", "Stress Alert: ${stressResult.risk}. HR Delta: ${stressResult.hrDelta}")
+                Log.w("PassiveMonitoring", "Stress Alert: ${stressResult.risk}. HR Delta: ${stressResult.hrDelta}, Trigger: ${stressResult.trigger}")
                 wearableCommunicationRepository.sendStressAlert(
                     risk = stressResult.risk.name,
                     hrDelta = stressResult.hrDelta,
-                    hrvDelta = stressResult.hrvDelta
+                    hrvDelta = stressResult.hrvDelta,
+                    trigger = stressResult.trigger
                 )
             }
 

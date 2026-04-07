@@ -17,6 +17,10 @@ object FidgetDetector {
     private const val WINDOW_SIZE = 50 // Approx 5 seconds at NORMAL sensor delay
     private val motionWindow = LinkedList<Float>()
 
+    fun reset() {
+        motionWindow.clear()
+    }
+
     fun process(data: MotionData): MotionEvaluation {
         motionWindow.add(data.acceleration)
         if (motionWindow.size > WINDOW_SIZE) {
