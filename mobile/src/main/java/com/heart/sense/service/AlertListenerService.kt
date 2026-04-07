@@ -42,6 +42,12 @@ class AlertListenerService : WearableListenerService() {
             Constants.PATH_IRREGULAR_RHYTHM -> {
                 alertHandler.handleIrregularRhythmAlert()
             }
+            Constants.PATH_STRESS_ALERT -> {
+                val data = String(messageEvent.data).split("|")
+                if (data.size >= 3) {
+                    alertHandler.handleStressAlert(data[0], data[1].toInt(), data[2].toFloat())
+                }
+            }
         }
     }
 }

@@ -22,6 +22,7 @@ class NotificationHelper(private val context: Context) {
         const val ID_CRITICAL_HR = 102
         const val ID_ILLNESS = 103
         const val ID_IRREGULAR_RHYTHM = 104
+        const val ID_STRESS = 105
     }
 
     fun showHighHrNotification(hr: Int) {
@@ -112,6 +113,23 @@ class NotificationHelper(private val context: Context) {
             .build()
 
         notificationManager.notify(ID_IRREGULAR_RHYTHM, notification)
+    }
+
+    fun showStressNotification(risk: String, hrDelta: Int) {
+        createHighHrChannel() // Using High HR channel for stress alerts as they are actionable
+
+        val message = "Stress Level: $risk. HR Spike: +$hrDelta BPM. Consider a sensory break or a deep breathing exercise."
+
+        val notification = NotificationCompat.Builder(context, CHANNEL_HIGH_HR)
+            .setSmallIcon(android.R.drawable.ic_dialog_info)
+            .setContentTitle("Stress Event Detected")
+            .setContentText(message)
+            .setStyle(NotificationCompat.BigTextStyle().bigText(message))
+            .setPriority(NotificationCompat.PRIORITY_HIGH)
+            .setAutoCancel(true)
+            .build()
+
+        notificationManager.notify(ID_STRESS, notification)
     }
 
     private fun createActionPendingIntent(action: String, requestCode: Int): PendingIntent {

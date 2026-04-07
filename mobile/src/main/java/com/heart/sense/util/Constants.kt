@@ -11,6 +11,7 @@ object Constants {
     const val PATH_IRREGULAR_RHYTHM = "/irregular_rhythm"
     const val PATH_STOP_HMS = "/stop_hms"
     const val PATH_REQUEST_SYNC = "/request_sync"
+    const val PATH_STRESS_ALERT = "/stress_alert"
 
     const val PATH_SYNC_BATCH = "/sync_batch"
 

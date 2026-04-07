@@ -39,6 +39,12 @@ class AlertsRepository @Inject constructor(
         }
     }
 
+    fun tagAlert(alertId: Int, tag: String) {
+        repositoryScope.launch {
+            alertDao.updateTag(alertId, tag)
+        }
+    }
+
     fun updateLiveHr(hr: Int) {
         _lastMessageTimestamp.value = System.currentTimeMillis()
         _liveHr.value = hr

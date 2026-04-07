@@ -202,7 +202,10 @@ fun SettingsScreen(
         }
         
         items(alerts) { alert ->
-            AlertItem(alert)
+            AlertItem(
+                alert = alert,
+                onTagSelected = { tag -> viewModel.tagAlert(alert.id, tag) }
+            )
         }
     }
 }
@@ -336,19 +339,51 @@ fun CalibrationProgressCard(settings: Settings, durationHours: Long, totalHours:
 }
 
 @Composable
-fun AlertItem(alert: com.heart.sense.data.Alert) {
+fun AlertItem(
+    alert: com.heart.sense.data.Alert,
+    onTagSelected: (String) -> Unit
+) {
     val formatter = DateTimeFormatter.ofPattern("HH:mm:ss")
+    val tags = listOf("Sensory", "Transition", "Anxiety", "Activity", "Other")
+
     Card(modifier = Modifier.fillMaxWidth()) {
-        Row(
-            modifier = Modifier.padding(12.dp),
-            horizontalArrangement = Arrangement.SpaceBetween,
-            verticalAlignment = Alignment.CenterVertically
-        ) {
-            Column {
-                Text(alert.type, style = MaterialTheme.typography.bodyLarge)
-                Text(alert.timestamp.format(formatter), style = MaterialTheme.typography.bodySmall)
+        Column(modifier = Modifier.padding(12.dp), verticalArrangement = Arrangement.spacedBy(8.dp)) {
+            Row(
+                modifier = Modifier.fillMaxWidth(),
+                horizontalArrangement = Arrangement.SpaceBetween,
+                verticalAlignment = Alignment.CenterVertically
+            ) {
+                Column {
+                    Text(alert.type, style = MaterialTheme.typography.bodyLarge, fontWeight = FontWeight.Bold)
+                    Text(alert.timestamp.format(formatter), style = MaterialTheme.typography.bodySmall)
+                }
+                Text("${alert.hr} BPM", style = MaterialTheme.typography.headlineSmall)
             }
-            Text("${alert.hr} BPM", style = MaterialTheme.typography.headlineSmall)
+            
+            if (alert.tag != null) {
+                Surface(
+                    color = MaterialTheme.colorScheme.secondaryContainer,
+                    shape = MaterialTheme.shapes.small
+                ) {
+                    Text(
+                        text = "Tag: ${alert.tag}",
+                        modifier = Modifier.padding(horizontal = 8.dp, vertical = 4.dp),
+                        style = MaterialTheme.typography.labelMedium
+                    )
+                }
+            } else {
+                Row(
+                    modifier = Modifier.fillMaxWidth(),
+                    horizontalArrangement = Arrangement.spacedBy(4.dp)
+                ) {
+                    tags.forEach { tag ->
+                        AssistChip(
+                            onClick = { onTagSelected(tag) },
+                            label = { Text(tag, style = MaterialTheme.typography.labelSmall) }
+                        )
+                    }
+                }
+            }
         }
     }
 }

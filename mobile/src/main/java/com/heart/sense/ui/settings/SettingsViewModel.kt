@@ -126,6 +126,10 @@ class SettingsViewModel @Inject constructor(
         alertsRepository.addAlert((70..150).random(), "Test Alert")
     }
 
+    fun tagAlert(alertId: Int, tag: String) {
+        alertsRepository.tagAlert(alertId, tag)
+    }
+
     fun updateEmergencySettings(
         name: String,
         phone: String,

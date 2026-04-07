@@ -9,5 +9,6 @@ data class Alert(
     @PrimaryKey(autoGenerate = true) val id: Int = 0,
     val hr: Int,
     val type: String, // "High HR" or "Sit Down"
-    val timestamp: LocalDateTime = LocalDateTime.now()
+    val timestamp: LocalDateTime = LocalDateTime.now(),
+    val tag: String? = null
 )

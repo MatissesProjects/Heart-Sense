@@ -20,6 +20,8 @@ import com.heart.sense.wear.util.HeartRateEvaluator
 import com.heart.sense.wear.util.MonitoringAction
 import com.heart.sense.wear.util.RhythmEvaluator
 import com.heart.sense.wear.util.RhythmState
+import com.heart.sense.wear.util.StressEvaluator
+import com.heart.sense.wear.util.StressRisk
 import dagger.hilt.android.AndroidEntryPoint
 import kotlinx.coroutines.CoroutineScope
 import kotlinx.coroutines.Dispatchers
@@ -141,10 +143,29 @@ class PassiveMonitoringService : PassiveListenerService() {
                 rrIntervals
             )
 
+            val settings = settingsDataStore.settings.first()
+
+            // Stress Evaluation (Autism Clinic Feature)
+            val currentRmssd = StressEvaluator.calculateRmssd(rrIntervals)
+            val stressResult = StressEvaluator.evaluate(
+                currentHr = latestHr,
+                currentRmssd = currentRmssd,
+                settings = settings,
+                activityState = lastActivityState
+            )
+
+            if (stressResult.risk == StressRisk.MODERATE || stressResult.risk == StressRisk.HIGH) {
+                Log.w("PassiveMonitoring", "Stress Alert: ${stressResult.risk}. HR Delta: ${stressResult.hrDelta}")
+                wearableCommunicationRepository.sendStressAlert(
+                    risk = stressResult.risk.name,
+                    hrDelta = stressResult.hrDelta,
+                    hrvDelta = stressResult.hrvDelta
+                )
+            }
+
             // Process for calibration
             calibrationRepository.processDataPoints(dataPoints)
 
-            val settings = settingsDataStore.settings.first()
             val action = HeartRateEvaluator.evaluate(
                 latestHr = latestHr,
                 activityState = lastActivityState,

@@ -11,6 +11,9 @@ interface AlertDao {
     @Insert
     suspend fun insert(alert: Alert)
 
+    @Query("UPDATE alerts SET tag = :tag WHERE id = :id")
+    suspend fun updateTag(id: Int, tag: String)
+
     @Query("SELECT * FROM alerts ORDER BY timestamp DESC LIMIT 20")
     fun getRecentAlerts(): Flow<List<Alert>>
 

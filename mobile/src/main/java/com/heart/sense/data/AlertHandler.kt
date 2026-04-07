@@ -71,6 +71,12 @@ class AlertHandler @Inject constructor(
         notificationHelper.showIrregularRhythmNotification()
     }
 
+    fun handleStressAlert(risk: String, hrDelta: Int, hrvDelta: Float) {
+        Log.d("AlertHandler", "Stress Alert: $risk, HR Delta: $hrDelta, HRV Delta: $hrvDelta")
+        alertsRepository.addAlert(hrDelta, "Stress ($risk)")
+        notificationHelper.showStressNotification(risk, hrDelta)
+    }
+
     fun handleLiveHrUpdate(hr: Int) {
         alertsRepository.updateLiveHr(hr)
     }
