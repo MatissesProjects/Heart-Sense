@@ -2,6 +2,7 @@ package com.heart.sense.wear.util
 
 import com.heart.sense.wear.data.Settings
 import kotlin.math.abs
+import kotlin.math.sqrt
 
 enum class StressRisk {
     CALM, MILD, MODERATE, HIGH
@@ -23,9 +24,6 @@ data class StressDetectionResult(
 )
 
 object StressEvaluator {
-    private var lastLux = 0f
-    private var lastDb = 0
-
     /**
      * Calculates RMSSD from a list of RR intervals in milliseconds.
      */
@@ -38,7 +36,7 @@ object StressEvaluator {
             sumSquaredDiffs += diff * diff
         }
         
-        return Math.sqrt(sumSquaredDiffs / (intervals.size - 1)).toFloat()
+        return sqrt(sumSquaredDiffs / (rrIntervals.size - 1).toDouble()).toFloat()
     }
 
     /**
@@ -68,7 +66,7 @@ object StressEvaluator {
         // Calculate physiological score (0-80)
         val hrScore = (hrDelta * 3).coerceIn(0, 50)
         val hrvScore = if (hrvDelta < 0) {
-            (Math.abs(hrvDelta) * 2).toInt().coerceIn(0, 30)
+            (abs(hrvDelta) * 2).toInt().coerceIn(0, 30)
         } else 0
 
         // Environmental Boost (0-20 points)

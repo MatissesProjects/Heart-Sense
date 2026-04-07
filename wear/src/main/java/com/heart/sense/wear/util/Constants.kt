@@ -13,6 +13,7 @@ object Constants {
     const val PATH_REQUEST_SYNC = "/request_sync"
     const val PATH_STRESS_ALERT = "/stress_alert"
     const val PATH_BEHAVIORAL_ALERT = "/behavioral_alert"
+    const val PATH_PRECURSOR_ALERT = "/precursor_alert"
 
     const val PATH_SYNC_BATCH = "/sync_batch"
 

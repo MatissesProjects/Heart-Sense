@@ -8,9 +8,14 @@ import android.hardware.SensorManager
 import android.media.MediaRecorder
 import android.util.Log
 import dagger.hilt.android.qualifiers.ApplicationContext
+import kotlinx.coroutines.CoroutineScope
+import kotlinx.coroutines.Dispatchers
+import kotlinx.coroutines.SupervisorJob
 import kotlinx.coroutines.channels.awaitClose
+import kotlinx.coroutines.delay
 import kotlinx.coroutines.flow.Flow
 import kotlinx.coroutines.flow.callbackFlow
+import kotlinx.coroutines.launch
 import java.io.IOException
 import javax.inject.Inject
 import javax.inject.Singleton
@@ -26,6 +31,7 @@ class EnvironmentalSensorRepository @Inject constructor(
 ) {
     private val sensorManager = context.getSystemService(Context.SENSOR_SERVICE) as SensorManager
     private val lightSensor = sensorManager.getDefaultSensor(Sensor.TYPE_LIGHT)
+    private val repositoryScope = CoroutineScope(SupervisorJob() + Dispatchers.IO)
 
     fun getLightData(): Flow<Float> = callbackFlow {
         if (lightSensor == null) {
@@ -70,14 +76,18 @@ class EnvironmentalSensorRepository @Inject constructor(
             return@callbackFlow
         }
 
-        val job = kotlinx.coroutines.MainScope().launch {
+        val job = repositoryScope.launch {
             while (true) {
-                val amplitude = recorder.maxAmplitude
-                if (amplitude > 0) {
-                    val db = (20 * Math.log10(amplitude.toDouble())).toInt()
-                    trySend(db)
+                try {
+                    val amplitude = recorder.maxAmplitude
+                    if (amplitude > 0) {
+                        val db = (20 * Math.log10(amplitude.toDouble())).toInt()
+                        trySend(db)
+                    }
+                } catch (e: Exception) {
+                    Log.e("EnvSensor", "Error reading amplitude: ${e.message}")
                 }
-                kotlinx.coroutines.delay(1000)
+                delay(1000)
             }
         }
 

@@ -17,14 +17,19 @@ import com.heart.sense.wear.data.WearableCommunicationRepository
 import com.heart.sense.wear.data.CalibrationRepository
 import com.heart.sense.wear.data.OvernightDataRepository
 import com.heart.sense.wear.data.MotionSensorRepository
+import com.heart.sense.wear.data.EnvironmentalSensorRepository
 import com.heart.sense.wear.util.HeartRateEvaluator
 import com.heart.sense.wear.util.MonitoringAction
 import com.heart.sense.wear.util.RhythmEvaluator
 import com.heart.sense.wear.util.RhythmState
 import com.heart.sense.wear.util.StressEvaluator
 import com.heart.sense.wear.util.StressRisk
+import com.heart.sense.wear.util.StressContext
 import com.heart.sense.wear.util.FidgetDetector
 import com.heart.sense.wear.util.PacingDetector
+import com.heart.sense.wear.ai.MultiModalDataAggregator
+import com.heart.sense.wear.ai.MultiModalPoint
+import com.heart.sense.wear.ai.StressPredictor
 import dagger.hilt.android.AndroidEntryPoint
 import kotlinx.coroutines.CoroutineScope
 import kotlinx.coroutines.Dispatchers
@@ -51,12 +56,27 @@ class PassiveMonitoringService : PassiveListenerService() {
     @Inject
     lateinit var motionSensorRepository: MotionSensorRepository
 
+    @Inject
+    lateinit var environmentalSensorRepository: EnvironmentalSensorRepository
+
+    @Inject
+    lateinit var dataAggregator: MultiModalDataAggregator
+
+    @Inject
+    lateinit var stressPredictor: StressPredictor
+
     private val scope = CoroutineScope(SupervisorJob() + Dispatchers.Main)
     
     private var lastActivityState: UserActivityState = UserActivityState.USER_ACTIVITY_UNKNOWN
     private var isPaused: Boolean = false
     private var currentMotionScore: Float = 0f
     private var lastHr: Int = 0
+
+    // Environmental Context
+    private var currentLux: Float = 0f
+    private var currentDb: Int = 0
+    private var isSuddenNoise: Boolean = false
+    private var isSuddenLight: Boolean = false
 
     private val receiver = object : BroadcastReceiver() {
         override fun onReceive(context: Context?, intent: Intent?) {
@@ -135,7 +155,7 @@ class PassiveMonitoringService : PassiveListenerService() {
 
         lastActivityState = newState
 
-        // Pacing Detection (Sub-task 1)
+        // Pacing Detection
         scope.launch {
             val settings = settingsDataStore.settings.first()
             if (settings.detectPacing) {
@@ -180,7 +200,7 @@ class PassiveMonitoringService : PassiveListenerService() {
 
             val settings = settingsDataStore.settings.first()
 
-            // Sudden Agitation Detection (Sub-task 2)
+            // Sudden Agitation Detection
             if (settings.detectAgitation) {
                 val isSuddenAgitation = (lastActivityState == UserActivityState.USER_ACTIVITY_PASSIVE || 
                                         lastActivityState == UserActivityState.USER_ACTIVITY_ASLEEP) &&
@@ -213,11 +233,37 @@ class PassiveMonitoringService : PassiveListenerService() {
 
             // Stress Evaluation (Autism Clinic Feature)
             val currentRmssd = StressEvaluator.calculateRmssd(rrIntervals)
+            
+            // Add to AI Data Aggregator
+            dataAggregator.addPoint(MultiModalPoint(
+                hr = latestHr,
+                hrv = currentRmssd,
+                motionScore = currentMotionScore,
+                ambientNoise = currentDb
+            ))
+
+            // Run AI Prediction
+            if (dataAggregator.isReady()) {
+                val input = dataAggregator.getNormalizedInput(settings)
+                val prediction = stressPredictor.predict(input)
+                
+                if (prediction.futureStressScore > 0.7f && prediction.confidence > 0.8f) {
+                    Log.w("PassiveMonitoring", "AI PRECURSOR ALERT: Potential stress spike in 10 mins! Score: ${prediction.futureStressScore}")
+                    wearableCommunicationRepository.sendPrecursorAlert(prediction.futureStressScore, prediction.confidence)
+                }
+            }
+
             val stressResult = StressEvaluator.evaluate(
                 currentHr = latestHr,
                 currentRmssd = currentRmssd,
                 settings = settings,
-                activityState = lastActivityState
+                activityState = lastActivityState,
+                envContext = StressContext(
+                    currentLux = currentLux,
+                    currentDb = currentDb,
+                    isSuddenNoise = isSuddenNoise,
+                    isSuddenLight = isSuddenLight
+                )
             )
 
             if (stressResult.risk == StressRisk.MODERATE || stressResult.risk == StressRisk.HIGH) {

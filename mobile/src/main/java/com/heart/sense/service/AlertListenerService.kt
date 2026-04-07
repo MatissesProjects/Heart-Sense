@@ -55,6 +55,12 @@ class AlertListenerService : WearableListenerService() {
                     alertHandler.handleBehavioralAlert(data[0], data[1])
                 }
             }
+            Constants.PATH_PRECURSOR_ALERT -> {
+                val data = String(messageEvent.data).split("|")
+                if (data.size >= 2) {
+                    alertHandler.handlePrecursorAlert(data[0].toFloat(), data[1].toFloat())
+                }
+            }
         }
     }
 }

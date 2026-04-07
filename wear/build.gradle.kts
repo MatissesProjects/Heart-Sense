@@ -64,6 +64,11 @@ dependencies {
     implementation(libs.androidx.room.ktx)
     ksp(libs.androidx.room.compiler)
     
+    // TFLite
+    implementation(libs.tensorflow.lite)
+    implementation(libs.tensorflow.lite.support)
+    implementation(libs.tensorflow.lite.metadata)
+    
     // Hilt
     implementation(libs.hilt.android)
     ksp(libs.hilt.compiler)

@@ -83,6 +83,12 @@ class AlertHandler @Inject constructor(
         notificationHelper.showBehavioralNotification(type, details)
     }
 
+    fun handlePrecursorAlert(score: Float, confidence: Float) {
+        Log.d("AlertHandler", "Precursor Alert: Score $score, Confidence $confidence")
+        alertsRepository.addAlert((score * 100).toInt(), "AI Precursor")
+        notificationHelper.showPrecursorNotification(score, confidence)
+    }
+
     fun handleLiveHrUpdate(hr: Int) {
         alertsRepository.updateLiveHr(hr)
     }
