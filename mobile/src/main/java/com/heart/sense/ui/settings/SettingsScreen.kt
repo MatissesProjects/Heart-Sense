@@ -17,6 +17,7 @@ import androidx.health.connect.client.PermissionController
 import com.heart.sense.ui.dashboard.HealthDashboard
 import com.heart.sense.data.Settings
 import java.time.format.DateTimeFormatter
+import androidx.compose.foundation.text.selection.SelectionContainer
 
 @Composable
 fun SettingsScreen(
@@ -29,9 +30,11 @@ fun SettingsScreen(
     val dailyAverages by viewModel.dailyAverages.collectAsState()
     val aiBaseline by viewModel.aiBaseline.collectAsState()
     val healthPermissionsGranted by viewModel.healthConnectPermissionsGranted.collectAsState()
+    val activeSession by viewModel.activeSession.collectAsState()
 
     var showCaregiverDashboard by remember { mutableStateOf(false) }
     var showReportScreen by remember { mutableStateOf(false) }
+    var showExportScreen by remember { mutableStateOf(false) }
 
     if (showCaregiverDashboard) {
         com.heart.sense.ui.caregiver.LocalDashboard(
@@ -45,6 +48,14 @@ fun SettingsScreen(
         com.heart.sense.ui.reports.ReportScreen(
             viewModel = viewModel,
             onBack = { showReportScreen = false }
+        )
+        return
+    }
+
+    if (showExportScreen) {
+        com.heart.sense.ui.reports.SessionExportScreen(
+            viewModel = viewModel,
+            onBack = { showExportScreen = false }
         )
         return
     }
@@ -111,6 +122,14 @@ fun SettingsScreen(
 
         item {
             com.heart.sense.ui.dashboard.CalmGardenCard(settings = settings)
+        }
+
+        item {
+            SessionModeCard(
+                activeSession = activeSession,
+                onStart = { viewModel.startVisit() },
+                onEnd = { viewModel.endVisit() }
+            )
         }
 
         if (settings.isCalibrating || settings.isCalibrated) {
@@ -225,6 +244,25 @@ fun SettingsScreen(
         }
 
         item {
+            Card(
+                modifier = Modifier.fillMaxWidth(),
+                onClick = { showExportScreen = true }
+            ) {
+                Row(
+                    modifier = Modifier.padding(16.dp),
+                    verticalAlignment = Alignment.CenterVertically,
+                    horizontalArrangement = Arrangement.SpaceBetween
+                ) {
+                    Column(modifier = Modifier.weight(1f)) {
+                        Text("Session Data Export", style = MaterialTheme.typography.titleMedium, fontWeight = FontWeight.Bold)
+                        Text("EHR-Ready JSON export for specific clinical visits.", style = MaterialTheme.typography.bodySmall)
+                    }
+                    Icon(imageVector = Icons.AutoMirrored.Filled.KeyboardArrowRight, contentDescription = null)
+                }
+            }
+        }
+
+        item {
             HealthConnectCard(
                 permissionsGranted = healthPermissionsGranted,
                 onRequestPermissions = { 
@@ -278,6 +316,47 @@ fun SettingsScreen(
                 alert = alert,
                 onTagSelected = { tag -> viewModel.tagAlert(alert.id, tag) }
             )
+        }
+    }
+}
+
+@Composable
+fun SessionModeCard(
+    activeSession: com.heart.sense.data.Session?,
+    onStart: () -> Unit,
+    onEnd: () -> Unit
+) {
+    Card(
+        modifier = Modifier.fillMaxWidth(),
+        colors = CardDefaults.cardColors(
+            containerColor = if (activeSession != null) MaterialTheme.colorScheme.tertiaryContainer else MaterialTheme.colorScheme.surfaceVariant
+        )
+    ) {
+        Column(modifier = Modifier.padding(16.dp), verticalArrangement = Arrangement.spacedBy(8.dp)) {
+            Row(modifier = Modifier.fillMaxWidth(), horizontalArrangement = Arrangement.SpaceBetween, verticalAlignment = Alignment.CenterVertically) {
+                Text("Clinical Session Mode", style = MaterialTheme.typography.titleMedium, fontWeight = FontWeight.Bold)
+                if (activeSession != null) {
+                    Text("ACTIVE", color = MaterialTheme.colorScheme.primary, fontWeight = FontWeight.Bold)
+                }
+            }
+            
+            Text(
+                "When active, all alerts and interventions are tagged with a unique Visit ID for clinical export.",
+                style = MaterialTheme.typography.bodySmall
+            )
+
+            if (activeSession != null) {
+                SelectionContainer {
+                    Text("Visit ID: ${activeSession.visitId}", style = MaterialTheme.typography.labelSmall, fontStyle = androidx.compose.ui.text.font.FontStyle.Italic)
+                }
+                Button(onClick = onEnd, modifier = Modifier.fillMaxWidth(), colors = ButtonDefaults.buttonColors(containerColor = MaterialTheme.colorScheme.error)) {
+                    Text("End Clinical Visit")
+                }
+            } else {
+                Button(onClick = onStart, modifier = Modifier.fillMaxWidth()) {
+                    Text("Start New Clinical Visit")
+                }
+            }
         }
     }
 }

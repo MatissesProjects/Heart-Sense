@@ -76,4 +76,10 @@ object WearableModule {
     fun provideInterventionDao(database: HeartSenseDatabase): com.heart.sense.data.db.InterventionDao {
         return database.interventionDao()
     }
+
+    @Provides
+    @Singleton
+    fun provideSessionDao(database: HeartSenseDatabase): com.heart.sense.data.db.SessionDao {
+        return database.sessionDao()
+    }
 }

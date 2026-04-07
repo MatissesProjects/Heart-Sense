@@ -21,14 +21,15 @@ class InterventionRepository @Inject constructor(
     /**
      * Starts a new intervention and returns the ID.
      */
-    suspend fun startIntervention(type: String, trigger: String?, hr: Int, hrv: Float): Long {
+    suspend fun startIntervention(type: String, trigger: String?, hr: Int, hrv: Float, visitId: String? = null): Long {
         val intervention = Intervention(
             type = type,
             trigger = trigger,
             startHr = hr,
             startHrv = hrv,
             endHr = null,
-            endHrv = null
+            endHrv = null,
+            visitId = visitId
         )
         return interventionDao.insert(intervention)
     }

@@ -11,5 +11,6 @@ data class OvernightMeasurement(
     val respiratoryRate: Float?,
     val activityState: Int,
     val rrIntervals: String? = null, // Store as JSON/CSV list of Long (ms)
-    val motionIntensity: Float = 0f
+    val motionIntensity: Float = 0f,
+    val visitId: String? = null
 )

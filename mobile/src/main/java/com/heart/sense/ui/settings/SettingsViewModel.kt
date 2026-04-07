@@ -8,6 +8,7 @@ import com.heart.sense.data.DailyAverage
 import com.heart.sense.data.DailyAverageRepository
 import com.heart.sense.data.HealthConnectRepository
 import com.heart.sense.data.LocalSyncRepository
+import com.heart.sense.data.SessionRepository
 import com.heart.sense.data.Settings
 import com.heart.sense.data.SettingsDataStore
 import com.heart.sense.data.SettingsRepository
@@ -28,9 +29,28 @@ class SettingsViewModel @Inject constructor(
     private val alertsRepository: AlertsRepository,
     private val dailyAverageRepository: DailyAverageRepository,
     private val healthConnectRepository: HealthConnectRepository,
-    private val localSyncRepository: LocalSyncRepository
+    private val localSyncRepository: LocalSyncRepository,
+    val sessionRepository: SessionRepository
 ) : ViewModel() {
     
+    val activeSession: StateFlow<com.heart.sense.data.Session?> = sessionRepository.activeSession.stateIn(
+        scope = viewModelScope,
+        started = SharingStarted.WhileSubscribed(5000),
+        initialValue = null
+    )
+
+    fun startVisit(notes: String? = null) {
+        viewModelScope.launch {
+            sessionRepository.startSession(notes)
+        }
+    }
+
+    fun endVisit() {
+        viewModelScope.launch {
+            sessionRepository.endSession()
+        }
+    }
+
     val settings: StateFlow<Settings> = settingsDataStore.settings.stateIn(
         scope = viewModelScope,
         started = SharingStarted.WhileSubscribed(5000),
@@ -155,7 +175,12 @@ class SettingsViewModel @Inject constructor(
     }
 
     fun testAlert() {
-        alertsRepository.addAlert((70..150).random(), "Test Alert")
+        alertsRepository.addAlert((70..150).random(), "Test Alert", getActiveVisitIdSync())
+    }
+
+    private fun getActiveVisitIdSync(): String? {
+        // Simple helper for testing, in real use we'd use the flow or repo
+        return null
     }
 
     fun tagAlert(alertId: Int, tag: String) {

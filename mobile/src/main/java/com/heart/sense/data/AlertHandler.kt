@@ -21,7 +21,8 @@ class AlertHandler @Inject constructor(
     private val alertsRepository: AlertsRepository,
     private val settingsDataStore: SettingsDataStore,
     private val localSyncRepository: LocalSyncRepository,
-    private val interventionRepository: InterventionRepository
+    private val interventionRepository: InterventionRepository,
+    private val sessionRepository: SessionRepository
 ) {
     private val scope = CoroutineScope(SupervisorJob() + Dispatchers.Main)
     private val notificationHelper = NotificationHelper(context)
@@ -35,7 +36,8 @@ class AlertHandler @Inject constructor(
                 return@launch
             }
             
-            alertsRepository.addAlert(hr, "High HR")
+            val visitId = sessionRepository.getActiveVisitId()
+            alertsRepository.addAlert(hr, "High HR", visitId)
             notificationHelper.showHighHrNotification(hr)
             localSyncRepository.sendData(NearbyPayload(hr, "High HR Alert"))
         }
@@ -43,7 +45,8 @@ class AlertHandler @Inject constructor(
 
     fun handleCriticalHrAlert(hr: Int) {
         scope.launch {
-            alertsRepository.addAlert(hr, "CRITICAL HR")
+            val visitId = sessionRepository.getActiveVisitId()
+            alertsRepository.addAlert(hr, "CRITICAL HR", visitId)
             notificationHelper.showCriticalHrNotification(hr)
             localSyncRepository.sendData(NearbyPayload(hr, "CRITICAL HR ALERT"))
             
@@ -63,7 +66,8 @@ class AlertHandler @Inject constructor(
 
     fun handleSitDownAlert(hr: Int) {
         scope.launch {
-            alertsRepository.addAlert(hr, "Sit Down")
+            val visitId = sessionRepository.getActiveVisitId()
+            alertsRepository.addAlert(hr, "Sit Down", visitId)
             notificationHelper.showSitDownWarning(hr)
             localSyncRepository.sendData(NearbyPayload(hr, "Sit Down Warning"))
         }
@@ -75,9 +79,12 @@ class AlertHandler @Inject constructor(
     }
 
     fun handleIrregularRhythmAlert() {
-        alertsRepository.addAlert(0, "Irregular Rhythm")
-        notificationHelper.showIrregularRhythmNotification()
-        localSyncRepository.sendData(NearbyPayload(0, "Irregular Rhythm Detected"))
+        scope.launch {
+            val visitId = sessionRepository.getActiveVisitId()
+            alertsRepository.addAlert(0, "Irregular Rhythm", visitId)
+            notificationHelper.showIrregularRhythmNotification()
+            localSyncRepository.sendData(NearbyPayload(0, "Irregular Rhythm Detected"))
+        }
     }
 
     fun handleStressAlert(risk: String, hrDelta: Int, hrvDelta: Float, trigger: String? = null) {
@@ -86,8 +93,9 @@ class AlertHandler @Inject constructor(
             
             // RL Logic: Get the best-performing recommendation for this context
             val recommendation = interventionRepository.getRecommendation(trigger)
+            val visitId = sessionRepository.getActiveVisitId()
             
-            alertsRepository.addAlert(hrDelta, "Stress ($risk)${if (trigger != null) ": $trigger" else ""}")
+            alertsRepository.addAlert(hrDelta, "Stress ($risk)${if (trigger != null) ": $trigger" else ""}", visitId)
             notificationHelper.showStressNotification(risk, hrDelta, trigger, recommendation)
             
             // Record initial state for the learning loop
@@ -96,7 +104,8 @@ class AlertHandler @Inject constructor(
                 type = recommendation,
                 trigger = trigger,
                 hr = settings.restingHr + hrDelta,
-                hrv = 40f - hrvDelta
+                hrv = 40f - hrvDelta,
+                visitId = visitId
             )
 
             localSyncRepository.sendData(NearbyPayload(hrDelta, "Stress: $risk. Recommended: $recommendation"))
@@ -104,17 +113,23 @@ class AlertHandler @Inject constructor(
     }
 
     fun handleBehavioralAlert(type: String, details: String) {
-        Log.d("AlertHandler", "Behavioral Alert: $type - $details")
-        alertsRepository.addAlert(0, "Behavior ($type)")
-        notificationHelper.showBehavioralNotification(type, details)
-        localSyncRepository.sendData(NearbyPayload(0, "Behavior: $type"))
+        scope.launch {
+            val visitId = sessionRepository.getActiveVisitId()
+            Log.d("AlertHandler", "Behavioral Alert: $type - $details")
+            alertsRepository.addAlert(0, "Behavior ($type)", visitId)
+            notificationHelper.showBehavioralNotification(type, details)
+            localSyncRepository.sendData(NearbyPayload(0, "Behavior: $type"))
+        }
     }
 
     fun handlePrecursorAlert(score: Float, confidence: Float) {
-        Log.d("AlertHandler", "Precursor Alert: Score $score, Confidence $confidence")
-        alertsRepository.addAlert((score * 100).toInt(), "AI Precursor")
-        notificationHelper.showPrecursorNotification(score, confidence)
-        localSyncRepository.sendData(NearbyPayload((score * 100).toInt(), "AI Stress Warning"))
+        scope.launch {
+            val visitId = sessionRepository.getActiveVisitId()
+            Log.d("AlertHandler", "Precursor Alert: Score $score, Confidence $confidence")
+            alertsRepository.addAlert((score * 100).toInt(), "AI Precursor", visitId)
+            notificationHelper.showPrecursorNotification(score, confidence)
+            localSyncRepository.sendData(NearbyPayload((score * 100).toInt(), "AI Stress Warning"))
+        }
     }
 
     fun handleLiveHrUpdate(hr: Int) {

@@ -20,5 +20,6 @@ data class Intervention(
     val endHrv: Float?,
     
     // Calculated efficiency (The "Reward" for RL)
-    val recoveryScore: Float = 0f 
+    val recoveryScore: Float = 0f,
+    val visitId: String? = null
 )
