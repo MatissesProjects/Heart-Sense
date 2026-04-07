@@ -28,6 +28,9 @@ class SettingsDataStore @Inject constructor(private val context: Context) {
     private val EMERGENCY_ENABLED = booleanPreferencesKey(Constants.KEY_EMERGENCY_ENABLED)
     private val DETECT_PACING = booleanPreferencesKey(Constants.KEY_DETECT_PACING)
     private val DETECT_AGITATION = booleanPreferencesKey(Constants.KEY_DETECT_AGITATION)
+    private val CURRENT_STREAK = intPreferencesKey(Constants.KEY_CURRENT_STREAK)
+    private val BEST_STREAK = intPreferencesKey(Constants.KEY_BEST_STREAK)
+    private val CALM_POINTS = intPreferencesKey(Constants.KEY_CALM_POINTS)
 
     val settings: Flow<Settings> = context.dataStore.data.map { preferences ->
         Settings(
@@ -44,7 +47,10 @@ class SettingsDataStore @Inject constructor(private val context: Context) {
             emergencyCountdownSeconds = preferences[EMERGENCY_COUNTDOWN] ?: 30,
             isEmergencyEnabled = preferences[EMERGENCY_ENABLED] ?: false,
             detectPacing = preferences[DETECT_PACING] ?: false,
-            detectAgitation = preferences[DETECT_AGITATION] ?: false
+            detectAgitation = preferences[DETECT_AGITATION] ?: false,
+            currentStreakMinutes = preferences[CURRENT_STREAK] ?: 0,
+            bestStreakMinutes = preferences[BEST_STREAK] ?: 0,
+            calmPoints = preferences[CALM_POINTS] ?: 0
         )
     }
 
@@ -64,6 +70,9 @@ class SettingsDataStore @Inject constructor(private val context: Context) {
             preferences[EMERGENCY_ENABLED] = settings.isEmergencyEnabled
             preferences[DETECT_PACING] = settings.detectPacing
             preferences[DETECT_AGITATION] = settings.detectAgitation
+            preferences[CURRENT_STREAK] = settings.currentStreakMinutes
+            preferences[BEST_STREAK] = settings.bestStreakMinutes
+            preferences[CALM_POINTS] = settings.calmPoints
         }
     }
 

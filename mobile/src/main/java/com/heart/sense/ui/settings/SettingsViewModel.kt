@@ -101,6 +101,17 @@ class SettingsViewModel @Inject constructor(
     fun refreshDailyAverages() {
         viewModelScope.launch {
             _dailyAverages.value = dailyAverageRepository.getDailyAverages(7)
+            checkStreakReset()
+        }
+    }
+
+    private fun checkStreakReset() {
+        viewModelScope.launch {
+            val current = settings.value
+            // If the last update was more than 24 hours ago, reset current streak
+            if (System.currentTimeMillis() - current.lastUpdated > 24 * 60 * 60 * 1000L) {
+                repository.updateSettings(current.copy(currentStreakMinutes = 0))
+            }
         }
     }
     

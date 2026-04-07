@@ -50,7 +50,7 @@ class SettingsRepository @Inject constructor(
     suspend fun updateSettings(settings: Settings) {
         val timestamp = System.currentTimeMillis()
         val updated = settings.copy(lastUpdated = timestamp)
-        settingsDataStore.updateSettings(updated.highHrThreshold, updated.isSickMode, updated.lastUpdated, updated.snoozeUntil)
+        settingsDataStore.updateSettings(updated)
         debouncedSync(updated)
     }
 
@@ -92,6 +92,9 @@ class SettingsRepository @Inject constructor(
             dataMap.putBoolean(Constants.KEY_EMERGENCY_ENABLED, settings.isEmergencyEnabled)
             dataMap.putBoolean(Constants.KEY_DETECT_PACING, settings.detectPacing)
             dataMap.putBoolean(Constants.KEY_DETECT_AGITATION, settings.detectAgitation)
+            dataMap.putInt(Constants.KEY_CURRENT_STREAK, settings.currentStreakMinutes)
+            dataMap.putInt(Constants.KEY_BEST_STREAK, settings.bestStreakMinutes)
+            dataMap.putInt(Constants.KEY_CALM_POINTS, settings.calmPoints)
         }.asPutDataRequest().setUrgent()
         
         try {

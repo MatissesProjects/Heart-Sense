@@ -19,6 +19,7 @@ import com.heart.sense.wear.data.OvernightDataRepository
 import com.heart.sense.wear.data.MotionSensorRepository
 import com.heart.sense.wear.data.EnvironmentalSensorRepository
 import com.heart.sense.wear.data.AdvancedSensorRepository
+import com.heart.sense.wear.data.GamificationRepository
 import com.heart.sense.wear.util.HeartRateEvaluator
 import com.heart.sense.wear.util.MonitoringAction
 import com.heart.sense.wear.util.RhythmEvaluator
@@ -68,6 +69,9 @@ class PassiveMonitoringService : PassiveListenerService() {
 
     @Inject
     lateinit var stressPredictor: StressPredictor
+
+    @Inject
+    lateinit var gamificationRepository: GamificationRepository
 
     private val scope = CoroutineScope(SupervisorJob() + Dispatchers.Main)
     
@@ -234,6 +238,9 @@ class PassiveMonitoringService : PassiveListenerService() {
                 rrIntervals = rrIntervals,
                 motionIntensity = currentMotionScore
             )
+
+            // Update Calm Streak / Gamification
+            gamificationRepository.updateCalmState(latestHr)
 
             // Stress Evaluation (Autism Clinic Feature)
             val currentRmssd = StressEvaluator.calculateRmssd(rrIntervals)

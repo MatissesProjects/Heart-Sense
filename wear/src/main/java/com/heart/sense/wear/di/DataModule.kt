@@ -67,4 +67,22 @@ object DataModule {
     fun provideOvernightMeasurementDao(database: HeartSenseDatabase): OvernightMeasurementDao {
         return database.overnightMeasurementDao()
     }
+
+    @Provides
+    @Singleton
+    fun provideGamificationRepository(settingsDataStore: SettingsDataStore): com.heart.sense.wear.data.GamificationRepository {
+        return com.heart.sense.wear.data.GamificationRepository(settingsDataStore)
+    }
+
+    @Provides
+    @Singleton
+    fun provideMultiModalDataAggregator(): com.heart.sense.wear.ai.MultiModalDataAggregator {
+        return com.heart.sense.wear.ai.MultiModalDataAggregator()
+    }
+
+    @Provides
+    @Singleton
+    fun provideStressPredictor(@ApplicationContext context: Context): com.heart.sense.wear.ai.StressPredictor {
+        return com.heart.sense.wear.ai.StressPredictor(context)
+    }
 }

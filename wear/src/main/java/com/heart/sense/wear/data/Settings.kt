@@ -14,7 +14,10 @@ data class Settings(
     val emergencyCountdownSeconds: Int = 30,
     val isEmergencyEnabled: Boolean = false,
     val detectPacing: Boolean = false,
-    val detectAgitation: Boolean = false
+    val detectAgitation: Boolean = false,
+    val currentStreakMinutes: Int = 0,
+    val bestStreakMinutes: Int = 0,
+    val calmPoints: Int = 0
 ) {
     val effectiveThreshold: Int
         get() {

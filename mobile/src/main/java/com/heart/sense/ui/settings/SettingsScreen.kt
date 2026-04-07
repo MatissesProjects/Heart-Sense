@@ -109,6 +109,10 @@ fun SettingsScreen(
             }
         }
 
+        item {
+            com.heart.sense.ui.dashboard.CalmGardenCard(settings = settings)
+        }
+
         if (settings.isCalibrating || settings.isCalibrated) {
             item {
                 CalibrationProgressCard(
