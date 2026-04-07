@@ -25,6 +25,10 @@ class SettingsDataStore @Inject constructor(
     private val RESTING_HR = intPreferencesKey(Constants.KEY_RESTING_HR)
     private val RESPIRATORY_RATE = floatPreferencesKey(Constants.KEY_RESPIRATORY_RATE)
     private val CALIBRATION_START_TIME = longPreferencesKey(Constants.KEY_CALIBRATION_START_TIME)
+    private val EMERGENCY_CONTACT_NAME = stringPreferencesKey(Constants.KEY_EMERGENCY_CONTACT_NAME)
+    private val EMERGENCY_CONTACT_PHONE = stringPreferencesKey(Constants.KEY_EMERGENCY_CONTACT_PHONE)
+    private val EMERGENCY_COUNTDOWN = intPreferencesKey(Constants.KEY_EMERGENCY_COUNTDOWN)
+    private val EMERGENCY_ENABLED = booleanPreferencesKey(Constants.KEY_EMERGENCY_ENABLED)
 
     val settings: Flow<Settings> = context.dataStore.data.map { preferences ->
         Settings(
@@ -35,7 +39,11 @@ class SettingsDataStore @Inject constructor(
             calibrationStatus = preferences[CALIBRATION_STATUS] ?: "NOT_STARTED",
             restingHr = preferences[RESTING_HR] ?: 0,
             respiratoryRate = preferences[RESPIRATORY_RATE] ?: 0f,
-            calibrationStartTime = preferences[CALIBRATION_START_TIME] ?: 0L
+            calibrationStartTime = preferences[CALIBRATION_START_TIME] ?: 0L,
+            emergencyContactName = preferences[EMERGENCY_CONTACT_NAME] ?: "",
+            emergencyContactPhone = preferences[EMERGENCY_CONTACT_PHONE] ?: "",
+            emergencyCountdownSeconds = preferences[EMERGENCY_COUNTDOWN] ?: 30,
+            isEmergencyEnabled = preferences[EMERGENCY_ENABLED] ?: false
         )
     }
 
@@ -53,6 +61,10 @@ class SettingsDataStore @Inject constructor(
             preferences[RESTING_HR] = settings.restingHr
             preferences[RESPIRATORY_RATE] = settings.respiratoryRate
             preferences[CALIBRATION_START_TIME] = settings.calibrationStartTime
+            preferences[EMERGENCY_CONTACT_NAME] = settings.emergencyContactName
+            preferences[EMERGENCY_CONTACT_PHONE] = settings.emergencyContactPhone
+            preferences[EMERGENCY_COUNTDOWN] = settings.emergencyCountdownSeconds
+            preferences[EMERGENCY_ENABLED] = settings.isEmergencyEnabled
         }
     }
 

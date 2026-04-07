@@ -8,7 +8,11 @@ data class Settings(
     val calibrationStatus: String = "NOT_STARTED", // "NOT_STARTED", "CALIBRATING", "CALIBRATED"
     val restingHr: Int = 0,
     val respiratoryRate: Float = 0f,
-    val calibrationStartTime: Long = 0L
+    val calibrationStartTime: Long = 0L,
+    val emergencyContactName: String = "",
+    val emergencyContactPhone: String = "",
+    val emergencyCountdownSeconds: Int = 30,
+    val isEmergencyEnabled: Boolean = false
 ) {
     val effectiveThreshold: Int
         get() {

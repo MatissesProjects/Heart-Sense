@@ -23,6 +23,10 @@ object Constants {
     const val KEY_RESTING_HR = "restingHr"
     const val KEY_RESPIRATORY_RATE = "respiratoryRate"
     const val KEY_CALIBRATION_START_TIME = "calibrationStartTime"
+    const val KEY_EMERGENCY_CONTACT_NAME = "emergencyContactName"
+    const val KEY_EMERGENCY_CONTACT_PHONE = "emergencyContactPhone"
+    const val KEY_EMERGENCY_COUNTDOWN = "emergencyCountdown"
+    const val KEY_EMERGENCY_ENABLED = "emergencyEnabled"
 
     // Intent Actions
     const val ACTION_SICK_MODE = "com.heart.sense.ACTION_SICK_MODE"

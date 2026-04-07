@@ -5,13 +5,17 @@ import android.content.Context
 import android.content.Intent
 import android.app.NotificationManager
 import android.net.Uri
+import com.heart.sense.data.AlertHandler
+import com.heart.sense.data.SettingsDataStore
 import com.heart.sense.data.SettingsRepository
 import com.heart.sense.data.WearableCommunicationRepository
 import com.heart.sense.util.Constants
+import com.heart.sense.util.NotificationHelper
 import dagger.hilt.android.AndroidEntryPoint
 import kotlinx.coroutines.CoroutineScope
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.SupervisorJob
+import kotlinx.coroutines.flow.first
 import kotlinx.coroutines.launch
 import javax.inject.Inject
 
@@ -19,10 +23,16 @@ import javax.inject.Inject
 class AlertActionReceiver : BroadcastReceiver() {
 
     @Inject
+    lateinit var settingsDataStore: SettingsDataStore
+
+    @Inject
     lateinit var settingsRepository: SettingsRepository
 
     @Inject
     lateinit var wearableCommunicationRepository: WearableCommunicationRepository
+
+    @Inject
+    lateinit var alertHandler: AlertHandler
 
     private val scope = CoroutineScope(SupervisorJob() + Dispatchers.IO)
 
@@ -30,9 +40,9 @@ class AlertActionReceiver : BroadcastReceiver() {
         val notificationManager = context.getSystemService(Context.NOTIFICATION_SERVICE) as NotificationManager
         
         // Cancel relevant notification based on ID
-        notificationManager.cancel(100) // High HR
-        notificationManager.cancel(101) // Sit Down
-        notificationManager.cancel(102) // Critical
+        notificationManager.cancel(NotificationHelper.ID_HIGH_HR)
+        notificationManager.cancel(NotificationHelper.ID_SIT_DOWN)
+        notificationManager.cancel(NotificationHelper.ID_CRITICAL_HR)
 
         when (intent.action) {
             Constants.ACTION_SICK_MODE -> {
@@ -51,13 +61,20 @@ class AlertActionReceiver : BroadcastReceiver() {
                 }
             }
             Constants.ACTION_EMERGENCY_CONTACT -> {
-                // For safety using DIAL instead of CALL to avoid immediate call without review
-                // and to avoid needing CALL_PHONE permission for now
-                val dialIntent = Intent(Intent.ACTION_DIAL).apply {
-                    data = Uri.parse("tel:911") // Placeholder, should be configurable
-                    flags = Intent.FLAG_ACTIVITY_NEW_TASK
+                scope.launch {
+                    val settings = settingsDataStore.settings.first()
+                    val phoneNumber = if (settings.emergencyContactPhone.isNotEmpty()) {
+                        settings.emergencyContactPhone
+                    } else {
+                        "911"
+                    }
+                    
+                    val dialIntent = Intent(Intent.ACTION_DIAL).apply {
+                        data = Uri.parse("tel:$phoneNumber")
+                        flags = Intent.FLAG_ACTIVITY_NEW_TASK
+                    }
+                    context.startActivity(dialIntent)
                 }
-                context.startActivity(dialIntent)
             }
             Constants.ACTION_ACKNOWLEDGE -> {
                 // Just dismiss, which we already did
