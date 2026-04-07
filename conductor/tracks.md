@@ -22,8 +22,8 @@
 | `018-autism-clinic-features` | Autism Clinic | Features for stress detection, event tagging, and clinician support. | Completed |
 | `019-motion-analytics` | Motion & Fidgeting | Tracking repetitive hand movements and stimming behaviors via IMU. | Completed |
 | `020-behavioral-patterns` | Behavioral Recognition| Detecting pacing, sudden agitation, and activity transitions. | Completed |
-| `021-environmental-context` | Environmental Triggers | Correlating ambient noise/light spikes with physiological stress. | In Progress |
-| `022-predictive-stress-ai` | Predictive Stress AI | On-device forecasting of stress events using TFLite. | Planned |
+| `021-environmental-context` | Environmental Triggers | Correlating ambient noise/light spikes with physiological stress. | Completed |
+| `022-predictive-stress-ai` | Predictive Stress AI | On-device forecasting of stress events using TFLite. | In Progress |
 | `023-remote-caregiver` | Caregiver Dashboard | Real-time monitoring for parents/clinicians via cloud sync. | Planned |
 | `024-active-biofeedback` | Active Biofeedback | Haptic-guided breathing and grounding exercises on-watch. | Planned |
 | `025-clinician-reports` | Reporting Engine | Automated PDF/CSV reports for behavioral analysis. | Planned |
