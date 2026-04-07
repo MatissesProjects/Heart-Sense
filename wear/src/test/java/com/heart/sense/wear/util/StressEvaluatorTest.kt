@@ -27,12 +27,24 @@ class StressEvaluatorTest {
 
     @Test
     fun `evaluate detects HIGH stress for high HR and low HRV`() {
-        // HR delta = 30 (90 - 60). HR score = 30 * 3 = 90 (capped at 60)
-        // HRV baseline = 40, current = 20. HRV delta = -20. HRV score = 20 * 2 = 40.
-        // Total = 60 + 40 = 100.
+        // HR delta = 30 (90 - 60). HR score = 30 * 3 = 90 (capped at 40)
+        // HRV baseline = 40, current = 20. HRV delta = -20. HRV score = 20 * 2 = 40 (capped at 30)
+        // Total = 40 + 30 = 70.
         val result = StressEvaluator.evaluate(90, 20f, calibratedSettings, UserActivityState.USER_ACTIVITY_PASSIVE)
         assertEquals(StressRisk.HIGH, result.risk)
-        assertEquals(100, result.score)
+        assertEquals(70, result.score)
+    }
+
+    @Test
+    fun `evaluate detects extra stress from environmental triggers`() {
+        // Physio score = 70
+        // Env score = 10 (Sudden Noise)
+        // Total = 80
+        val env = StressContext(isSuddenNoise = true)
+        val result = StressEvaluator.evaluate(90, 20f, calibratedSettings, UserActivityState.USER_ACTIVITY_PASSIVE, env)
+        assertEquals(StressRisk.HIGH, result.risk)
+        assertEquals(80, result.score)
+        assertEquals("Sudden Noise", result.trigger)
     }
 
     @Test

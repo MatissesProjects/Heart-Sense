@@ -3,6 +3,4 @@
     <style name="Theme.HeartSense" parent="Theme.AppCompat.Light.NoActionBar">
         <!-- Customize your theme here. -->
     </style>
-
-    <style name="Theme.AppCompat.Light.NoActionBar" parent="Theme.HeartSense" />
 </resources>

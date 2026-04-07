@@ -31,4 +31,4 @@
 | `027-multi-sensor-fusion`| Advanced Sensors | Integrating skin temp and GSR for higher fidelity detection. | Completed |
 | `028-adaptive-interventions`| RL Interventions | Learning which calming techniques work best for the user. | Completed |
 | `029-research-sync` | Research Data | Anonymized aggregate data sharing for clinical studies. | Skipped |
-| `030-gamified-calm` | Gamified Calm | Incentivizing calm states during known stressful periods. | In Progress |
+| `030-gamified-calm` | Gamified Calm | Incentivizing calm states during known stressful periods. | Completed |
