@@ -19,8 +19,8 @@
 | `015-ai-baseline` | AI Baseline | On-device adaptive thresholds using historical metrics. | Completed |
 | `016-emergency-response`| Emergency Response | Automated escalation to contacts during critical events. | Completed |
 | `017-health-connect` | Health Connect | Bi-directional sync with Google Health Connect ecosystem. | Completed |
-| `018-autism-clinic-features` | Autism Clinic | Features for stress detection, event tagging, and clinician support. | In Progress |
-| `019-motion-analytics` | Motion & Fidgeting | Tracking repetitive hand movements and stimming behaviors via IMU. | Planned |
+| `018-autism-clinic-features` | Autism Clinic | Features for stress detection, event tagging, and clinician support. | Completed |
+| `019-motion-analytics` | Motion & Fidgeting | Tracking repetitive hand movements and stimming behaviors via IMU. | In Progress |
 | `020-behavioral-patterns` | Behavioral Recognition| Detecting pacing, sudden agitation, and activity transitions. | Planned |
 | `021-environmental-context` | Environmental Triggers | Correlating ambient noise/light spikes with physiological stress. | Planned |
 | `022-predictive-stress-ai` | Predictive Stress AI | On-device forecasting of stress events using TFLite. | Planned |

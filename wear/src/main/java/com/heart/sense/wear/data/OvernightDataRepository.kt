@@ -12,13 +12,20 @@ class OvernightDataRepository @Inject constructor(
     private val dao: OvernightMeasurementDao,
     private val communicationRepository: WearableCommunicationRepository
 ) {
-    suspend fun storeMeasurement(heartRate: Int, respiratoryRate: Float?, activityState: Int, rrIntervals: List<Long>? = null) {
+    suspend fun storeMeasurement(
+        heartRate: Int, 
+        respiratoryRate: Float?, 
+        activityState: Int, 
+        rrIntervals: List<Long>? = null,
+        motionIntensity: Float = 0f
+    ) {
         val measurement = OvernightMeasurement(
             timestamp = System.currentTimeMillis(),
             heartRate = heartRate,
             respiratoryRate = respiratoryRate,
             activityState = activityState,
-            rrIntervals = rrIntervals?.joinToString(",")
+            rrIntervals = rrIntervals?.joinToString(","),
+            motionIntensity = motionIntensity
         )
         dao.insert(measurement)
     }
@@ -70,9 +77,9 @@ class OvernightDataRepository @Inject constructor(
             val end = minOf(i + batchSize, measurements.size)
             val batch = measurements.subList(i, end)
             
-            // Format: timestamp|hr|rr|activity|rrIntervals
+            // Format: timestamp|hr|rr|activity|rrIntervals|motion
             val serialized = batch.joinToString("\n") { m ->
-                "${m.timestamp}|${m.heartRate}|${m.respiratoryRate ?: 0f}|${m.activityState}|${m.rrIntervals ?: ""}"
+                "${m.timestamp}|${m.heartRate}|${m.respiratoryRate ?: 0f}|${m.activityState}|${m.rrIntervals ?: ""}|${m.motionIntensity}"
             }
             
             communicationRepository.sendMessageToPhone(Constants.PATH_SYNC_BATCH, serialized.toByteArray())

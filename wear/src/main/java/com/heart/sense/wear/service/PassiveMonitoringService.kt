@@ -16,12 +16,14 @@ import com.heart.sense.wear.data.SettingsDataStore
 import com.heart.sense.wear.data.WearableCommunicationRepository
 import com.heart.sense.wear.data.CalibrationRepository
 import com.heart.sense.wear.data.OvernightDataRepository
+import com.heart.sense.wear.data.MotionSensorRepository
 import com.heart.sense.wear.util.HeartRateEvaluator
 import com.heart.sense.wear.util.MonitoringAction
 import com.heart.sense.wear.util.RhythmEvaluator
 import com.heart.sense.wear.util.RhythmState
 import com.heart.sense.wear.util.StressEvaluator
 import com.heart.sense.wear.util.StressRisk
+import com.heart.sense.wear.util.FidgetDetector
 import dagger.hilt.android.AndroidEntryPoint
 import kotlinx.coroutines.CoroutineScope
 import kotlinx.coroutines.Dispatchers
@@ -45,10 +47,14 @@ class PassiveMonitoringService : PassiveListenerService() {
     @Inject
     lateinit var overnightDataRepository: OvernightDataRepository
 
+    @Inject
+    lateinit var motionSensorRepository: MotionSensorRepository
+
     private val scope = CoroutineScope(SupervisorJob() + Dispatchers.Main)
     
     private var lastActivityState: UserActivityState = UserActivityState.USER_ACTIVITY_UNKNOWN
     private var isPaused: Boolean = false
+    private var currentMotionScore: Float = 0f
 
     private val receiver = object : BroadcastReceiver() {
         override fun onReceive(context: Context?, intent: Intent?) {
@@ -73,6 +79,16 @@ class PassiveMonitoringService : PassiveListenerService() {
         }
         registerReceiver(receiver, filter)
         createNotificationChannel()
+        startMotionTracking()
+    }
+
+    private fun startMotionTracking() {
+        scope.launch {
+            motionSensorRepository.getMotionData().collect { data ->
+                val evaluation = FidgetDetector.process(data)
+                currentMotionScore = evaluation.score
+            }
+        }
     }
 
     override fun onDestroy() {
@@ -137,10 +153,11 @@ class PassiveMonitoringService : PassiveListenerService() {
 
             // Store for overnight analysis
             overnightDataRepository.storeMeasurement(
-                latestHr, 
-                null, // RR Placeholder
-                lastActivityState.id,
-                rrIntervals
+                heartRate = latestHr, 
+                respiratoryRate = null, // RR Placeholder
+                activityState = lastActivityState.id,
+                rrIntervals = rrIntervals,
+                motionIntensity = currentMotionScore
             )
 
             val settings = settingsDataStore.settings.first()
