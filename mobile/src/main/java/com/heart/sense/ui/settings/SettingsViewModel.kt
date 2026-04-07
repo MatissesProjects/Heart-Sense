@@ -103,4 +103,21 @@ class SettingsViewModel @Inject constructor(
     fun testAlert() {
         alertsRepository.addAlert((70..150).random(), "Test Alert")
     }
+
+    fun updateEmergencySettings(
+        name: String,
+        phone: String,
+        countdown: Int,
+        enabled: Boolean
+    ) {
+        viewModelScope.launch {
+            val updated = settings.value.copy(
+                emergencyContactName = name,
+                emergencyContactPhone = phone,
+                emergencyCountdownSeconds = countdown,
+                isEmergencyEnabled = enabled
+            )
+            repository.updateSettings(updated)
+        }
+    }
 }

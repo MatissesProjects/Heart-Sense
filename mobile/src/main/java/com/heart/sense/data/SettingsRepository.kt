@@ -82,6 +82,14 @@ class SettingsRepository @Inject constructor(
             dataMap.putBoolean(Constants.KEY_IS_SICK_MODE, settings.isSickMode)
             dataMap.putLong(Constants.KEY_LAST_UPDATED, settings.lastUpdated)
             dataMap.putLong(Constants.KEY_SNOOZE_UNTIL, settings.snoozeUntil)
+            dataMap.putString(Constants.KEY_CALIBRATION_STATUS, settings.calibrationStatus)
+            dataMap.putInt(Constants.KEY_RESTING_HR, settings.restingHr)
+            dataMap.putFloat(Constants.KEY_RESPIRATORY_RATE, settings.respiratoryRate)
+            dataMap.putLong(Constants.KEY_CALIBRATION_START_TIME, settings.calibrationStartTime)
+            dataMap.putString(Constants.KEY_EMERGENCY_CONTACT_NAME, settings.emergencyContactName)
+            dataMap.putString(Constants.KEY_EMERGENCY_CONTACT_PHONE, settings.emergencyContactPhone)
+            dataMap.putInt(Constants.KEY_EMERGENCY_COUNTDOWN, settings.emergencyCountdownSeconds)
+            dataMap.putBoolean(Constants.KEY_EMERGENCY_ENABLED, settings.isEmergencyEnabled)
         }.asPutDataRequest().setUrgent()
         
         try {

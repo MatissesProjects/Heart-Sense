@@ -44,6 +44,9 @@ class AlertActionReceiver : BroadcastReceiver() {
         notificationManager.cancel(NotificationHelper.ID_SIT_DOWN)
         notificationManager.cancel(NotificationHelper.ID_CRITICAL_HR)
 
+        // Stop any active emergency countdowns
+        alertHandler.acknowledgeAlert()
+
         when (intent.action) {
             Constants.ACTION_SICK_MODE -> {
                 scope.launch {

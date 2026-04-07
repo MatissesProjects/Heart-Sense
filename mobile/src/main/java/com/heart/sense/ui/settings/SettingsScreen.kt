@@ -176,6 +176,78 @@ fun SettingsScreen(
 }
 
 @Composable
+fun EmergencyResponseCard(
+    settings: Settings,
+    onUpdate: (String, String, Int, Boolean) -> Unit
+) {
+    var name by remember(settings.emergencyContactName) { mutableStateOf(settings.emergencyContactName) }
+    var phone by remember(settings.emergencyContactPhone) { mutableStateOf(settings.emergencyContactPhone) }
+    var countdown by remember(settings.emergencyCountdownSeconds) { mutableFloatStateOf(settings.emergencyCountdownSeconds.toFloat()) }
+    var enabled by remember(settings.isEmergencyEnabled) { mutableStateOf(settings.isEmergencyEnabled) }
+
+    Card(modifier = Modifier.fillMaxWidth()) {
+        Column(modifier = Modifier.padding(16.dp), verticalArrangement = Arrangement.spacedBy(12.dp)) {
+            Row(
+                modifier = Modifier.fillMaxWidth(),
+                horizontalArrangement = Arrangement.SpaceBetween,
+                verticalAlignment = Alignment.CenterVertically
+            ) {
+                Text("Emergency Response", style = MaterialTheme.typography.titleMedium, fontWeight = FontWeight.Bold)
+                Switch(
+                    checked = enabled,
+                    onCheckedChange = { 
+                        enabled = it
+                        onUpdate(name, phone, countdown.toInt(), it)
+                    }
+                )
+            }
+
+            Text(
+                "Automated escalation to your emergency contact during critical alerts if you don't acknowledge them.",
+                style = MaterialTheme.typography.bodySmall
+            )
+
+            if (enabled) {
+                OutlinedTextField(
+                    value = name,
+                    onValueChange = { 
+                        name = it
+                        onUpdate(it, phone, countdown.toInt(), enabled)
+                    },
+                    label = { Text("Contact Name") },
+                    modifier = Modifier.fillMaxWidth(),
+                    singleLine = true
+                )
+
+                OutlinedTextField(
+                    value = phone,
+                    onValueChange = { 
+                        phone = it
+                        onUpdate(name, it, countdown.toInt(), enabled)
+                    },
+                    label = { Text("Contact Phone") },
+                    modifier = Modifier.fillMaxWidth(),
+                    singleLine = true
+                )
+
+                Column {
+                    Text("Escalation Countdown: ${countdown.toInt()}s", style = MaterialTheme.typography.bodySmall)
+                    Slider(
+                        value = countdown,
+                        onValueChange = { 
+                            countdown = it
+                            onUpdate(name, phone, it.toInt(), enabled)
+                        },
+                        valueRange = 10f..120f,
+                        steps = 11
+                    )
+                }
+            }
+        }
+    }
+}
+
+@Composable
 fun CalibrationProgressCard(settings: Settings, durationHours: Long, totalHours: Long) {
     Card(modifier = Modifier.fillMaxWidth()) {
         Column(modifier = Modifier.padding(16.dp), verticalArrangement = Arrangement.spacedBy(8.dp)) {
