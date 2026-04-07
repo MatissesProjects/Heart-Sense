@@ -51,6 +51,7 @@ dependencies {
     implementation(libs.androidx.datastore.preferences)
     implementation(libs.kotlinx.coroutines.play.services)
     implementation(libs.androidx.health.connect)
+    implementation(libs.play.services.nearby)
     
     // Room
     implementation(libs.androidx.room.runtime)

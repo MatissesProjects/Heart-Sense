@@ -10,6 +10,8 @@ import androidx.hilt.navigation.compose.hiltViewModel
 import androidx.compose.foundation.lazy.LazyColumn
 import androidx.compose.foundation.lazy.items
 import androidx.compose.ui.text.font.FontWeight
+import androidx.compose.material.icons.Icons
+import androidx.compose.material.icons.automirrored.filled.KeyboardArrowRight
 import androidx.activity.compose.rememberLauncherForActivityResult
 import androidx.health.connect.client.PermissionController
 import com.heart.sense.ui.dashboard.HealthDashboard
@@ -27,6 +29,16 @@ fun SettingsScreen(
     val dailyAverages by viewModel.dailyAverages.collectAsState()
     val aiBaseline by viewModel.aiBaseline.collectAsState()
     val healthPermissionsGranted by viewModel.healthConnectPermissionsGranted.collectAsState()
+
+    var showCaregiverDashboard by remember { mutableStateOf(false) }
+
+    if (showCaregiverDashboard) {
+        com.heart.sense.ui.caregiver.LocalDashboard(
+            viewModel = viewModel,
+            onBack = { showCaregiverDashboard = false }
+        )
+        return
+    }
 
     val permissionLauncher = rememberLauncherForActivityResult(
         PermissionController.createRequestPermissionResultContract()
@@ -150,6 +162,34 @@ fun SettingsScreen(
                     viewModel.updateEmergencySettings(name, phone, countdown, enabled)
                 }
             )
+        }
+
+        item {
+            BehavioralDetectionCard(
+                settings = settings,
+                onUpdate = { pacing, agitation ->
+                    viewModel.updateBehavioralSettings(pacing, agitation)
+                }
+            )
+        }
+
+        item {
+            Card(
+                modifier = Modifier.fillMaxWidth(),
+                onClick = { showCaregiverDashboard = true }
+            ) {
+                Row(
+                    modifier = Modifier.padding(16.dp),
+                    verticalAlignment = Alignment.CenterVertically,
+                    horizontalArrangement = Arrangement.SpaceBetween
+                ) {
+                    Column(modifier = Modifier.weight(1f)) {
+                        Text("Local Caregiver Sync", style = MaterialTheme.typography.titleMedium, fontWeight = FontWeight.Bold)
+                        Text("Monitor other devices on your local network.", style = MaterialTheme.typography.bodySmall)
+                    }
+                    Icon(imageVector = Icons.AutoMirrored.Filled.KeyboardArrowRight, contentDescription = null)
+                }
+            }
         }
 
         item {

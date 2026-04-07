@@ -1,14 +1,15 @@
-# Track 023: Caregiver Dashboard
+# Track 023: Local Caregiver Dashboard
 
 ## Overview
-Implement real-time remote monitoring for parents or clinicians.
+Implement real-time local monitoring for parents or clinicians without sending data to the cloud.
 
 ## Objectives
-- Integrate Firebase or a similar cloud backend for real-time data sync.
-- Create a "Follower" mode in the mobile app.
-- Securely share physiological metrics and alert history.
-- Push critical alerts from the user's watch to the caregiver's phone.
+- Integrate **Google Nearby Connections API** for offline device-to-device communication.
+- Implement a "Broadcaster" mode on the wearer's phone to stream HR and alerts.
+- Implement a "Follower" mode on the caregiver's phone to discover and display metrics.
+- Ensure data never leaves the local Wi-Fi or Bluetooth range.
+- Implement a local pairing mechanism (e.g., Device Name matching).
 
 ## Key Files
-- `mobile/src/main/java/com/heart/sense/data/CloudSyncRepository.kt` (New)
-- `mobile/src/main/java/com/heart/sense/ui/caregiver/CaregiverDashboard.kt` (New)
+- `mobile/src/main/java/com/heart/sense/data/LocalSyncRepository.kt` (New)
+- `mobile/src/main/java/com/heart/sense/ui/caregiver/LocalDashboard.kt` (New)

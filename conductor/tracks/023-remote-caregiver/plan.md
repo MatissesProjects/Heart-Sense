@@ -1,10 +1,15 @@
-# Implementation Plan: Track 023 - Caregiver Dashboard
+# Implementation Plan: Track 023 - Local Caregiver Dashboard
 
 ## Overview
-Enable real-time data synchronization to a cloud backend to allow authorized caregivers to monitor the user's health metrics remotely.
+Enable real-time data synchronization between devices on the same network or within Bluetooth range using the Nearby Connections API.
 
 ## Sub-tasks
-1. **Backend Integration:** Set up Firebase Auth and Realtime Database/Firestore.
-2. **Cloud Sync Repository:** Implement logic to push local alert history and live HR to the cloud.
-3. **Caregiver UI:** Create a read-only dashboard for followers.
-4. **Push Notifications:** Configure cloud functions to send notifications to caregivers during critical events.
+1. **Dependency Integration:** Add `play-services-nearby` to the mobile module.
+2. **Local Sync Repository:** 
+    - Implement `startBroadcasting()` for the wearer's device.
+    - Implement `startDiscovery()` for the caregiver's device.
+    - Handle payload encryption (AES-256 with local key).
+3. **Caregiver Dashboard:** 
+    - Create a UI to show "Nearby Wearers".
+    - Display real-time HR and recent alerts received via the local link.
+4. **Connection Management:** Handle connection requests, bandwidth optimization, and automatic reconnection.
