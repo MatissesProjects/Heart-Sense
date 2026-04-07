@@ -18,6 +18,7 @@ import com.heart.sense.wear.data.CalibrationRepository
 import com.heart.sense.wear.data.OvernightDataRepository
 import com.heart.sense.wear.data.MotionSensorRepository
 import com.heart.sense.wear.data.EnvironmentalSensorRepository
+import com.heart.sense.wear.data.AdvancedSensorRepository
 import com.heart.sense.wear.util.HeartRateEvaluator
 import com.heart.sense.wear.util.MonitoringAction
 import com.heart.sense.wear.util.RhythmEvaluator
@@ -58,6 +59,9 @@ class PassiveMonitoringService : PassiveListenerService() {
 
     @Inject
     lateinit var environmentalSensorRepository: EnvironmentalSensorRepository
+
+    @Inject
+    lateinit var advancedSensorRepository: AdvancedSensorRepository
 
     @Inject
     lateinit var dataAggregator: MultiModalDataAggregator
@@ -253,6 +257,8 @@ class PassiveMonitoringService : PassiveListenerService() {
                 }
             }
 
+            val advancedData = advancedSensorRepository.sensorData.first()
+
             val stressResult = StressEvaluator.evaluate(
                 currentHr = latestHr,
                 currentRmssd = currentRmssd,
@@ -261,6 +267,8 @@ class PassiveMonitoringService : PassiveListenerService() {
                 envContext = StressContext(
                     currentLux = currentLux,
                     currentDb = currentDb,
+                    currentSkinTemp = advancedData.skinTemp ?: advancedData.manualTemp,
+                    currentEda = advancedData.eda,
                     isSuddenNoise = isSuddenNoise,
                     isSuddenLight = isSuddenLight
                 )
@@ -274,6 +282,10 @@ class PassiveMonitoringService : PassiveListenerService() {
                     hrvDelta = stressResult.hrvDelta,
                     trigger = stressResult.trigger
                 )
+
+                if (stressResult.risk == StressRisk.HIGH) {
+                    triggerStressIntervention()
+                }
             }
 
             // Process for calibration
@@ -334,6 +346,11 @@ class PassiveMonitoringService : PassiveListenerService() {
         scope.launch {
             wearableCommunicationRepository.sendSitDownWarning(hr)
         }
+    }
+
+    private fun triggerStressIntervention() {
+        val notificationManager = getSystemService(Context.NOTIFICATION_SERVICE) as NotificationManager
+        notificationManager.notify(300, createStressNotification())
     }
 
     private fun triggerIrregularRhythmAlert() {

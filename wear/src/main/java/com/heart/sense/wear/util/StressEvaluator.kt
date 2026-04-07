@@ -11,6 +11,8 @@ enum class StressRisk {
 data class StressContext(
     val currentLux: Float = 0f,
     val currentDb: Int = 0,
+    val currentSkinTemp: Float? = null,
+    val currentEda: Float? = null,
     val isSuddenNoise: Boolean = false,
     val isSuddenLight: Boolean = false
 )
@@ -24,6 +26,10 @@ data class StressDetectionResult(
 )
 
 object StressEvaluator {
+    private var lastLux = 0f
+    private var lastDb = 0
+    private var skinTempBaseline = 33.0f // Baseline skin temp in Celsius
+
     /**
      * Calculates RMSSD from a list of RR intervals in milliseconds.
      */
@@ -40,7 +46,7 @@ object StressEvaluator {
     }
 
     /**
-     * Evaluates real-time stress based on current HR/HRV vs. baseline and environmental triggers.
+     * Evaluates real-time stress based on HR/HRV, environment, and advanced sensors.
      */
     fun evaluate(
         currentHr: Int,
@@ -63,26 +69,40 @@ object StressEvaluator {
         val hrvBaseline = 40f // Default if not yet tracked in settings
         val hrvDelta = currentRmssd - hrvBaseline
 
-        // Calculate physiological score (0-80)
-        val hrScore = (hrDelta * 3).coerceIn(0, 50)
+        // 1. Physiological Score (0-70 points)
+        val hrScore = (hrDelta * 3).coerceIn(0, 40)
         val hrvScore = if (hrvDelta < 0) {
             (abs(hrvDelta) * 2).toInt().coerceIn(0, 30)
         } else 0
 
-        // Environmental Boost (0-20 points)
-        var envScore = 0
+        // 2. Advanced Sensor Fusion (0-20 points)
+        var advancedScore = 0
         var trigger: String? = null
 
-        if (envContext.isSuddenNoise) {
-            envScore += 15
-            trigger = "Sudden Noise"
-        }
-        if (envContext.isSuddenLight) {
-            envScore += 10
-            trigger = if (trigger != null) "Multiple Triggers" else "Bright Light"
+        // Skin Temp: Slight increase often accompanies psychological stress
+        envContext.currentSkinTemp?.let { temp ->
+            if (temp > skinTempBaseline + 1.5f) {
+                advancedScore += 10
+                trigger = "Temp Spike"
+            }
         }
 
-        val totalScore = hrScore + hrvScore + envScore
+        // EDA: High conductance spikes are very strong stress indicators
+        envContext.currentEda?.let { eda ->
+            if (eda > 5.0f) { // Threshold for significant EDA spike
+                advancedScore += 15
+                trigger = if (trigger != null) "Multiple Bio-Triggers" else "EDA Spike"
+            }
+        }
+
+        // 3. Environmental Context (0-10 points)
+        var envScore = 0
+        if (envContext.isSuddenNoise) {
+            envScore += 10
+            if (trigger == null) trigger = "Sudden Noise"
+        }
+
+        val totalScore = hrScore + hrvScore + advancedScore + envScore
 
         val risk = when {
             totalScore >= 70 -> StressRisk.HIGH
