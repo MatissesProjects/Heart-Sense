@@ -118,11 +118,11 @@ class NotificationHelper(private val context: Context) {
         notificationManager.notify(ID_IRREGULAR_RHYTHM, notification)
     }
 
-    fun showStressNotification(risk: String, hrDelta: Int, trigger: String? = null) {
-        createHighHrChannel()
+    fun showStressNotification(risk: String, hrDelta: Int, trigger: String? = null, recommendation: String = "a sensory break") {
+        createHighHrChannel() // Using High HR channel for stress alerts as they are actionable
 
         val triggerText = if (trigger != null) " Trigger: $trigger." else ""
-        val message = "Stress Level: $risk. HR Spike: +$hrDelta BPM.$triggerText Consider a sensory break."
+        val message = "Stress Level: $risk. HR Spike: +$hrDelta BPM.$triggerText Recommendation: Try $recommendation."
 
         val notification = NotificationCompat.Builder(context, CHANNEL_HIGH_HR)
             .setSmallIcon(android.R.drawable.ic_dialog_info)

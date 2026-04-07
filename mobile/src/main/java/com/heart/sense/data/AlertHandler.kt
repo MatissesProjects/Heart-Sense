@@ -2,12 +2,13 @@ package com.heart.sense.data
 
 import android.content.Context
 import android.util.Log
+import com.heart.sense.util.Constants
 import com.heart.sense.util.NotificationHelper
 import dagger.hilt.android.qualifiers.ApplicationContext
 import kotlinx.coroutines.CoroutineScope
 import kotlinx.coroutines.Dispatchers
-import kotlinx.coroutines.SupervisorJob
 import kotlinx.coroutines.Job
+import kotlinx.coroutines.SupervisorJob
 import kotlinx.coroutines.delay
 import kotlinx.coroutines.flow.first
 import kotlinx.coroutines.launch
@@ -19,7 +20,8 @@ class AlertHandler @Inject constructor(
     @ApplicationContext private val context: Context,
     private val alertsRepository: AlertsRepository,
     private val settingsDataStore: SettingsDataStore,
-    private val localSyncRepository: LocalSyncRepository
+    private val localSyncRepository: LocalSyncRepository,
+    private val interventionRepository: InterventionRepository
 ) {
     private val scope = CoroutineScope(SupervisorJob() + Dispatchers.Main)
     private val notificationHelper = NotificationHelper(context)
@@ -79,10 +81,26 @@ class AlertHandler @Inject constructor(
     }
 
     fun handleStressAlert(risk: String, hrDelta: Int, hrvDelta: Float, trigger: String? = null) {
-        Log.d("AlertHandler", "Stress Alert: $risk, HR Delta: $hrDelta, HRV Delta: $hrvDelta, Trigger: $trigger")
-        alertsRepository.addAlert(hrDelta, "Stress ($risk)${if (trigger != null) ": $trigger" else ""}")
-        notificationHelper.showStressNotification(risk, hrDelta, trigger)
-        localSyncRepository.sendData(NearbyPayload(hrDelta, "Stress: $risk"))
+        scope.launch {
+            Log.d("AlertHandler", "Stress Alert: $risk, HR Delta: $hrDelta, HRV Delta: $hrvDelta, Trigger: $trigger")
+            
+            // RL Logic: Get the best-performing recommendation for this context
+            val recommendation = interventionRepository.getRecommendation(trigger)
+            
+            alertsRepository.addAlert(hrDelta, "Stress ($risk)${if (trigger != null) ": $trigger" else ""}")
+            notificationHelper.showStressNotification(risk, hrDelta, trigger, recommendation)
+            
+            // Record initial state for the learning loop
+            val settings = settingsDataStore.settings.first()
+            interventionRepository.startIntervention(
+                type = recommendation,
+                trigger = trigger,
+                hr = settings.restingHr + hrDelta,
+                hrv = 40f - hrvDelta
+            )
+
+            localSyncRepository.sendData(NearbyPayload(hrDelta, "Stress: $risk. Recommended: $recommendation"))
+        }
     }
 
     fun handleBehavioralAlert(type: String, details: String) {
@@ -109,7 +127,6 @@ class AlertHandler @Inject constructor(
         countdownJob = scope.launch {
             Log.d("AlertHandler", "Emergency countdown started: $seconds seconds")
             for (i in seconds downTo 1) {
-                // In a real app, we would update the notification with the countdown
                 Log.d("AlertHandler", "Countdown: $i")
                 delay(1000)
             }
@@ -122,8 +139,5 @@ class AlertHandler @Inject constructor(
         Log.d("AlertHandler", "!!! EMERGENCY ESCALATION TRIGGERED !!!")
         Log.d("AlertHandler", "Contacting: ${settings.emergencyContactName} (${settings.emergencyContactPhone})")
         Log.d("AlertHandler", "Reason: Critical HR of $hr BPM unacknowledged.")
-        
-        // Track 016: Here we would send SMS or call API
-        // For now, we'll simulate with a high-priority system notification or log
     }
 }
