@@ -24,7 +24,7 @@
 | `020-behavioral-patterns` | Behavioral Recognition| Detecting pacing, sudden agitation, and activity transitions. | Completed |
 | `021-environmental-context` | Environmental Triggers | Correlating ambient noise/light spikes with physiological stress. | Completed |
 | `022-predictive-stress-ai` | Predictive Stress AI | On-device forecasting of stress events using TFLite. | Completed |
-| `023-remote-caregiver` | Caregiver Dashboard | Real-time monitoring for parents/clinicians via cloud sync. | Completed |
+| `023-remote-caregiver` | Caregiver Dashboard | Real-time local monitoring for parents/clinicians via Nearby Connections. | Completed |
 | `024-active-biofeedback` | Active Biofeedback | Haptic-guided breathing and grounding exercises on-watch. | Completed |
 | `025-clinician-reports` | Reporting Engine | Automated PDF/CSV reports for behavioral analysis. | Completed |
 | `026-voice-tagging` | Voice-to-Tag | Tagging behavioral events via Google Assistant commands. | Completed |
@@ -32,4 +32,4 @@
 | `028-adaptive-interventions`| RL Interventions | Learning which calming techniques work best for the user. | Completed |
 | `029-research-sync` | Research Data | Anonymized aggregate data sharing for clinical studies. | Skipped |
 | `030-gamified-calm` | Gamified Calm | Incentivizing calm states during known stressful periods. | Completed |
-| `031-session-export` | Session-Based Export| Anonymized visit-centric data tagging for EHR integration. | In Progress |
+| `031-session-export` | Session-Based Export| Anonymized visit-centric data tagging for EHR integration. | Completed |

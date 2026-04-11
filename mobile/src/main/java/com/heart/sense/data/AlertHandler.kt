@@ -24,6 +24,8 @@ class AlertHandler @Inject constructor(
     private val interventionRepository: InterventionRepository,
     private val sessionRepository: SessionRepository
 ) {
+    // Standard Hilt/Testing practice: Use an injected scope or Dispatchers.Main
+    // For simplicity here, we'll keep the internal scope but allow it to be influenced by tests via Dispatchers.setMain
     private val scope = CoroutineScope(SupervisorJob() + Dispatchers.Main)
     private val notificationHelper = NotificationHelper(context)
     private var countdownJob: Job? = null
