@@ -32,10 +32,10 @@ class AlertsRepository @Inject constructor(
     private val _lastMessageTimestamp = MutableStateFlow<Long>(0L)
     val lastMessageTimestamp: StateFlow<Long> = _lastMessageTimestamp.asStateFlow()
 
-    fun addAlert(hr: Int, type: String, visitId: String? = null) {
+    fun addAlert(hr: Int, type: String, visitId: String? = null, ambientTemp: Float? = null) {
         _lastMessageTimestamp.value = System.currentTimeMillis()
         repositoryScope.launch {
-            alertDao.insert(Alert(hr = hr, type = type, visitId = visitId))
+            alertDao.insert(Alert(hr = hr, type = type, visitId = visitId, ambientTemp = ambientTemp))
         }
     }
 

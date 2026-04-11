@@ -9,5 +9,6 @@ data class DailyAverage(
     val sampleCount: Int,
     val isAlertTriggered: Boolean,
     val alertType: String? = null,
-    val hrvRmssd: Float = 0f
+    val hrvRmssd: Float = 0f,
+    val avgAmbientTemp: Float? = null
 )

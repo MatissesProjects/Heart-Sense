@@ -22,7 +22,8 @@ class AlertHandler @Inject constructor(
     private val settingsDataStore: SettingsDataStore,
     private val localSyncRepository: LocalSyncRepository,
     private val interventionRepository: InterventionRepository,
-    private val sessionRepository: SessionRepository
+    private val sessionRepository: SessionRepository,
+    private val ambientSensorRepository: AmbientSensorRepository
 ) {
     // Standard Hilt/Testing practice: Use an injected scope or Dispatchers.Main
     // For simplicity here, we'll keep the internal scope but allow it to be influenced by tests via Dispatchers.setMain
@@ -39,18 +40,20 @@ class AlertHandler @Inject constructor(
             }
             
             val visitId = sessionRepository.getActiveVisitId()
-            alertsRepository.addAlert(hr, "High HR", visitId)
+            val ambientTemp = ambientSensorRepository.getAmbientTemp().first()
+            alertsRepository.addAlert(hr, "High HR", visitId, ambientTemp)
             notificationHelper.showHighHrNotification(hr)
-            localSyncRepository.sendData(NearbyPayload(hr, "High HR Alert"))
+            localSyncRepository.sendData(NearbyPayload(hr, "High HR Alert", ambientTemp))
         }
     }
 
     fun handleCriticalHrAlert(hr: Int) {
         scope.launch {
             val visitId = sessionRepository.getActiveVisitId()
-            alertsRepository.addAlert(hr, "CRITICAL HR", visitId)
+            val ambientTemp = ambientSensorRepository.getAmbientTemp().first()
+            alertsRepository.addAlert(hr, "CRITICAL HR", visitId, ambientTemp)
             notificationHelper.showCriticalHrNotification(hr)
-            localSyncRepository.sendData(NearbyPayload(hr, "CRITICAL HR ALERT"))
+            localSyncRepository.sendData(NearbyPayload(hr, "CRITICAL HR ALERT", ambientTemp))
             
             val settings = settingsDataStore.settings.first()
             if (settings.isEmergencyEnabled) {
@@ -69,9 +72,10 @@ class AlertHandler @Inject constructor(
     fun handleSitDownAlert(hr: Int) {
         scope.launch {
             val visitId = sessionRepository.getActiveVisitId()
-            alertsRepository.addAlert(hr, "Sit Down", visitId)
+            val ambientTemp = ambientSensorRepository.getAmbientTemp().first()
+            alertsRepository.addAlert(hr, "Sit Down", visitId, ambientTemp)
             notificationHelper.showSitDownWarning(hr)
-            localSyncRepository.sendData(NearbyPayload(hr, "Sit Down Warning"))
+            localSyncRepository.sendData(NearbyPayload(hr, "Sit Down Warning", ambientTemp))
         }
     }
 
@@ -83,9 +87,10 @@ class AlertHandler @Inject constructor(
     fun handleIrregularRhythmAlert() {
         scope.launch {
             val visitId = sessionRepository.getActiveVisitId()
-            alertsRepository.addAlert(0, "Irregular Rhythm", visitId)
+            val ambientTemp = ambientSensorRepository.getAmbientTemp().first()
+            alertsRepository.addAlert(0, "Irregular Rhythm", visitId, ambientTemp)
             notificationHelper.showIrregularRhythmNotification()
-            localSyncRepository.sendData(NearbyPayload(0, "Irregular Rhythm Detected"))
+            localSyncRepository.sendData(NearbyPayload(0, "Irregular Rhythm Detected", ambientTemp))
         }
     }
 
@@ -96,8 +101,9 @@ class AlertHandler @Inject constructor(
             // RL Logic: Get the best-performing recommendation for this context
             val recommendation = interventionRepository.getRecommendation(trigger)
             val visitId = sessionRepository.getActiveVisitId()
+            val ambientTemp = ambientSensorRepository.getAmbientTemp().first()
             
-            alertsRepository.addAlert(hrDelta, "Stress ($risk)${if (trigger != null) ": $trigger" else ""}", visitId)
+            alertsRepository.addAlert(hrDelta, "Stress ($risk)${if (trigger != null) ": $trigger" else ""}", visitId, ambientTemp)
             notificationHelper.showStressNotification(risk, hrDelta, trigger, recommendation)
             
             // Record initial state for the learning loop
@@ -110,27 +116,29 @@ class AlertHandler @Inject constructor(
                 visitId = visitId
             )
 
-            localSyncRepository.sendData(NearbyPayload(hrDelta, "Stress: $risk. Recommended: $recommendation"))
+            localSyncRepository.sendData(NearbyPayload(hrDelta, "Stress: $risk. Recommended: $recommendation", ambientTemp))
         }
     }
 
     fun handleBehavioralAlert(type: String, details: String) {
         scope.launch {
             val visitId = sessionRepository.getActiveVisitId()
+            val ambientTemp = ambientSensorRepository.getAmbientTemp().first()
             Log.d("AlertHandler", "Behavioral Alert: $type - $details")
-            alertsRepository.addAlert(0, "Behavior ($type)", visitId)
+            alertsRepository.addAlert(0, "Behavior ($type)", visitId, ambientTemp)
             notificationHelper.showBehavioralNotification(type, details)
-            localSyncRepository.sendData(NearbyPayload(0, "Behavior: $type"))
+            localSyncRepository.sendData(NearbyPayload(0, "Behavior: $type", ambientTemp))
         }
     }
 
     fun handlePrecursorAlert(score: Float, confidence: Float) {
         scope.launch {
             val visitId = sessionRepository.getActiveVisitId()
+            val ambientTemp = ambientSensorRepository.getAmbientTemp().first()
             Log.d("AlertHandler", "Precursor Alert: Score $score, Confidence $confidence")
-            alertsRepository.addAlert((score * 100).toInt(), "AI Precursor", visitId)
+            alertsRepository.addAlert((score * 100).toInt(), "AI Precursor", visitId, ambientTemp)
             notificationHelper.showPrecursorNotification(score, confidence)
-            localSyncRepository.sendData(NearbyPayload((score * 100).toInt(), "AI Stress Warning"))
+            localSyncRepository.sendData(NearbyPayload((score * 100).toInt(), "AI Stress Warning", ambientTemp))
         }
     }
 
