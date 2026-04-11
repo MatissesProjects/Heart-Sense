@@ -25,6 +25,7 @@ class AlertHandlerTest {
     private lateinit var localSyncRepository: LocalSyncRepository
     private lateinit var interventionRepository: InterventionRepository
     private lateinit var sessionRepository: SessionRepository
+    private lateinit var ambientSensorRepository: AmbientSensorRepository
     private lateinit var alertHandler: AlertHandler
 
     @Before
@@ -34,6 +35,7 @@ class AlertHandlerTest {
         every { Log.e(any(), any()) } returns 0
 
         mockkConstructor(NotificationHelper::class)
+        // ... (mocking notification methods as before)
         every { anyConstructed<NotificationHelper>().showHighHrNotification(any()) } returns Unit
         every { anyConstructed<NotificationHelper>().showCriticalHrNotification(any()) } returns Unit
         every { anyConstructed<NotificationHelper>().showSitDownWarning(any()) } returns Unit
@@ -52,6 +54,9 @@ class AlertHandlerTest {
         localSyncRepository = mockk(relaxed = true)
         interventionRepository = mockk(relaxed = true)
         sessionRepository = mockk(relaxed = true)
+        ambientSensorRepository = mockk(relaxed = true)
+        
+        every { ambientSensorRepository.getAmbientTemp() } returns flowOf(22.5f)
     }
 
     private fun initHandler() {
@@ -61,7 +66,8 @@ class AlertHandlerTest {
             settingsDataStore,
             localSyncRepository,
             interventionRepository,
-            sessionRepository
+            sessionRepository,
+            ambientSensorRepository
         )
     }
 
@@ -82,7 +88,7 @@ class AlertHandlerTest {
             alertHandler.handleHrAlert(hr)
             advanceUntilIdle()
 
-            verify { alertsRepository.addAlert(120, any(), any()) }
+            verify { alertsRepository.addAlert(120, any(), any(), any()) }
             verify { localSyncRepository.sendData(any()) }
         } finally {
             Dispatchers.resetMain()
@@ -103,7 +109,7 @@ class AlertHandlerTest {
             alertHandler.handleHrAlert(hr)
             advanceUntilIdle()
 
-            verify(exactly = 0) { alertsRepository.addAlert(any(), any(), any()) }
+            verify(exactly = 0) { alertsRepository.addAlert(any(), any(), any(), any()) }
             verify(exactly = 0) { localSyncRepository.sendData(any()) }
         } finally {
             Dispatchers.resetMain()
@@ -122,7 +128,7 @@ class AlertHandlerTest {
             alertHandler.handleCriticalHrAlert(hr)
             advanceUntilIdle()
 
-            verify { alertsRepository.addAlert(160, any(), any()) }
+            verify { alertsRepository.addAlert(160, any(), any(), any()) }
             verify { localSyncRepository.sendData(any()) }
         } finally {
             Dispatchers.resetMain()
@@ -153,6 +159,7 @@ class AlertHandlerTest {
                     visitId = any()
                 )
             }
+            verify { alertsRepository.addAlert(any(), any(), any(), any()) }
         } finally {
             Dispatchers.resetMain()
         }
