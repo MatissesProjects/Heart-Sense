@@ -76,7 +76,8 @@ class SyncListenerService : WearableListenerService() {
                         respiratoryRate = parts[2].toFloatOrNull(),
                         activityState = parts[3].toInt(),
                         rrIntervals = if (parts.size >= 5 && parts[4].isNotEmpty()) parts[4] else null,
-                        motionIntensity = if (parts.size >= 6) parts[5].toFloatOrNull() ?: 0f else 0f
+                        motionIntensity = if (parts.size >= 6) parts[5].toFloatOrNull() ?: 0f else 0f,
+                        spo2 = if (parts.size >= 7) parts[6].toFloatOrNull() else null
                     )
                 } else null
             } catch (e: Exception) {

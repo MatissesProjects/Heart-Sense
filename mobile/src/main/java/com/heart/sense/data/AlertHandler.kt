@@ -283,6 +283,11 @@ class AlertHandler @Inject constructor(
         }
     }
 
+    fun handleApneaAlert(risk: String, dipCount: Int, correlationCount: Int, minSpo2: Float) {
+        notificationHelper.showApneaNotification(risk, dipCount, correlationCount, minSpo2)
+        localSyncRepository.sendData(NearbyPayload(minSpo2.toInt(), "Apnea Trend: $risk"))
+    }
+
     fun handleLiveHrUpdate(hr: Int) {
         alertsRepository.updateLiveHr(hr)
         localSyncRepository.sendData(NearbyPayload(hr))

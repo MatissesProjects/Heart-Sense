@@ -91,6 +91,12 @@ fun HealthDashboard(
 
         Spacer(modifier = Modifier.height(24.dp))
 
+        Text("Blood Oxygen (SpO2 %)", style = MaterialTheme.typography.titleMedium, fontWeight = FontWeight.Bold)
+        Spacer(modifier = Modifier.height(8.dp))
+        Spo2Chart(dailyAverages)
+
+        Spacer(modifier = Modifier.height(24.dp))
+
         if (cbtEntries.isNotEmpty()) {
             Text("Subjective Reflections", style = MaterialTheme.typography.titleMedium, fontWeight = FontWeight.Bold)
             Spacer(modifier = Modifier.height(8.dp))
@@ -185,15 +191,40 @@ fun HrvChart(dailyAverages: List<DailyAverage>) {
 }
 
 @Composable
+fun Spo2Chart(dailyAverages: List<DailyAverage>) {
+    val modelProducer = remember { ChartEntryModelProducer() }
+    
+    LaunchedEffect(dailyAverages) {
+        val entries = dailyAverages.mapIndexed { index, average ->
+            FloatEntry(index.toFloat(), average.avgSpo2 ?: 0f)
+        }
+        modelProducer.setEntries(entries)
+    }
+
+    Chart(
+        chart = lineChart(),
+        chartModelProducer = modelProducer,
+        startAxis = rememberStartAxis(),
+        bottomAxis = rememberBottomAxis(
+            valueFormatter = { value, _ ->
+                dailyAverages.getOrNull(value.toInt())?.date?.format(DateTimeFormatter.ofPattern("MM/dd")) ?: ""
+            }
+        ),
+        modifier = Modifier.height(200.dp)
+    )
+}
+
+@Composable
 fun SummaryHeader() {
     Row(
         modifier = Modifier.fillMaxWidth().padding(vertical = 8.dp),
         horizontalArrangement = Arrangement.SpaceBetween
     ) {
         Text("Date", modifier = Modifier.weight(1f), fontWeight = FontWeight.Bold)
-        Text("HR", modifier = Modifier.weight(0.8f), fontWeight = FontWeight.Bold)
-        Text("HRV", modifier = Modifier.weight(0.8f), fontWeight = FontWeight.Bold)
-        Text("Status", modifier = Modifier.weight(1.2f), fontWeight = FontWeight.Bold)
+        Text("HR", modifier = Modifier.weight(0.7f), fontWeight = FontWeight.Bold)
+        Text("HRV", modifier = Modifier.weight(0.7f), fontWeight = FontWeight.Bold)
+        Text("SpO2", modifier = Modifier.weight(0.7f), fontWeight = FontWeight.Bold)
+        Text("Status", modifier = Modifier.weight(1.1f), fontWeight = FontWeight.Bold)
     }
 }
 
@@ -210,8 +241,9 @@ fun DailyAverageRow(average: DailyAverage) {
         verticalAlignment = Alignment.CenterVertically
     ) {
         Text(average.date.format(DateTimeFormatter.ofPattern("MMM dd")), modifier = Modifier.weight(1f))
-        Text("${average.avgHr}", modifier = Modifier.weight(0.8f))
-        Text("${average.hrvRmssd.toInt()}", modifier = Modifier.weight(0.8f))
+        Text("${average.avgHr}", modifier = Modifier.weight(0.7f))
+        Text("${average.hrvRmssd.toInt()}", modifier = Modifier.weight(0.7f))
+        Text("${average.avgSpo2?.toInt() ?: "--"}%", modifier = Modifier.weight(0.7f))
         
         val statusText = if (average.isAlertTriggered) {
             average.alertType ?: "Alert"
@@ -222,7 +254,7 @@ fun DailyAverageRow(average: DailyAverage) {
         
         Text(
             statusText,
-            modifier = Modifier.weight(1.2f),
+            modifier = Modifier.weight(1.1f),
             color = statusColor,
             fontWeight = FontWeight.SemiBold
         )

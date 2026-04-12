@@ -12,5 +12,6 @@ data class DailyAverage(
     val hrvRmssd: Float = 0f,
     val avgAmbientTemp: Float? = null,
     val avgAmbientLux: Float? = null,
-    val avgAmbientDb: Int? = null
+    val avgAmbientDb: Int? = null,
+    val avgSpo2: Float? = null
 )

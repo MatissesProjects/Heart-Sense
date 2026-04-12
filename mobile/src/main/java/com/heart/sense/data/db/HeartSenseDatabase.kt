@@ -17,7 +17,7 @@ import com.heart.sense.data.*
     EnvironmentalContext::class,
     FhirExportLog::class,
     CbtJournalEntry::class
-], version = 10, exportSchema = false)
+], version = 11, exportSchema = false)
 @TypeConverters(Converters::class)
 abstract class HeartSenseDatabase : RoomDatabase() {
     abstract fun overnightMeasurementDao(): OvernightMeasurementDao

@@ -41,6 +41,7 @@ class DailyAverageRepository @Inject constructor(
             val hrSamples = dailySamples.map { it.heartRate }.filter { it > 0 }
             val rrSamples = dailySamples.mapNotNull { it.respiratoryRate }.filter { it > 0f }
             val tempSamples = dailySamples.mapNotNull { it.ambientTemp }.filter { it > 0f }
+            val spo2Samples = dailySamples.mapNotNull { it.spo2 }.filter { it > 0f }
             val alertTriggered = hrSamples.any { it >= threshold }
             
             // Extract RR intervals for HRV calculation
@@ -55,7 +56,8 @@ class DailyAverageRepository @Inject constructor(
                 isAlertTriggered = alertTriggered,
                 alertType = if (alertTriggered) "High HR" else null,
                 hrvRmssd = calculateRMSSD(dailyRrIntervals),
-                avgAmbientTemp = if (tempSamples.isNotEmpty()) tempSamples.average().toFloat() else null
+                avgAmbientTemp = if (tempSamples.isNotEmpty()) tempSamples.average().toFloat() else null,
+                avgSpo2 = if (spo2Samples.isNotEmpty()) spo2Samples.average().toFloat() else null
             )
         }.sortedBy { it.date }
     }

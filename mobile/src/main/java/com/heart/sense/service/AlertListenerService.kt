@@ -61,6 +61,12 @@ class AlertListenerService : WearableListenerService() {
                     alertHandler.handlePrecursorAlert(data[0].toFloat(), data[1].toFloat())
                 }
             }
+            Constants.PATH_APNEA_ALERT -> {
+                val data = String(messageEvent.data).split("|")
+                if (data.size >= 4) {
+                    alertHandler.handleApneaAlert(data[0], data[1].toInt(), data[2].toInt(), data[3].toFloat())
+                }
+            }
         }
     }
 }

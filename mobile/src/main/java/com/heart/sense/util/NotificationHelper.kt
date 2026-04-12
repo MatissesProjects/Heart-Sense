@@ -16,6 +16,7 @@ class NotificationHelper(private val context: Context) {
         const val CHANNEL_HIGH_HR = "high_hr_alerts"
         const val CHANNEL_CRITICAL_HR = "critical_hr_alerts"
         const val CHANNEL_ILLNESS = "illness_alerts"
+        const val CHANNEL_CBT = "cbt_reflections"
         
         const val ID_HIGH_HR = 100
         const val ID_SIT_DOWN = 101
@@ -27,8 +28,7 @@ class NotificationHelper(private val context: Context) {
         const val ID_AGITATION = 107
         const val ID_PRECURSOR = 108
         const val ID_CBT = 109
-        
-        const val CHANNEL_CBT = "cbt_reflections"
+        const val ID_APNEA = 110
     }
 
     fun showCbtReflectionNotification(alertId: Int, alertType: String) {
@@ -141,6 +141,23 @@ class NotificationHelper(private val context: Context) {
             .build()
 
         notificationManager.notify(ID_ILLNESS, notification)
+    }
+
+    fun showApneaNotification(risk: String, dipCount: Int, correlationCount: Int, minSpo2: Float) {
+        createIllnessChannel()
+        
+        val message = "Risk: $risk. $dipCount SpO2 dips (<90%) detected. $correlationCount correlated with RR spikes. Min SpO2: ${minSpo2.toInt()}%."
+
+        val notification = NotificationCompat.Builder(context, CHANNEL_ILLNESS)
+            .setSmallIcon(android.R.drawable.ic_dialog_alert)
+            .setContentTitle("Sleep Apnea Check")
+            .setContentText(message)
+            .setStyle(NotificationCompat.BigTextStyle().bigText(message))
+            .setPriority(NotificationCompat.PRIORITY_DEFAULT)
+            .setAutoCancel(true)
+            .build()
+
+        notificationManager.notify(ID_APNEA, notification)
     }
 
     fun showIrregularRhythmNotification() {
