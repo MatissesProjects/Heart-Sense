@@ -33,7 +33,7 @@
 | `029-research-sync` | Research Data | Anonymized aggregate data sharing for clinical studies. | Skipped |
 | `030-gamified-calm` | Gamified Calm | Incentivizing calm states during known stressful periods. | Completed |
 | `031-session-export` | Session-Based Export| Anonymized visit-centric data tagging for EHR integration. | Completed |
-| `032-medication-tracking` | Medication Tracking | Integrate medication intake to correlate with HR/HRV changes. | Pending |
+| `032-medication-tracking` | Medication Tracking | Integrate medication intake to correlate with HR/HRV changes. | In Progress |
 | `033-cgm-integration` | CGM Integration | Sync with Continuous Glucose Monitors to correlate sugar with stress. | Pending |
 | `034-hormonal-cycle-sync` | Hormonal Cycle Sync | Adjust AI baselines based on hormonal phases via Health Connect. | Pending |
 | `035-geospatial-stress-mapping` | Geospatial Stress | Map physiological spikes to GPS locations to find stress hotspots. | Pending |

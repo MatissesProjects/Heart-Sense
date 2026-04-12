@@ -1,0 +1,19 @@
+# Track 032: Medication Tracking
+
+## Status
+- **Status**: In Progress
+- **Owner**: Gemini CLI
+- **Start Date**: April 12, 2026
+
+## Summary
+Implement a comprehensive medication tracking system with mobile configuration, Wear OS quick-logging, and physiological correlation.
+
+## Links
+- [Implementation Plan](./plan.md)
+
+## Tasks
+- [ ] Phase 1: Database & Sync Architecture
+- [ ] Phase 2: Mobile Configuration & Reminders
+- [ ] Phase 3: Wear OS Quick-Log
+- [ ] Phase 4: Clinical Correlation & Analytics
+- [ ] Validation & Testing
