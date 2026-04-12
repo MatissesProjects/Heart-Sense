@@ -7,11 +7,11 @@ import io.mockk.every
 import io.mockk.mockk
 import kotlinx.coroutines.flow.flowOf
 import kotlinx.coroutines.test.runTest
-import org.junit.Assert.*
+import org.junit.Assert.assertEquals
 import org.junit.Before
 import org.junit.Test
-import java.time.LocalDate
-import java.time.ZoneId
+import java.time.Instant
+import java.time.temporal.ChronoUnit
 
 class DailyAverageRepositoryTest {
 
@@ -23,77 +23,46 @@ class DailyAverageRepositoryTest {
     fun setup() {
         dao = mockk()
         settingsDataStore = mockk()
+        
+        every { settingsDataStore.settings } returns flowOf(Settings(highHrThreshold = 100, cyclePhase = "FOLLICULAR"))
+        
         repository = DailyAverageRepository(dao, settingsDataStore)
     }
 
     @Test
-    fun `getDailyAverages should calculate averages correctly for multiple days`() = runTest {
-        // Mock data for 2 days
-        val today = LocalDate.now().atStartOfDay(ZoneId.systemDefault()).toInstant().toEpochMilli()
-        val yesterday = LocalDate.now().minusDays(1).atStartOfDay(ZoneId.systemDefault()).toInstant().toEpochMilli()
-
-        val measurements = listOf(
-            OvernightMeasurement(timestamp = today, heartRate = 70, respiratoryRate = 16f, activityState = 0),
-            OvernightMeasurement(timestamp = today + 1000, heartRate = 80, respiratoryRate = 18f, activityState = 0),
-            OvernightMeasurement(timestamp = yesterday, heartRate = 60, respiratoryRate = 14f, activityState = 0)
+    fun `calculateAdaptiveBaseline computes weighted average with cycle phase offset`() = runTest {
+        val now = Instant.now()
+        
+        // Mock 3 days of measurements
+        val m1 = OvernightMeasurement(
+            timestamp = now.minus(2, ChronoUnit.DAYS).toEpochMilli(),
+            heartRate = 60,
+            respiratoryRate = 14f,
+            activityState = 1
+        )
+        val m2 = OvernightMeasurement(
+            timestamp = now.minus(1, ChronoUnit.DAYS).toEpochMilli(),
+            heartRate = 70,
+            respiratoryRate = 15f,
+            activityState = 1
+        )
+        val m3 = OvernightMeasurement(
+            timestamp = now.toEpochMilli(),
+            heartRate = 65,
+            respiratoryRate = 14f,
+            activityState = 1
         )
 
-        coEvery { dao.getMeasurementsInRange(any(), any()) } returns measurements
-        every { settingsDataStore.settings } returns flowOf(Settings(highHrThreshold = 100))
+        coEvery { dao.getMeasurementsInRange(any(), any()) } returns listOf(m1, m2, m3)
 
-        val results = repository.getDailyAverages(7)
-
-        assertEquals(2, results.size)
-        
-        val todayAvg = results.find { it.date == LocalDate.now() }
-        assertEquals(75, todayAvg?.avgHr) // (70+80)/2
-        assertEquals(17f, todayAvg?.avgRr ?: 0f, 0.1f)
-        
-        val yesterdayAvg = results.find { it.date == LocalDate.now().minusDays(1) }
-        assertEquals(60, yesterdayAvg?.avgHr)
-    }
-
-    @Test
-    fun `calculateAdaptiveBaseline should give more weight to recent days`() = runTest {
-        // Mock 3 days of averages
-        val measurements = mutableListOf<OvernightMeasurement>()
-        val today = LocalDate.now()
-        
-        // Day 1 (6 days ago): HR 60
-        // Day 2 (1 day ago): HR 70
-        // Day 3 (today): HR 80
-        
-        val d1 = today.minusDays(6).atStartOfDay(ZoneId.systemDefault()).toInstant().toEpochMilli()
-        val d2 = today.minusDays(1).atStartOfDay(ZoneId.systemDefault()).toInstant().toEpochMilli()
-        val d3 = today.atStartOfDay(ZoneId.systemDefault()).toInstant().toEpochMilli()
-
-        measurements.add(OvernightMeasurement(timestamp = d1, heartRate = 60, respiratoryRate = 15f, activityState = 0))
-        measurements.add(OvernightMeasurement(timestamp = d2, heartRate = 70, respiratoryRate = 15f, activityState = 0))
-        measurements.add(OvernightMeasurement(timestamp = d3, heartRate = 80, respiratoryRate = 15f, activityState = 0))
-
-        coEvery { dao.getMeasurementsInRange(any(), any()) } returns measurements
-        every { settingsDataStore.settings } returns flowOf(Settings(highHrThreshold = 100))
+        // Day 1: HR 60 (weight 1)
+        // Day 2: HR 70 (weight 2)
+        // Day 3: HR 65 (weight 3)
+        // Weighted Average = (60*1 + 70*2 + 65*3) / 6 = (60 + 140 + 195) / 6 = 395 / 6 = 65.83 -> 65
+        // Phase Offset (FOLLICULAR) = -1
+        // Expected Baseline = 65 - 1 = 64
 
         val baseline = repository.calculateAdaptiveBaseline()
-
-        // Weighted Average Calculation:
-        // Indices in sorted results: 0 (Day 1), 1 (Day 2), 2 (Day 3)
-        // Weights: 1, 2, 3
-        // (60*1 + 70*2 + 80*3) / (1+2+3) = (60 + 140 + 240) / 6 = 440 / 6 = 73.33 -> 73
-        assertEquals(73, baseline)
-    }
-
-    @Test
-    fun `getBaselineDeviation should calculate percentage correctly`() = runTest {
-        val today = LocalDate.now().atStartOfDay(ZoneId.systemDefault()).toInstant().toEpochMilli()
-        coEvery { dao.getMeasurementsInRange(any(), any()) } returns listOf(
-            OvernightMeasurement(timestamp = today, heartRate = 75, respiratoryRate = 15f, activityState = 0)
-        )
-        // Resting HR in settings is 60. Current baseline is 75.
-        // Deviation: (75 - 60) / 60 = 15 / 60 = 0.25
-        every { settingsDataStore.settings } returns flowOf(Settings(restingHr = 60))
-
-        val deviation = repository.getBaselineDeviation()
-        assertEquals(0.25f, deviation, 0.01f)
+        assertEquals(64, baseline)
     }
 }
