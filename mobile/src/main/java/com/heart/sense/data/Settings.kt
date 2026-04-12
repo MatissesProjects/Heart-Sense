@@ -17,7 +17,8 @@ data class Settings(
     val detectAgitation: Boolean = false,
     val currentStreakMinutes: Int = 0,
     val bestStreakMinutes: Int = 0,
-    val calmPoints: Int = 0
+    val calmPoints: Int = 0,
+    val cyclePhase: String = "UNKNOWN" // "FOLLICULAR", "OVULATION", "LUTEAL", "MENSTRUAL", "UNKNOWN"
 ) {
     val isSnoozed: Boolean
         get() = System.currentTimeMillis() < snoozeUntil

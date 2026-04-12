@@ -36,9 +36,10 @@ class StressPredictor @Inject constructor(
     /**
      * Runs inference on the normalized input buffer.
      * @param normalizedInput 1D array of 240 floats (60 steps * 4 features)
+     * @param cyclePhase String representing menstrual phase.
      */
-    fun predict(normalizedInput: FloatArray): PredictionResult {
-        val tflite = interpreter ?: return fallbackPrediction(normalizedInput)
+    fun predict(normalizedInput: FloatArray, cyclePhase: String = "UNKNOWN"): PredictionResult {
+        val tflite = interpreter ?: return fallbackPrediction(normalizedInput, cyclePhase)
 
         val inputBuffer = ByteBuffer.allocateDirect(normalizedInput.size * 4).apply {
             order(ByteOrder.nativeOrder())
@@ -52,7 +53,13 @@ class StressPredictor @Inject constructor(
 
         tflite.run(inputBuffer, outputBuffer)
         outputBuffer.rewind()
-        val score = outputBuffer.float
+        var score = outputBuffer.float
+
+        // Apply heuristic adjustments based on cycle phase since model doesn't accept it yet
+        when (cyclePhase) {
+            "LUTEAL" -> score -= 0.1f // Naturally higher HR, lower stress threshold
+            "FOLLICULAR" -> score += 0.05f
+        }
 
         // Calculate a dummy confidence based on data variance
         val confidence = 0.85f 
@@ -63,7 +70,7 @@ class StressPredictor @Inject constructor(
     /**
      * Simplified heuristic prediction if TFLite model is not yet available.
      */
-    private fun fallbackPrediction(input: FloatArray): PredictionResult {
+    private fun fallbackPrediction(input: FloatArray, cyclePhase: String): PredictionResult {
         // Look at the trend of the last 10 points (last 40 floats)
         if (input.size < 40) return PredictionResult(0f, 0f)
         
@@ -81,7 +88,12 @@ class StressPredictor @Inject constructor(
         val avgHrv = hrvSum / steps
         
         // Predict stress if HR is high AND HRV is low
-        val score = (avgHr * 0.7f + (1f - avgHrv) * 0.3f)
+        var score = (avgHr * 0.7f + (1f - avgHrv) * 0.3f)
+        
+        when (cyclePhase) {
+            "LUTEAL" -> score -= 0.15f 
+            "FOLLICULAR" -> score += 0.05f
+        }
         
         return PredictionResult(score.coerceIn(0f, 1f), 0.6f)
     }

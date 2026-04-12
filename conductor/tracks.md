@@ -35,12 +35,12 @@
 | `031-session-export` | Session-Based Export| Anonymized visit-centric data tagging for EHR integration. | Completed |
 | `032-medication-tracking` | Medication Tracking | Integrate medication intake to correlate with HR/HRV changes. | Completed |
 | `033-cgm-integration` | CGM Integration | Sync with Continuous Glucose Monitors to correlate sugar with stress. | Completed |
-| `034-hormonal-cycle-sync` | Hormonal Cycle Sync | Adjust AI baselines based on hormonal phases via Health Connect. | Pending |
+| `034-hormonal-cycle-sync` | Hormonal Cycle Sync | Adjust AI baselines based on hormonal phases via Health Connect. | Completed |
 | `035-geospatial-stress-mapping` | Geospatial Stress | Map physiological spikes to GPS locations to find stress hotspots. | Completed |
 | `036-air-quality-weather` | Environmental Data | Correlate AQI and weather changes with agitation/RR anomalies. | Completed |
 | `037-fhir-interoperability` | FHIR Interoperability | Support HL7 FHIR standards for direct EHR integration. | Completed |
 | `038-live-clinician-portal` | Live Clinician Portal | Real-time WebRTC/WebSocket dashboard for active exposure therapy. | Skipped |
 | `039-post-event-cbt` | Post-Event CBT | Mobile UI reflection triggered 30 mins after a stress event. | Completed |
 | `040-spo2-apnea-detection` | SpO2 & Apnea Detection | Utilize Blood Oxygen & RR to detect poor recovery/sleep apnea. | Completed |
-| `041-external-ble-sensors` | External BLE Sensors | Support external BLE medical sensors (e.g., chest straps) for research. | Pending |
+| `041-external-ble-sensors` | External BLE Sensors | Support external BLE medical sensors (e.g., chest straps) for research. | Completed |
 | `042-clinical-test-suite` | Clinical Validation | Comprehensive test suite for AI, Baselines, and External Data Sync. | In Progress |

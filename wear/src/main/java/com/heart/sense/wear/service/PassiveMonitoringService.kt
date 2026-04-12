@@ -260,8 +260,8 @@ class PassiveMonitoringService : PassiveListenerService() {
             // Run AI Prediction
             if (dataAggregator.isReady()) {
                 val input = dataAggregator.getNormalizedInput(settings)
-                val prediction = stressPredictor.predict(input)
-                
+                val prediction = stressPredictor.predict(input, settings.cyclePhase)
+
                 if (prediction.futureStressScore > 0.7f && prediction.confidence > 0.8f) {
                     Log.w("PassiveMonitoring", "AI PRECURSOR ALERT: Potential stress spike in 10 mins! Score: ${prediction.futureStressScore}")
                     wearableCommunicationRepository.sendPrecursorAlert(prediction.futureStressScore, prediction.confidence)

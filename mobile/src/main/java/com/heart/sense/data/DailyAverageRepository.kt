@@ -79,7 +79,16 @@ class DailyAverageRepository @Inject constructor(
             weightTotal += weight
         }
         
-        return (weightedSum / weightTotal).toInt()
+        val rawBaseline = (weightedSum / weightTotal).toInt()
+        val settings = settingsDataStore.settings.first()
+        val phaseOffset = when (settings.cyclePhase) {
+            "LUTEAL" -> 2
+            "FOLLICULAR" -> -1
+            "MENSTRUAL" -> 0
+            "OVULATION" -> 1
+            else -> 0
+        }
+        return rawBaseline + phaseOffset
     }
 
     suspend fun getBaselineDeviation(): Float {

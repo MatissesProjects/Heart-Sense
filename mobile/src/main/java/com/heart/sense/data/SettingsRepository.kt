@@ -95,6 +95,7 @@ class SettingsRepository @Inject constructor(
             dataMap.putInt(Constants.KEY_CURRENT_STREAK, settings.currentStreakMinutes)
             dataMap.putInt(Constants.KEY_BEST_STREAK, settings.bestStreakMinutes)
             dataMap.putInt(Constants.KEY_CALM_POINTS, settings.calmPoints)
+            dataMap.putString(Constants.KEY_CYCLE_PHASE, settings.cyclePhase)
         }.asPutDataRequest().setUrgent()
         
         try {

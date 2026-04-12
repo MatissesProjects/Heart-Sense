@@ -34,6 +34,7 @@ class SettingsDataStore @Inject constructor(
     private val CURRENT_STREAK = intPreferencesKey(Constants.KEY_CURRENT_STREAK)
     private val BEST_STREAK = intPreferencesKey(Constants.KEY_BEST_STREAK)
     private val CALM_POINTS = intPreferencesKey(Constants.KEY_CALM_POINTS)
+    private val CYCLE_PHASE = stringPreferencesKey(Constants.KEY_CYCLE_PHASE)
 
     val settings: Flow<Settings> = context.dataStore.data.map { preferences ->
         Settings(
@@ -53,7 +54,8 @@ class SettingsDataStore @Inject constructor(
             detectAgitation = preferences[DETECT_AGITATION] ?: false,
             currentStreakMinutes = preferences[CURRENT_STREAK] ?: 0,
             bestStreakMinutes = preferences[BEST_STREAK] ?: 0,
-            calmPoints = preferences[CALM_POINTS] ?: 0
+            calmPoints = preferences[CALM_POINTS] ?: 0,
+            cyclePhase = preferences[CYCLE_PHASE] ?: "UNKNOWN"
         )
     }
 
@@ -80,6 +82,7 @@ class SettingsDataStore @Inject constructor(
             preferences[CURRENT_STREAK] = settings.currentStreakMinutes
             preferences[BEST_STREAK] = settings.bestStreakMinutes
             preferences[CALM_POINTS] = settings.calmPoints
+            preferences[CYCLE_PHASE] = settings.cyclePhase
         }
     }
 

@@ -8,6 +8,7 @@ import androidx.health.connect.client.records.BloodGlucoseRecord
 import androidx.health.connect.client.records.HeartRateRecord
 import androidx.health.connect.client.records.RestingHeartRateRecord
 import androidx.health.connect.client.records.HeartRateVariabilityRmssdRecord
+import androidx.health.connect.client.records.MenstruationPeriodRecord
 import androidx.health.connect.client.request.ReadRecordsRequest
 import androidx.health.connect.client.time.TimeRangeFilter
 import dagger.hilt.android.qualifiers.ApplicationContext
@@ -35,7 +36,8 @@ class HealthConnectRepository @Inject constructor(
         HealthPermission.getWritePermission(RestingHeartRateRecord::class),
         HealthPermission.getReadPermission(HeartRateVariabilityRmssdRecord::class),
         HealthPermission.getWritePermission(HeartRateVariabilityRmssdRecord::class),
-        HealthPermission.getReadPermission(BloodGlucoseRecord::class)
+        HealthPermission.getReadPermission(BloodGlucoseRecord::class),
+        HealthPermission.getReadPermission(MenstruationPeriodRecord::class)
     )
 
     suspend fun hasAllPermissions(): Boolean {
@@ -105,6 +107,22 @@ class HealthConnectRepository @Inject constructor(
             return response.records
         } catch (e: Exception) {
             Log.e("HealthConnect", "Error reading Glucose records: ${e.message}")
+            return emptyList()
+        }
+    }
+
+    suspend fun readMenstruationRecords(startTime: Instant, endTime: Instant): List<MenstruationPeriodRecord> {
+        val client = healthConnectClient ?: return emptyList()
+        try {
+            val response = client.readRecords(
+                ReadRecordsRequest(
+                    MenstruationPeriodRecord::class,
+                    timeRangeFilter = TimeRangeFilter.between(startTime, endTime)
+                )
+            )
+            return response.records
+        } catch (e: Exception) {
+            Log.e("HealthConnect", "Error reading Menstruation records: ${e.message}")
             return emptyList()
         }
     }

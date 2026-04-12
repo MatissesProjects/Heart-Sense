@@ -35,11 +35,12 @@ object Constants {
     const val KEY_EMERGENCY_ENABLED = "emergencyEnabled"
     const val KEY_DETECT_PACING = "detectPacing"
     const val KEY_DETECT_AGITATION = "detectAgitation"
-    const val KEY_CURRENT_STREAK = "currentStreak"
-    const val KEY_BEST_STREAK = "bestStreak"
-    const val KEY_CALM_POINTS = "calmPoints"
+    const val KEY_CURRENT_STREAK = "current_streak"
+    const val KEY_BEST_STREAK = "best_streak"
+    const val KEY_CALM_POINTS = "calm_points"
+    const val KEY_CYCLE_PHASE = "cycle_phase"
 
-    // Intent Actions
+    // Action Intents
     const val ACTION_SICK_MODE = "com.heart.sense.ACTION_SICK_MODE"
     const val ACTION_ACKNOWLEDGE = "com.heart.sense.ACTION_ACKNOWLEDGE"
     const val ACTION_SNOOZE = "com.heart.sense.ACTION_SNOOZE"

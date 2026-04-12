@@ -37,15 +37,32 @@ class SettingsListenerService : WearableListenerService() {
             when (event.dataItem.uri.path) {
                 Constants.PATH_SETTINGS -> {
                     val dataMap = DataMapItem.fromDataItem(event.dataItem).dataMap
-                    val threshold = dataMap.getInt(Constants.KEY_HIGH_HR_THRESHOLD)
-                    val isSick = dataMap.getBoolean(Constants.KEY_IS_SICK_MODE)
                     val timestamp = dataMap.getLong(Constants.KEY_LAST_UPDATED)
-                    val snoozeUntil = dataMap.getLong(Constants.KEY_SNOOZE_UNTIL)
                     
                     scope.launch {
                         val current = settingsDataStore.settings.first()
                         if (timestamp > current.lastUpdated) {
-                            settingsDataStore.updateSettings(threshold, isSick, timestamp, snoozeUntil)
+                            val newSettings = com.heart.sense.wear.data.Settings(
+                                highHrThreshold = dataMap.getInt(Constants.KEY_HIGH_HR_THRESHOLD),
+                                isSickMode = dataMap.getBoolean(Constants.KEY_IS_SICK_MODE),
+                                lastUpdated = timestamp,
+                                snoozeUntil = dataMap.getLong(Constants.KEY_SNOOZE_UNTIL),
+                                calibrationStatus = dataMap.getString(Constants.KEY_CALIBRATION_STATUS) ?: "NOT_STARTED",
+                                restingHr = dataMap.getInt(Constants.KEY_RESTING_HR),
+                                respiratoryRate = dataMap.getFloat(Constants.KEY_RESPIRATORY_RATE),
+                                calibrationStartTime = dataMap.getLong(Constants.KEY_CALIBRATION_START_TIME),
+                                emergencyContactName = dataMap.getString(Constants.KEY_EMERGENCY_CONTACT_NAME) ?: "",
+                                emergencyContactPhone = dataMap.getString(Constants.KEY_EMERGENCY_CONTACT_PHONE) ?: "",
+                                emergencyCountdownSeconds = dataMap.getInt(Constants.KEY_EMERGENCY_COUNTDOWN),
+                                isEmergencyEnabled = dataMap.getBoolean(Constants.KEY_EMERGENCY_ENABLED),
+                                detectPacing = dataMap.getBoolean(Constants.KEY_DETECT_PACING),
+                                detectAgitation = dataMap.getBoolean(Constants.KEY_DETECT_AGITATION),
+                                currentStreakMinutes = dataMap.getInt(Constants.KEY_CURRENT_STREAK),
+                                bestStreakMinutes = dataMap.getInt(Constants.KEY_BEST_STREAK),
+                                calmPoints = dataMap.getInt(Constants.KEY_CALM_POINTS),
+                                cyclePhase = dataMap.getString(Constants.KEY_CYCLE_PHASE) ?: "UNKNOWN"
+                            )
+                            settingsDataStore.updateSettings(newSettings)
                         }
                     }
                 }

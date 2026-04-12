@@ -164,6 +164,31 @@ class SettingsViewModel @Inject constructor(
             averages.forEach { 
                 healthConnectRepository.writeDailyAverage(it)
             }
+            syncMenstrualCycle()
+        }
+    }
+
+    private suspend fun syncMenstrualCycle() {
+        val now = java.time.Instant.now()
+        val past = now.minus(java.time.Duration.ofDays(40))
+        val records = healthConnectRepository.readMenstruationRecords(past, now)
+        val latest = records.maxByOrNull { it.time }
+        val phase = if (latest != null) {
+            val daysSinceStart = java.time.Duration.between(latest.time, now).toDays()
+            when {
+                daysSinceStart in 0..5 -> "MENSTRUAL"
+                daysSinceStart in 6..13 -> "FOLLICULAR"
+                daysSinceStart in 14..16 -> "OVULATION"
+                daysSinceStart in 17..28 -> "LUTEAL"
+                else -> "UNKNOWN"
+            }
+        } else {
+            "UNKNOWN"
+        }
+        val currentSettings = settingsDataStore.settings.kotlinx.coroutines.flow.first()
+        if (currentSettings.cyclePhase != phase) {
+            settingsDataStore.updateSettings(currentSettings.copy(cyclePhase = phase))
+            repository.updateSettings(currentSettings.copy(cyclePhase = phase))
         }
     }
 
