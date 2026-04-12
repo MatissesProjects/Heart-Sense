@@ -28,6 +28,8 @@ class AlertHandlerTest {
     private lateinit var ambientSensorRepository: AmbientSensorRepository
     private lateinit var medicationRepository: MedicationRepository
     private lateinit var bloodGlucoseRepository: BloodGlucoseRepository
+    private lateinit var locationRepository: LocationRepository
+    private lateinit var weatherRepository: WeatherRepository
     private lateinit var alertHandler: AlertHandler
 
     @Before
@@ -46,11 +48,16 @@ class AlertHandlerTest {
         every { anyConstructed<NotificationHelper>().showPrecursorNotification(any(), any()) } returns Unit
         every { anyConstructed<NotificationHelper>().showIrregularRhythmNotification() } returns Unit
 
+        mockkObject(com.heart.sense.service.CbtTriggerWorker)
+        every { com.heart.sense.service.CbtTriggerWorker.schedule(any(), any(), any()) } returns Unit
+
         context = mockk(relaxed = true)
         val notificationManager = mockk<android.app.NotificationManager>(relaxed = true)
         every { context.getSystemService(Context.NOTIFICATION_SERVICE) } returns notificationManager
 
         alertsRepository = mockk(relaxed = true)
+        coEvery { alertsRepository.addAlert(any(), any(), any(), any(), any(), any(), any(), any(), any()) } returns 1
+
         settingsDataStore = mockk(relaxed = true)
         localSyncRepository = mockk(relaxed = true)
         interventionRepository = mockk(relaxed = true)
@@ -58,10 +65,13 @@ class AlertHandlerTest {
         ambientSensorRepository = mockk(relaxed = true)
         medicationRepository = mockk(relaxed = true)
         bloodGlucoseRepository = mockk(relaxed = true)
+        locationRepository = mockk(relaxed = true)
+        weatherRepository = mockk(relaxed = true)
         
         every { ambientSensorRepository.getAmbientTemp() } returns flowOf(22.5f)
         every { ambientSensorRepository.getAmbientLux() } returns flowOf(300f)
         every { ambientSensorRepository.getAmbientNoise() } returns flowOf(45)
+        every { weatherRepository.getLatestEnvironmentalContext() } returns flowOf(null)
     }
 
     private fun initHandler() {
@@ -74,7 +84,9 @@ class AlertHandlerTest {
             sessionRepository,
             ambientSensorRepository,
             medicationRepository,
-            bloodGlucoseRepository
+            bloodGlucoseRepository,
+            locationRepository,
+            weatherRepository
         )
     }
 
@@ -91,13 +103,14 @@ class AlertHandlerTest {
             coEvery { sessionRepository.getActiveVisitId() } returns null
             coEvery { medicationRepository.getIntakesForDay(any()) } returns emptyList()
             every { medicationRepository.activeMedications } returns flowOf(emptyList())
+            coEvery { bloodGlucoseRepository.isGlucoseCrashing() } returns false
             initHandler()
 
             val hr = 120
             alertHandler.handleHrAlert(hr)
             advanceUntilIdle()
 
-            verify { alertsRepository.addAlert(120, any(), any(), any(), any(), any()) }
+            coVerify { alertsRepository.addAlert(hr = 120, type = any(), visitId = any(), ambientTemp = any(), ambientLux = any(), ambientDb = any(), aqi = any(), humidity = any(), barometricPressure = any()) }
             verify { localSyncRepository.sendData(any()) }
         } finally {
             Dispatchers.resetMain()
@@ -118,7 +131,7 @@ class AlertHandlerTest {
             alertHandler.handleHrAlert(hr)
             advanceUntilIdle()
 
-            verify(exactly = 0) { alertsRepository.addAlert(any(), any(), any(), any(), any(), any()) }
+            coVerify(exactly = 0) { alertsRepository.addAlert(any(), any(), any(), any(), any(), any(), any(), any(), any()) }
             verify(exactly = 0) { localSyncRepository.sendData(any()) }
         } finally {
             Dispatchers.resetMain()
@@ -137,7 +150,7 @@ class AlertHandlerTest {
             alertHandler.handleCriticalHrAlert(hr)
             advanceUntilIdle()
 
-            verify { alertsRepository.addAlert(160, any(), any(), any(), any(), any()) }
+            coVerify { alertsRepository.addAlert(hr = 160, type = any(), visitId = any(), ambientTemp = any(), ambientLux = any(), ambientDb = any(), aqi = any(), humidity = any(), barometricPressure = any()) }
             verify { localSyncRepository.sendData(any()) }
         } finally {
             Dispatchers.resetMain()
@@ -168,7 +181,7 @@ class AlertHandlerTest {
                     visitId = any()
                 )
             }
-            verify { alertsRepository.addAlert(any(), any(), any(), any(), any(), any()) }
+            coVerify { alertsRepository.addAlert(hr = any(), type = any(), visitId = any(), ambientTemp = any(), ambientLux = any(), ambientDb = any(), aqi = any(), humidity = any(), barometricPressure = any()) }
         } finally {
             Dispatchers.resetMain()
         }

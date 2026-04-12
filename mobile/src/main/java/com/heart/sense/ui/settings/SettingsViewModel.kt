@@ -21,6 +21,7 @@ import kotlinx.coroutines.flow.MutableStateFlow
 import kotlinx.coroutines.flow.SharingStarted
 import kotlinx.coroutines.flow.StateFlow
 import kotlinx.coroutines.flow.asStateFlow
+import kotlinx.coroutines.flow.first
 import kotlinx.coroutines.flow.map
 import kotlinx.coroutines.flow.stateIn
 import kotlinx.coroutines.launch
@@ -172,9 +173,9 @@ class SettingsViewModel @Inject constructor(
         val now = java.time.Instant.now()
         val past = now.minus(java.time.Duration.ofDays(40))
         val records = healthConnectRepository.readMenstruationRecords(past, now)
-        val latest = records.maxByOrNull { it.time }
+        val latest = records.maxByOrNull { it.startTime }
         val phase = if (latest != null) {
-            val daysSinceStart = java.time.Duration.between(latest.time, now).toDays()
+            val daysSinceStart = java.time.Duration.between(latest.startTime, now).toDays()
             when {
                 daysSinceStart in 0..5 -> "MENSTRUAL"
                 daysSinceStart in 6..13 -> "FOLLICULAR"
@@ -185,7 +186,7 @@ class SettingsViewModel @Inject constructor(
         } else {
             "UNKNOWN"
         }
-        val currentSettings = settingsDataStore.settings.kotlinx.coroutines.flow.first()
+        val currentSettings = settingsDataStore.settings.first()
         if (currentSettings.cyclePhase != phase) {
             settingsDataStore.updateSettings(currentSettings.copy(cyclePhase = phase))
             repository.updateSettings(currentSettings.copy(cyclePhase = phase))
