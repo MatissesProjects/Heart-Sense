@@ -4,6 +4,8 @@ import android.util.Log
 import com.google.android.gms.wearable.MessageEvent
 import com.google.android.gms.wearable.WearableListenerService
 import com.heart.sense.data.DailyAverageRepository
+import com.heart.sense.data.MedicationRepository
+import com.heart.sense.data.db.MedicationIntake
 import com.heart.sense.data.db.OvernightMeasurement
 import com.heart.sense.util.Constants
 import dagger.hilt.android.AndroidEntryPoint
@@ -20,6 +22,9 @@ class SyncListenerService : WearableListenerService() {
 
     @Inject
     lateinit var dailyAverageRepository: DailyAverageRepository
+
+    @Inject
+    lateinit var medicationRepository: MedicationRepository
 
     private val scope = CoroutineScope(SupervisorJob() + Dispatchers.IO)
     private val syncChannel = Channel<List<OvernightMeasurement>>(Channel.RENDEZVOUS)
@@ -40,13 +45,21 @@ class SyncListenerService : WearableListenerService() {
     }
 
     override fun onMessageReceived(messageEvent: MessageEvent) {
-        if (messageEvent.path == Constants.PATH_SYNC_BATCH) {
-            val data = String(messageEvent.data)
-            
-            scope.launch {
-                val measurements = parseBatch(data)
-                if (measurements.isNotEmpty()) {
-                    syncChannel.send(measurements)
+        when (messageEvent.path) {
+            Constants.PATH_SYNC_BATCH -> {
+                val data = String(messageEvent.data)
+                scope.launch {
+                    val measurements = parseBatch(data)
+                    if (measurements.isNotEmpty()) {
+                        syncChannel.send(measurements)
+                    }
+                }
+            }
+            Constants.PATH_LOG_INTAKE -> {
+                val data = String(messageEvent.data)
+                scope.launch {
+                    val intake = parseIntake(data)
+                    intake?.let { medicationRepository.logIntake(it) }
                 }
             }
         }
@@ -69,6 +82,23 @@ class SyncListenerService : WearableListenerService() {
             } catch (e: Exception) {
                 null
             }
+        }
+    }
+
+    private fun parseIntake(data: String): MedicationIntake? {
+        return try {
+            val parts = data.split("|")
+            if (parts.size >= 5) {
+                MedicationIntake(
+                    medId = parts[0].toInt(),
+                    medName = parts[1],
+                    timestamp = parts[2].toLong(),
+                    dose = parts[3],
+                    source = parts[4]
+                )
+            } else null
+        } catch (e: Exception) {
+            null
         }
     }
 }

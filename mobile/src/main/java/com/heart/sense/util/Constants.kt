@@ -16,6 +16,8 @@ object Constants {
     const val PATH_PRECURSOR_ALERT = "/precursor_alert"
 
     const val PATH_SYNC_BATCH = "/sync_batch"
+    const val PATH_MEDICATIONS = "/medications"
+    const val PATH_LOG_INTAKE = "/log_intake"
 
     // Data Map Keys
     const val KEY_HIGH_HR_THRESHOLD = "highHrThreshold"

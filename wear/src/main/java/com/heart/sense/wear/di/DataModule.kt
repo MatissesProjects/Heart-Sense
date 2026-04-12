@@ -59,13 +59,21 @@ object DataModule {
             context,
             HeartSenseDatabase::class.java,
             "heart_sense_db"
-        ).build()
+        )
+        .fallbackToDestructiveMigration()
+        .build()
     }
 
     @Provides
     @Singleton
     fun provideOvernightMeasurementDao(database: HeartSenseDatabase): OvernightMeasurementDao {
         return database.overnightMeasurementDao()
+    }
+
+    @Provides
+    @Singleton
+    fun provideMedicationDao(database: HeartSenseDatabase): com.heart.sense.wear.data.db.MedicationDao {
+        return database.medicationDao()
     }
 
     @Provides

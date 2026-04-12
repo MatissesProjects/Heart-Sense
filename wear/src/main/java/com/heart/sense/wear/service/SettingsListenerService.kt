@@ -7,6 +7,8 @@ import com.google.android.gms.wearable.MessageEvent
 import com.google.android.gms.wearable.WearableListenerService
 import com.heart.sense.wear.data.SettingsDataStore
 import com.heart.sense.wear.data.OvernightDataRepository
+import com.heart.sense.wear.data.MedicationRepository
+import com.heart.sense.wear.data.db.Medication
 import com.heart.sense.wear.util.Constants
 import dagger.hilt.android.AndroidEntryPoint
 import kotlinx.coroutines.CoroutineScope
@@ -25,21 +27,47 @@ class SettingsListenerService : WearableListenerService() {
     @Inject
     lateinit var overnightDataRepository: OvernightDataRepository
 
+    @Inject
+    lateinit var medicationRepository: MedicationRepository
+
     private val scope = CoroutineScope(SupervisorJob() + Dispatchers.Main)
 
     override fun onDataChanged(dataEvents: DataEventBuffer) {
         dataEvents.forEach { event ->
-            if (event.dataItem.uri.path == Constants.PATH_SETTINGS) {
-                val dataMap = DataMapItem.fromDataItem(event.dataItem).dataMap
-                val threshold = dataMap.getInt(Constants.KEY_HIGH_HR_THRESHOLD)
-                val isSick = dataMap.getBoolean(Constants.KEY_IS_SICK_MODE)
-                val timestamp = dataMap.getLong(Constants.KEY_LAST_UPDATED)
-                val snoozeUntil = dataMap.getLong(Constants.KEY_SNOOZE_UNTIL)
-                
-                scope.launch {
-                    val current = settingsDataStore.settings.first()
-                    if (timestamp > current.lastUpdated) {
-                        settingsDataStore.updateSettings(threshold, isSick, timestamp, snoozeUntil)
+            when (event.dataItem.uri.path) {
+                Constants.PATH_SETTINGS -> {
+                    val dataMap = DataMapItem.fromDataItem(event.dataItem).dataMap
+                    val threshold = dataMap.getInt(Constants.KEY_HIGH_HR_THRESHOLD)
+                    val isSick = dataMap.getBoolean(Constants.KEY_IS_SICK_MODE)
+                    val timestamp = dataMap.getLong(Constants.KEY_LAST_UPDATED)
+                    val snoozeUntil = dataMap.getLong(Constants.KEY_SNOOZE_UNTIL)
+                    
+                    scope.launch {
+                        val current = settingsDataStore.settings.first()
+                        if (timestamp > current.lastUpdated) {
+                            settingsDataStore.updateSettings(threshold, isSick, timestamp, snoozeUntil)
+                        }
+                    }
+                }
+                Constants.PATH_MEDICATIONS -> {
+                    val dataMap = DataMapItem.fromDataItem(event.dataItem).dataMap
+                    val medStrings = dataMap.getStringArray("medList") ?: emptyArray()
+                    
+                    val medications = medStrings.mapNotNull { str ->
+                        val parts = str.split("|")
+                        if (parts.size >= 5) {
+                            Medication(
+                                id = parts[0].toInt(),
+                                name = parts[1],
+                                dose = parts[2],
+                                frequency = parts[3],
+                                reminderTime = parts[4]
+                            )
+                        } else null
+                    }
+                    
+                    scope.launch {
+                        medicationRepository.updateMedications(medications)
                     }
                 }
             }
