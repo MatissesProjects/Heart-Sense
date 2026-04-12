@@ -56,6 +56,11 @@ class WearableCommunicationRepository @Inject constructor(
         sendMessageToPhone(Constants.PATH_PRECURSOR_ALERT, data.toByteArray())
     }
 
+    suspend fun sendApneaAlert(risk: String, dipCount: Int, correlationCount: Int, minSpo2: Float) {
+        val data = "$risk|$dipCount|$correlationCount|$minSpo2"
+        sendMessageToPhone(Constants.PATH_APNEA_ALERT, data.toByteArray())
+    }
+
     suspend fun logIntakeToPhone(intakeData: String) {
         sendMessageToPhone(Constants.PATH_LOG_INTAKE, intakeData.toByteArray())
     }

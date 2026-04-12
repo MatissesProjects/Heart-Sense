@@ -193,18 +193,21 @@ class PassiveMonitoringService : PassiveListenerService() {
             
             if (hrDataPoints.isEmpty()) return@launch
 
-            val latestDataPoint = hrDataPoints.last()
-            val latestHr = latestDataPoint.value.toInt()
+            val latestHrDataPoint = hrDataPoints.last()
+            val latestHr = latestHrDataPoint.value.toInt()
             lastHr = latestHr
+            
+            var latestRr: Float? = null
+            var latestSpo2: Float? = null
             
             // Extract RR intervals from metadata if available
             val rrIntervals = try {
-                latestDataPoint.metadata.getLongArray("androidx.health.services.client.data.DataPoint.HEART_RATE_RR_INTERVALS")?.toList()
+                latestHrDataPoint.metadata.getLongArray("androidx.health.services.client.data.DataPoint.HEART_RATE_RR_INTERVALS")?.toList()
             } catch (e: Exception) {
                 null
             }
             
-            Log.d("PassiveMonitoring", "New HR: $latestHr BPM, RR Intervals: ${rrIntervals?.size ?: 0}")
+            Log.d("PassiveMonitoring", "New HR: $latestHr BPM")
 
             val settings = settingsDataStore.settings.first()
 
@@ -233,10 +236,11 @@ class PassiveMonitoringService : PassiveListenerService() {
             // Store for overnight analysis
             overnightDataRepository.storeMeasurement(
                 heartRate = latestHr, 
-                respiratoryRate = null, // RR Placeholder
+                respiratoryRate = latestRr,
                 activityState = lastActivityState.id,
                 rrIntervals = rrIntervals,
-                motionIntensity = currentMotionScore
+                motionIntensity = currentMotionScore,
+                spo2 = latestSpo2
             )
 
             // Update Calm Streak / Gamification
@@ -333,6 +337,22 @@ class PassiveMonitoringService : PassiveListenerService() {
                     risk = result.risk.name,
                     hrElevation = result.hrElevation,
                     rrElevation = result.rrElevation
+                )
+            }
+
+            // Apnea Detection
+            val endTime = System.currentTimeMillis()
+            val startTime = endTime - (8 * 60 * 60 * 1000L)
+            val measurements = overnightDataRepository.getMeasurementsInRange(startTime, endTime)
+            val apneaResult = com.heart.sense.wear.util.ApneaEvaluator.evaluate(measurements)
+            
+            if (apneaResult.risk != com.heart.sense.wear.util.ApneaRisk.NONE) {
+                Log.d("PassiveMonitoring", "Apnea Risk Detected: ${apneaResult.risk}. Sending alert.")
+                wearableCommunicationRepository.sendApneaAlert(
+                    risk = apneaResult.risk.name,
+                    dipCount = apneaResult.dipCount,
+                    correlationCount = apneaResult.correlationCount,
+                    minSpo2 = apneaResult.minSpo2
                 )
             }
             
