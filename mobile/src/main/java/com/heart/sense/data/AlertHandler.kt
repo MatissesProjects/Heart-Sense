@@ -24,7 +24,8 @@ class AlertHandler @Inject constructor(
     private val interventionRepository: InterventionRepository,
     private val sessionRepository: SessionRepository,
     private val ambientSensorRepository: AmbientSensorRepository,
-    private val medicationRepository: MedicationRepository
+    private val medicationRepository: MedicationRepository,
+    private val bloodGlucoseRepository: BloodGlucoseRepository
 ) {
     // Standard Hilt/Testing practice: Use an injected scope or Dispatchers.Main
     // For simplicity here, we'll keep the internal scope but allow it to be influenced by tests via Dispatchers.setMain
@@ -39,15 +40,24 @@ class AlertHandler @Inject constructor(
                 Log.d("AlertHandler", "Alert suppressed: Snoozed until ${settings.snoozeUntil}")
                 return@launch
             }
-            
+
             val visitId = sessionRepository.getActiveVisitId()
             val ambientTemp = ambientSensorRepository.getAmbientTemp().first()
             val ambientLux = ambientSensorRepository.getAmbientLux().first()
             val ambientDb = ambientSensorRepository.getAmbientNoise().first()
-            
+
             val missedMedContext = checkMissedMedications()
-            val alertType = if (missedMedContext != null) "High HR (Missed: $missedMedContext)" else "High HR"
-            
+            val glucoseCrash = bloodGlucoseRepository.isGlucoseCrashing()
+
+            var triggerContext = ""
+            if (missedMedContext != null) triggerContext += "Missed: $missedMedContext"
+            if (glucoseCrash) {
+                if (triggerContext.isNotEmpty()) triggerContext += ", "
+                triggerContext += "Glucose Crash"
+            }
+
+            val alertType = if (triggerContext.isNotEmpty()) "High HR ($triggerContext)" else "High HR"
+
             alertsRepository.addAlert(hr, alertType, visitId, ambientTemp, ambientLux, ambientDb)
             notificationHelper.showHighHrNotification(hr)
             localSyncRepository.sendData(NearbyPayload(hr, "$alertType Alert", ambientTemp, ambientLux, ambientDb))

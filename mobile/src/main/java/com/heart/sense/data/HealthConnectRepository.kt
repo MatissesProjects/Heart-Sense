@@ -4,6 +4,7 @@ import android.content.Context
 import android.util.Log
 import androidx.health.connect.client.HealthConnectClient
 import androidx.health.connect.client.permission.HealthPermission
+import androidx.health.connect.client.records.BloodGlucoseRecord
 import androidx.health.connect.client.records.HeartRateRecord
 import androidx.health.connect.client.records.RestingHeartRateRecord
 import androidx.health.connect.client.records.HeartRateVariabilityRmssdRecord
@@ -33,7 +34,8 @@ class HealthConnectRepository @Inject constructor(
         HealthPermission.getReadPermission(RestingHeartRateRecord::class),
         HealthPermission.getWritePermission(RestingHeartRateRecord::class),
         HealthPermission.getReadPermission(HeartRateVariabilityRmssdRecord::class),
-        HealthPermission.getWritePermission(HeartRateVariabilityRmssdRecord::class)
+        HealthPermission.getWritePermission(HeartRateVariabilityRmssdRecord::class),
+        HealthPermission.getReadPermission(BloodGlucoseRecord::class)
     )
 
     suspend fun hasAllPermissions(): Boolean {
@@ -87,6 +89,22 @@ class HealthConnectRepository @Inject constructor(
             return response.records
         } catch (e: Exception) {
             Log.e("HealthConnect", "Error reading HR records: ${e.message}")
+            return emptyList()
+        }
+    }
+
+    suspend fun readBloodGlucoseRange(startTime: Instant, endTime: Instant): List<BloodGlucoseRecord> {
+        val client = healthConnectClient ?: return emptyList()
+        try {
+            val response = client.readRecords(
+                ReadRecordsRequest(
+                    BloodGlucoseRecord::class,
+                    timeRangeFilter = TimeRangeFilter.between(startTime, endTime)
+                )
+            )
+            return response.records
+        } catch (e: Exception) {
+            Log.e("HealthConnect", "Error reading Glucose records: ${e.message}")
             return emptyList()
         }
     }

@@ -7,7 +7,7 @@ import com.heart.sense.data.Alert
 import com.heart.sense.data.Intervention
 import com.heart.sense.data.Session
 
-@Database(entities = [OvernightMeasurement::class, Alert::class, Intervention::class, Session::class, Medication::class, MedicationIntake::class], version = 5, exportSchema = false)
+@Database(entities = [OvernightMeasurement::class, Alert::class, Intervention::class, Session::class, Medication::class, MedicationIntake::class, BloodGlucose::class], version = 6, exportSchema = false)
 @TypeConverters(Converters::class)
 abstract class HeartSenseDatabase : RoomDatabase() {
     abstract fun overnightMeasurementDao(): OvernightMeasurementDao
@@ -15,4 +15,5 @@ abstract class HeartSenseDatabase : RoomDatabase() {
     abstract fun interventionDao(): InterventionDao
     abstract fun sessionDao(): SessionDao
     abstract fun medicationDao(): MedicationDao
+    abstract fun bloodGlucoseDao(): BloodGlucoseDao
 }

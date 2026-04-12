@@ -88,4 +88,10 @@ object WearableModule {
     fun provideMedicationDao(database: HeartSenseDatabase): com.heart.sense.data.db.MedicationDao {
         return database.medicationDao()
     }
+
+    @Provides
+    @Singleton
+    fun provideBloodGlucoseDao(database: HeartSenseDatabase): com.heart.sense.data.db.BloodGlucoseDao {
+        return database.bloodGlucoseDao()
+    }
 }

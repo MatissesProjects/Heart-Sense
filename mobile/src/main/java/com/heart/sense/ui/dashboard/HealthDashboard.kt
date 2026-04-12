@@ -26,6 +26,7 @@ import java.time.format.DateTimeFormatter
 fun HealthDashboard(
     dailyAverages: List<DailyAverage>,
     medicationIntakes: List<com.heart.sense.data.db.MedicationIntake>,
+    bloodGlucose: List<com.heart.sense.data.db.BloodGlucose>,
     settings: Settings,
     modifier: Modifier = Modifier
 ) {
@@ -50,6 +51,17 @@ fun HealthDashboard(
                     style = MaterialTheme.typography.bodySmall
                 )
             }
+        }
+
+        if (bloodGlucose.isNotEmpty()) {
+            Spacer(modifier = Modifier.height(16.dp))
+            Text("Blood Glucose (CGM)", style = MaterialTheme.typography.titleSmall, fontWeight = FontWeight.Bold)
+            val latest = bloodGlucose.first()
+            Text(
+                text = "Latest: ${"%.1f".format(latest.value)} ${latest.unit} at ${java.time.Instant.ofEpochMilli(latest.timestamp).atZone(java.time.ZoneId.systemDefault()).format(DateTimeFormatter.ofPattern("HH:mm"))}",
+                style = MaterialTheme.typography.bodyMedium,
+                color = if (latest.value < 4.0 || latest.value > 10.0) Color.Red else Color.Unspecified
+            )
         }
 
         Spacer(modifier = Modifier.height(24.dp))

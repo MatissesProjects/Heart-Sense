@@ -34,7 +34,7 @@
 | `030-gamified-calm` | Gamified Calm | Incentivizing calm states during known stressful periods. | Completed |
 | `031-session-export` | Session-Based Export| Anonymized visit-centric data tagging for EHR integration. | Completed |
 | `032-medication-tracking` | Medication Tracking | Integrate medication intake to correlate with HR/HRV changes. | Completed |
-| `033-cgm-integration` | CGM Integration | Sync with Continuous Glucose Monitors to correlate sugar with stress. | Pending |
+| `033-cgm-integration` | CGM Integration | Sync with Continuous Glucose Monitors to correlate sugar with stress. | Completed |
 | `034-hormonal-cycle-sync` | Hormonal Cycle Sync | Adjust AI baselines based on hormonal phases via Health Connect. | Pending |
 | `035-geospatial-stress-mapping` | Geospatial Stress | Map physiological spikes to GPS locations to find stress hotspots. | Pending |
 | `036-air-quality-weather` | Environmental Data | Correlate AQI and weather changes with agitation/RR anomalies. | Pending |

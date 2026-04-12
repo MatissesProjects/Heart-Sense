@@ -29,6 +29,7 @@ fun SettingsScreen(
     val isConnected by viewModel.isWatchConnected.collectAsState()
     val dailyAverages by viewModel.dailyAverages.collectAsState()
     val medicationIntakes by viewModel.medicationIntakes.collectAsState()
+    val bloodGlucose by viewModel.bloodGlucose.collectAsState()
     val aiBaseline by viewModel.aiBaseline.collectAsState()
     val healthPermissionsGranted by viewModel.healthConnectPermissionsGranted.collectAsState()
     val activeSession by viewModel.activeSession.collectAsState()
@@ -301,6 +302,12 @@ fun SettingsScreen(
         }
 
         item {
+            CgmIntegrationCard(
+                onSync = { viewModel.syncCgmData() }
+            )
+        }
+
+        item {
             Button(onClick = { viewModel.testAlert() }) {
                 Text("Send Test Alert")
             }
@@ -331,6 +338,7 @@ fun SettingsScreen(
             HealthDashboard(
                 dailyAverages = dailyAverages,
                 medicationIntakes = medicationIntakes,
+                bloodGlucose = bloodGlucose,
                 settings = settings
             )
         }
@@ -468,6 +476,28 @@ fun HealthConnectCard(
                         Text("Sync Now")
                     }
                 }
+            }
+        }
+    }
+}
+
+@Composable
+fun CgmIntegrationCard(
+    onSync: () -> Unit
+) {
+    Card(modifier = Modifier.fillMaxWidth()) {
+        Column(modifier = Modifier.padding(16.dp), verticalArrangement = Arrangement.spacedBy(8.dp)) {
+            Text("CGM Integration", style = MaterialTheme.typography.titleMedium, fontWeight = FontWeight.Bold)
+            Text(
+                "Sync with Continuous Glucose Monitors via Health Connect to correlate sugar with stress.",
+                style = MaterialTheme.typography.bodySmall
+            )
+            
+            Button(
+                onClick = onSync,
+                modifier = Modifier.fillMaxWidth()
+            ) {
+                Text("Sync CGM Data")
             }
         }
     }

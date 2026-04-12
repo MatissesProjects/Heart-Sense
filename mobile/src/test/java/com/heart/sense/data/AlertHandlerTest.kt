@@ -27,6 +27,7 @@ class AlertHandlerTest {
     private lateinit var sessionRepository: SessionRepository
     private lateinit var ambientSensorRepository: AmbientSensorRepository
     private lateinit var medicationRepository: MedicationRepository
+    private lateinit var bloodGlucoseRepository: BloodGlucoseRepository
     private lateinit var alertHandler: AlertHandler
 
     @Before
@@ -56,6 +57,7 @@ class AlertHandlerTest {
         sessionRepository = mockk(relaxed = true)
         ambientSensorRepository = mockk(relaxed = true)
         medicationRepository = mockk(relaxed = true)
+        bloodGlucoseRepository = mockk(relaxed = true)
         
         every { ambientSensorRepository.getAmbientTemp() } returns flowOf(22.5f)
         every { ambientSensorRepository.getAmbientLux() } returns flowOf(300f)
@@ -71,7 +73,8 @@ class AlertHandlerTest {
             interventionRepository,
             sessionRepository,
             ambientSensorRepository,
-            medicationRepository
+            medicationRepository,
+            bloodGlucoseRepository
         )
     }
 

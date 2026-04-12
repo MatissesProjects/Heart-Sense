@@ -9,6 +9,7 @@ import com.heart.sense.data.DailyAverageRepository
 import com.heart.sense.data.HealthConnectRepository
 import com.heart.sense.data.LocalSyncRepository
 import com.heart.sense.data.MedicationRepository
+import com.heart.sense.data.BloodGlucoseRepository
 import com.heart.sense.data.SessionRepository
 import com.heart.sense.data.Settings
 import com.heart.sense.data.SettingsDataStore
@@ -32,15 +33,35 @@ class SettingsViewModel @Inject constructor(
     private val healthConnectRepository: HealthConnectRepository,
     private val localSyncRepository: LocalSyncRepository,
     private val medicationRepository: MedicationRepository,
+    private val bloodGlucoseRepository: BloodGlucoseRepository,
     val sessionRepository: SessionRepository
 ) : ViewModel() {
     
     private val _medicationIntakes = MutableStateFlow<List<com.heart.sense.data.db.MedicationIntake>>(emptyList())
     val medicationIntakes: StateFlow<List<com.heart.sense.data.db.MedicationIntake>> = _medicationIntakes.asStateFlow()
 
+    private val _bloodGlucose = MutableStateFlow<List<com.heart.sense.data.db.BloodGlucose>>(emptyList())
+    val bloodGlucose: StateFlow<List<com.heart.sense.data.db.BloodGlucose>> = _bloodGlucose.asStateFlow()
+
     fun refreshMedicationIntakes() {
         viewModelScope.launch {
             _medicationIntakes.value = medicationRepository.getIntakesForDay(System.currentTimeMillis())
+        }
+    }
+
+    fun refreshBloodGlucose() {
+        viewModelScope.launch {
+            _bloodGlucose.value = bloodGlucoseRepository.getGlucoseInRange(
+                System.currentTimeMillis() - (24 * 60 * 60 * 1000L),
+                System.currentTimeMillis()
+            )
+        }
+    }
+
+    fun syncCgmData() {
+        viewModelScope.launch {
+            bloodGlucoseRepository.syncFromHealthConnect()
+            refreshBloodGlucose()
         }
     }
     
@@ -122,6 +143,7 @@ class SettingsViewModel @Inject constructor(
     init {
         refreshDailyAverages()
         refreshMedicationIntakes()
+        refreshBloodGlucose()
     }
 
     fun recalculateBaseline() {
