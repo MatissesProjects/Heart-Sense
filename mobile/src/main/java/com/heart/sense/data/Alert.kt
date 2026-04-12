@@ -14,5 +14,8 @@ data class Alert(
     val visitId: String? = null,
     val ambientTemp: Float? = null,
     val ambientLux: Float? = null,
-    val ambientDb: Int? = null
+    val ambientDb: Int? = null,
+    val aqi: Int? = null,
+    val humidity: Int? = null,
+    val barometricPressure: Float? = null
 )

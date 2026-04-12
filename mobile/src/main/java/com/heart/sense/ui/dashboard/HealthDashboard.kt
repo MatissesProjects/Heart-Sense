@@ -27,6 +27,8 @@ fun HealthDashboard(
     dailyAverages: List<DailyAverage>,
     medicationIntakes: List<com.heart.sense.data.db.MedicationIntake>,
     bloodGlucose: List<com.heart.sense.data.db.BloodGlucose>,
+    environmentalInsights: List<com.heart.sense.data.EnvironmentalInsight> = emptyList(),
+    cbtEntries: List<com.heart.sense.data.db.CbtJournalEntry> = emptyList(),
     settings: Settings,
     modifier: Modifier = Modifier
 ) {
@@ -38,6 +40,23 @@ fun HealthDashboard(
     }
 
     Column(modifier = modifier.padding(16.dp)) {
+        if (environmentalInsights.isNotEmpty()) {
+            Text("Environmental Insights", style = MaterialTheme.typography.titleMedium, fontWeight = FontWeight.Bold)
+            Spacer(modifier = Modifier.height(8.dp))
+            environmentalInsights.forEach { insight ->
+                Card(
+                    modifier = Modifier.fillMaxWidth().padding(vertical = 4.dp),
+                    colors = CardDefaults.cardColors(containerColor = MaterialTheme.colorScheme.tertiaryContainer)
+                ) {
+                    Column(modifier = Modifier.padding(12.dp)) {
+                        Text(insight.triggerType, style = MaterialTheme.typography.labelLarge, color = MaterialTheme.colorScheme.primary)
+                        Text(insight.correlationMessage, style = MaterialTheme.typography.bodyMedium)
+                    }
+                }
+            }
+            Spacer(modifier = Modifier.height(16.dp))
+        }
+
         Text("Heart Rate (BPM)", style = MaterialTheme.typography.titleMedium, fontWeight = FontWeight.Bold)
         Spacer(modifier = Modifier.height(8.dp))
         HrChart(dailyAverages, settings)
@@ -71,6 +90,31 @@ fun HealthDashboard(
         HrvChart(dailyAverages)
 
         Spacer(modifier = Modifier.height(24.dp))
+
+        if (cbtEntries.isNotEmpty()) {
+            Text("Subjective Reflections", style = MaterialTheme.typography.titleMedium, fontWeight = FontWeight.Bold)
+            Spacer(modifier = Modifier.height(8.dp))
+            cbtEntries.take(5).forEach { entry ->
+                Card(
+                    modifier = Modifier.fillMaxWidth().padding(vertical = 4.dp),
+                    colors = CardDefaults.cardColors(containerColor = MaterialTheme.colorScheme.secondaryContainer)
+                ) {
+                    Column(modifier = Modifier.padding(12.dp)) {
+                        Row(modifier = Modifier.fillMaxWidth(), horizontalArrangement = Arrangement.SpaceBetween) {
+                            Text(entry.emotion, style = MaterialTheme.typography.labelLarge, fontWeight = FontWeight.Bold)
+                            Text("Stress: ${entry.stressLevel}/10", style = MaterialTheme.typography.labelMedium)
+                        }
+                        Text(entry.timestamp.format(DateTimeFormatter.ofPattern("MMM dd, HH:mm")), style = MaterialTheme.typography.labelSmall)
+                        Spacer(modifier = Modifier.height(4.dp))
+                        Text(entry.thoughts, style = MaterialTheme.typography.bodySmall)
+                        if (!entry.context.isNullOrEmpty()) {
+                            Text("Context: ${entry.context}", style = MaterialTheme.typography.labelSmall, fontStyle = androidx.compose.ui.text.font.FontStyle.Italic)
+                        }
+                    }
+                }
+            }
+            Spacer(modifier = Modifier.height(24.dp))
+        }
 
         Text("Daily Summary", style = MaterialTheme.typography.titleMedium, fontWeight = FontWeight.Bold)
         Spacer(modifier = Modifier.height(8.dp))

@@ -94,4 +94,28 @@ object WearableModule {
     fun provideBloodGlucoseDao(database: HeartSenseDatabase): com.heart.sense.data.db.BloodGlucoseDao {
         return database.bloodGlucoseDao()
     }
+
+    @Provides
+    @Singleton
+    fun provideLocationDao(database: HeartSenseDatabase): com.heart.sense.data.LocationDao {
+        return database.locationDao()
+    }
+
+    @Provides
+    @Singleton
+    fun provideEnvironmentalContextDao(database: HeartSenseDatabase): com.heart.sense.data.db.EnvironmentalContextDao {
+        return database.environmentalContextDao()
+    }
+
+    @Provides
+    @Singleton
+    fun provideFhirExportLogDao(database: HeartSenseDatabase): com.heart.sense.data.db.FhirExportLogDao {
+        return database.fhirExportLogDao()
+    }
+
+    @Provides
+    @Singleton
+    fun provideCbtJournalDao(database: HeartSenseDatabase): com.heart.sense.data.db.CbtJournalDao {
+        return database.cbtJournalDao()
+    }
 }

@@ -33,11 +33,22 @@ fun SettingsScreen(
     val aiBaseline by viewModel.aiBaseline.collectAsState()
     val healthPermissionsGranted by viewModel.healthConnectPermissionsGranted.collectAsState()
     val activeSession by viewModel.activeSession.collectAsState()
+    val environmentalInsights by viewModel.environmentalInsights.collectAsState()
+    val cbtJournalEntries by viewModel.cbtJournalEntries.collectAsState()
+    val cbtAlertId by viewModel.cbtReflectionAlertId.collectAsState()
 
     var showCaregiverDashboard by remember { mutableStateOf(false) }
     var showReportScreen by remember { mutableStateOf(false) }
     var showExportScreen by remember { mutableStateOf(false) }
     var showMedicationScreen by remember { mutableStateOf(false) }
+    var showHeatmapScreen by remember { mutableStateOf(false) }
+
+    if (showHeatmapScreen) {
+        com.heart.sense.ui.heatmap.HeatmapScreen(
+            onBack = { showHeatmapScreen = false }
+        )
+        return
+    }
 
     if (showMedicationScreen) {
         com.heart.sense.ui.medication.MedicationsScreen(
@@ -66,6 +77,14 @@ fun SettingsScreen(
         com.heart.sense.ui.reports.SessionExportScreen(
             viewModel = viewModel,
             onBack = { showExportScreen = false }
+        )
+        return
+    }
+
+    if (cbtAlertId != null) {
+        com.heart.sense.ui.cbt.CbtReflectionScreen(
+            alertId = cbtAlertId!!,
+            viewModel = viewModel
         )
         return
     }
@@ -275,6 +294,25 @@ fun SettingsScreen(
         item {
             Card(
                 modifier = Modifier.fillMaxWidth(),
+                onClick = { showHeatmapScreen = true }
+            ) {
+                Row(
+                    modifier = Modifier.padding(16.dp),
+                    verticalAlignment = Alignment.CenterVertically,
+                    horizontalArrangement = Arrangement.SpaceBetween
+                ) {
+                    Column(modifier = Modifier.weight(1f)) {
+                        Text("Stress Hotspots (Heatmap)", style = MaterialTheme.typography.titleMedium, fontWeight = FontWeight.Bold)
+                        Text("Visualize environmental triggers on a map.", style = MaterialTheme.typography.bodySmall)
+                    }
+                    Icon(imageVector = Icons.AutoMirrored.Filled.KeyboardArrowRight, contentDescription = null)
+                }
+            }
+        }
+
+        item {
+            Card(
+                modifier = Modifier.fillMaxWidth(),
                 onClick = { showExportScreen = true }
             ) {
                 Row(
@@ -339,6 +377,8 @@ fun SettingsScreen(
                 dailyAverages = dailyAverages,
                 medicationIntakes = medicationIntakes,
                 bloodGlucose = bloodGlucose,
+                environmentalInsights = environmentalInsights,
+                cbtEntries = cbtJournalEntries,
                 settings = settings
             )
         }

@@ -16,6 +16,9 @@ interface OvernightMeasurementDao {
     @Query("SELECT * FROM overnight_measurements WHERE timestamp >= :startTime AND timestamp <= :endTime ORDER BY timestamp ASC")
     suspend fun getMeasurementsInRange(startTime: Long, endTime: Long): List<OvernightMeasurement>
 
+    @Query("SELECT * FROM overnight_measurements WHERE visitId = :visitId ORDER BY timestamp ASC")
+    suspend fun getMeasurementsByVisitId(visitId: String): List<OvernightMeasurement>
+
     @Query("DELETE FROM overnight_measurements WHERE timestamp < :timestamp")
     suspend fun deleteOldMeasurements(timestamp: Long)
 }

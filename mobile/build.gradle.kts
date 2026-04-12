@@ -55,6 +55,11 @@ dependencies {
     implementation(libs.androidx.work.runtime.ktx)
     implementation(libs.androidx.hilt.work)
     ksp(libs.androidx.hilt.compiler)
+
+    // Networking
+    implementation(libs.retrofit)
+    implementation(libs.converter.gson)
+    implementation(libs.gson)
     
     // Room
     implementation(libs.androidx.room.runtime)
@@ -70,6 +75,11 @@ dependencies {
     implementation(libs.play.services.wearable)
 //    implementation(libs.androidx.health.services)
 
+    // Location & Maps
+    implementation(libs.play.services.location)
+    implementation(libs.play.services.maps)
+    implementation(libs.google.maps.compose)
+    implementation(libs.android.maps.utils)
 
     // Hilt
     implementation(libs.hilt.android)

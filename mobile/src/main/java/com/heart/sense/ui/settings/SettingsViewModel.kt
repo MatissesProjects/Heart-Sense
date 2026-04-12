@@ -14,6 +14,8 @@ import com.heart.sense.data.SessionRepository
 import com.heart.sense.data.Settings
 import com.heart.sense.data.SettingsDataStore
 import com.heart.sense.data.SettingsRepository
+import com.heart.sense.data.EnvironmentalCorrelationRepository
+import com.heart.sense.data.EnvironmentalInsight
 import dagger.hilt.android.lifecycle.HiltViewModel
 import kotlinx.coroutines.flow.MutableStateFlow
 import kotlinx.coroutines.flow.SharingStarted
@@ -34,9 +36,46 @@ class SettingsViewModel @Inject constructor(
     private val localSyncRepository: LocalSyncRepository,
     private val medicationRepository: MedicationRepository,
     private val bloodGlucoseRepository: BloodGlucoseRepository,
+    private val environmentalCorrelationRepository: EnvironmentalCorrelationRepository,
+    private val fhirExporter: com.heart.sense.data.FhirExporter,
+    private val cbtJournalDao: com.heart.sense.data.db.CbtJournalDao,
     val sessionRepository: SessionRepository
 ) : ViewModel() {
     
+    val cbtJournalEntries: StateFlow<List<com.heart.sense.data.db.CbtJournalEntry>> = cbtJournalDao.getAllEntries()
+        .stateIn(
+            scope = viewModelScope,
+            started = SharingStarted.WhileSubscribed(5000),
+            initialValue = emptyList()
+        )
+
+    private val _cbtReflectionAlertId = MutableStateFlow<Int?>(null)
+    val cbtReflectionAlertId = _cbtReflectionAlertId.asStateFlow()
+
+    fun showCbtReflection(alertId: Int) {
+        _cbtReflectionAlertId.value = alertId
+    }
+
+    fun dismissCbtReflection() {
+        _cbtReflectionAlertId.value = null
+    }
+
+    suspend fun getAlertById(id: Int): Alert? = alertsRepository.getAlertById(id)
+
+    fun saveCbtEntry(entry: com.heart.sense.data.db.CbtJournalEntry) {
+        viewModelScope.launch {
+            cbtJournalDao.insert(entry)
+            dismissCbtReflection()
+        }
+    }
+
+    val environmentalInsights: StateFlow<List<EnvironmentalInsight>> = environmentalCorrelationRepository.getEnvironmentalInsights()
+        .stateIn(
+            scope = viewModelScope,
+            started = SharingStarted.WhileSubscribed(5000),
+            initialValue = emptyList()
+        )
+
     private val _medicationIntakes = MutableStateFlow<List<com.heart.sense.data.db.MedicationIntake>>(emptyList())
     val medicationIntakes: StateFlow<List<com.heart.sense.data.db.MedicationIntake>> = _medicationIntakes.asStateFlow()
 
@@ -209,7 +248,9 @@ class SettingsViewModel @Inject constructor(
     }
 
     fun testAlert() {
-        alertsRepository.addAlert((70..150).random(), "Test Alert", getActiveVisitIdSync())
+        viewModelScope.launch {
+            alertsRepository.addAlert((70..150).random(), "Test Alert", getActiveVisitIdSync())
+        }
     }
 
     private fun getActiveVisitIdSync(): String? {
@@ -262,5 +303,9 @@ class SettingsViewModel @Inject constructor(
     fun generateReport(context: android.content.Context): android.net.Uri? {
         val generator = com.heart.sense.util.ReportGenerator(context)
         return generator.generateCsvReport(alerts.value, dailyAverages.value)
+    }
+
+    suspend fun exportVisitToFhir(visitId: String): String? {
+        return fhirExporter.exportVisitToFhirJson(visitId)
     }
 }

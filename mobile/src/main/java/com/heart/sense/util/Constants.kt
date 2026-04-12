@@ -45,4 +45,7 @@ object Constants {
     const val ACTION_FALSE_POSITIVE_EXERCISE = "com.heart.sense.ACTION_FALSE_POSITIVE_EXERCISE"
     const val ACTION_EMERGENCY_CONTACT = "com.heart.sense.ACTION_EMERGENCY_CONTACT"
     const val ACTION_LOG_MED = "com.heart.sense.ACTION_LOG_MED"
+    const val ACTION_CBT_REFLECTION = "com.heart.sense.ACTION_CBT_REFLECTION"
+    
+    const val EXTRA_ALERT_ID = "com.heart.sense.EXTRA_ALERT_ID"
 }

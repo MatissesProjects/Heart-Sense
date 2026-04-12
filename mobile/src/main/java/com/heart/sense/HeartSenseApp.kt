@@ -15,6 +15,7 @@ class HeartSenseApp : Application(), Configuration.Provider {
     override fun onCreate() {
         super.onCreate()
         com.heart.sense.service.CgmSyncWorker.schedule(this)
+        com.heart.sense.data.workers.WeatherWorker.schedule(this)
     }
 
     override val workManagerConfiguration: Configuration

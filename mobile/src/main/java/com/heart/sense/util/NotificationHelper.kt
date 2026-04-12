@@ -26,6 +26,48 @@ class NotificationHelper(private val context: Context) {
         const val ID_PACING = 106
         const val ID_AGITATION = 107
         const val ID_PRECURSOR = 108
+        const val ID_CBT = 109
+        
+        const val CHANNEL_CBT = "cbt_reflections"
+    }
+
+    fun showCbtReflectionNotification(alertId: Int, alertType: String) {
+        createCbtChannel()
+        
+        val intent = Intent(context, com.heart.sense.MainActivity::class.java).apply {
+            action = Constants.ACTION_CBT_REFLECTION
+            putExtra(Constants.EXTRA_ALERT_ID, alertId)
+            flags = Intent.FLAG_ACTIVITY_NEW_TASK or Intent.FLAG_ACTIVITY_CLEAR_TASK
+        }
+        
+        val pendingIntent = PendingIntent.getActivity(
+            context, 
+            alertId, 
+            intent, 
+            PendingIntent.FLAG_IMMUTABLE or PendingIntent.FLAG_UPDATE_CURRENT
+        )
+
+        val notification = NotificationCompat.Builder(context, CHANNEL_CBT)
+            .setSmallIcon(android.R.drawable.ic_menu_edit)
+            .setContentTitle("Check-in: How are you feeling?")
+            .setContentText("A $alertType event occurred 30 minutes ago. Take a moment to reflect.")
+            .setPriority(NotificationCompat.PRIORITY_DEFAULT)
+            .setContentIntent(pendingIntent)
+            .setAutoCancel(true)
+            .build()
+
+        notificationManager.notify(ID_CBT, notification)
+    }
+
+    private fun createCbtChannel() {
+        val channel = NotificationChannel(
+            CHANNEL_CBT,
+            "CBT Reflections",
+            NotificationManager.IMPORTANCE_DEFAULT
+        ).apply {
+            description = "Gentle reminders to reflect on stress events"
+        }
+        notificationManager.createNotificationChannel(channel)
     }
 
     fun showHighHrNotification(hr: Int) {

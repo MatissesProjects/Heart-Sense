@@ -4,6 +4,7 @@ import android.content.Context
 import android.util.Log
 import com.heart.sense.util.Constants
 import com.heart.sense.util.NotificationHelper
+import com.heart.sense.service.CbtTriggerWorker
 import dagger.hilt.android.qualifiers.ApplicationContext
 import kotlinx.coroutines.CoroutineScope
 import kotlinx.coroutines.Dispatchers
@@ -25,7 +26,9 @@ class AlertHandler @Inject constructor(
     private val sessionRepository: SessionRepository,
     private val ambientSensorRepository: AmbientSensorRepository,
     private val medicationRepository: MedicationRepository,
-    private val bloodGlucoseRepository: BloodGlucoseRepository
+    private val bloodGlucoseRepository: BloodGlucoseRepository,
+    private val locationRepository: LocationRepository,
+    private val weatherRepository: WeatherRepository
 ) {
     // Standard Hilt/Testing practice: Use an injected scope or Dispatchers.Main
     // For simplicity here, we'll keep the internal scope but allow it to be influenced by tests via Dispatchers.setMain
@@ -45,6 +48,8 @@ class AlertHandler @Inject constructor(
             val ambientTemp = ambientSensorRepository.getAmbientTemp().first()
             val ambientLux = ambientSensorRepository.getAmbientLux().first()
             val ambientDb = ambientSensorRepository.getAmbientNoise().first()
+            
+            val envContext = weatherRepository.getLatestEnvironmentalContext().first()
 
             val missedMedContext = checkMissedMedications()
             val glucoseCrash = bloodGlucoseRepository.isGlucoseCrashing()
@@ -58,9 +63,23 @@ class AlertHandler @Inject constructor(
 
             val alertType = if (triggerContext.isNotEmpty()) "High HR ($triggerContext)" else "High HR"
 
-            alertsRepository.addAlert(hr, alertType, visitId, ambientTemp, ambientLux, ambientDb)
+            val alertId = alertsRepository.addAlert(
+                hr = hr, 
+                type = alertType, 
+                visitId = visitId, 
+                ambientTemp = ambientTemp, 
+                ambientLux = ambientLux, 
+                ambientDb = ambientDb,
+                aqi = envContext?.aqi,
+                humidity = envContext?.humidity,
+                barometricPressure = envContext?.pressure
+            )
+            CbtTriggerWorker.schedule(context, alertId, "High HR")
+
             notificationHelper.showHighHrNotification(hr)
             localSyncRepository.sendData(NearbyPayload(hr, "$alertType Alert", ambientTemp, ambientLux, ambientDb))
+            
+            locationRepository.logLocationTag(alertType, hr, visitId)
         }
     }
 
@@ -71,7 +90,21 @@ class AlertHandler @Inject constructor(
             val ambientLux = ambientSensorRepository.getAmbientLux().first()
             val ambientDb = ambientSensorRepository.getAmbientNoise().first()
             
-            alertsRepository.addAlert(hr, "CRITICAL HR", visitId, ambientTemp, ambientLux, ambientDb)
+            val envContext = weatherRepository.getLatestEnvironmentalContext().first()
+            
+            val alertId = alertsRepository.addAlert(
+                hr = hr, 
+                type = "CRITICAL HR", 
+                visitId = visitId, 
+                ambientTemp = ambientTemp, 
+                ambientLux = ambientLux, 
+                ambientDb = ambientDb,
+                aqi = envContext?.aqi,
+                humidity = envContext?.humidity,
+                barometricPressure = envContext?.pressure
+            )
+            CbtTriggerWorker.schedule(context, alertId, "Critical HR")
+
             notificationHelper.showCriticalHrNotification(hr)
             localSyncRepository.sendData(NearbyPayload(hr, "CRITICAL HR ALERT", ambientTemp, ambientLux, ambientDb))
             
@@ -79,6 +112,8 @@ class AlertHandler @Inject constructor(
             if (settings.isEmergencyEnabled) {
                 startEmergencyCountdown(hr, settings.emergencyCountdownSeconds)
             }
+
+            locationRepository.logLocationTag("CRITICAL HR", hr, visitId)
         }
     }
 
@@ -96,9 +131,23 @@ class AlertHandler @Inject constructor(
             val ambientLux = ambientSensorRepository.getAmbientLux().first()
             val ambientDb = ambientSensorRepository.getAmbientNoise().first()
             
-            alertsRepository.addAlert(hr, "Sit Down", visitId, ambientTemp, ambientLux, ambientDb)
+            val envContext = weatherRepository.getLatestEnvironmentalContext().first()
+            
+            alertsRepository.addAlert(
+                hr = hr, 
+                type = "Sit Down", 
+                visitId = visitId, 
+                ambientTemp = ambientTemp, 
+                ambientLux = ambientLux, 
+                ambientDb = ambientDb,
+                aqi = envContext?.aqi,
+                humidity = envContext?.humidity,
+                barometricPressure = envContext?.pressure
+            )
             notificationHelper.showSitDownWarning(hr)
             localSyncRepository.sendData(NearbyPayload(hr, "Sit Down Warning", ambientTemp, ambientLux, ambientDb))
+            
+            locationRepository.logLocationTag("Sit Down", hr, visitId)
         }
     }
 
@@ -114,9 +163,23 @@ class AlertHandler @Inject constructor(
             val ambientLux = ambientSensorRepository.getAmbientLux().first()
             val ambientDb = ambientSensorRepository.getAmbientNoise().first()
             
-            alertsRepository.addAlert(0, "Irregular Rhythm", visitId, ambientTemp, ambientLux, ambientDb)
+            val envContext = weatherRepository.getLatestEnvironmentalContext().first()
+            
+            alertsRepository.addAlert(
+                hr = 0, 
+                type = "Irregular Rhythm", 
+                visitId = visitId, 
+                ambientTemp = ambientTemp, 
+                ambientLux = ambientLux, 
+                ambientDb = ambientDb,
+                aqi = envContext?.aqi,
+                humidity = envContext?.humidity,
+                barometricPressure = envContext?.pressure
+            )
             notificationHelper.showIrregularRhythmNotification()
             localSyncRepository.sendData(NearbyPayload(0, "Irregular Rhythm Detected", ambientTemp, ambientLux, ambientDb))
+            
+            locationRepository.logLocationTag("Irregular Rhythm", 0, visitId)
         }
     }
 
@@ -131,7 +194,21 @@ class AlertHandler @Inject constructor(
             val ambientLux = ambientSensorRepository.getAmbientLux().first()
             val ambientDb = ambientSensorRepository.getAmbientNoise().first()
             
-            alertsRepository.addAlert(hrDelta, "Stress ($risk)${if (trigger != null) ": $trigger" else ""}", visitId, ambientTemp, ambientLux, ambientDb)
+            val envContext = weatherRepository.getLatestEnvironmentalContext().first()
+            
+            val alertId = alertsRepository.addAlert(
+                hr = hrDelta, 
+                type = "Stress ($risk)${if (trigger != null) ": $trigger" else ""}", 
+                visitId = visitId, 
+                ambientTemp = ambientTemp, 
+                ambientLux = ambientLux, 
+                ambientDb = ambientDb,
+                aqi = envContext?.aqi,
+                humidity = envContext?.humidity,
+                barometricPressure = envContext?.pressure
+            )
+            CbtTriggerWorker.schedule(context, alertId, "Stress")
+
             notificationHelper.showStressNotification(risk, hrDelta, trigger, recommendation)
             
             // Record initial state for the learning loop
@@ -145,6 +222,8 @@ class AlertHandler @Inject constructor(
             )
 
             localSyncRepository.sendData(NearbyPayload(hrDelta, "Stress: $risk. Recommended: $recommendation", ambientTemp, ambientLux, ambientDb))
+            
+            locationRepository.logLocationTag("Stress ($risk)", hrDelta, visitId)
         }
     }
 
@@ -155,10 +234,26 @@ class AlertHandler @Inject constructor(
             val ambientLux = ambientSensorRepository.getAmbientLux().first()
             val ambientDb = ambientSensorRepository.getAmbientNoise().first()
             
+            val envContext = weatherRepository.getLatestEnvironmentalContext().first()
+            
             Log.d("AlertHandler", "Behavioral Alert: $type - $details")
-            alertsRepository.addAlert(0, "Behavior ($type)", visitId, ambientTemp, ambientLux, ambientDb)
+            val alertId = alertsRepository.addAlert(
+                hr = 0, 
+                type = "Behavior ($type)", 
+                visitId = visitId, 
+                ambientTemp = ambientTemp, 
+                ambientLux = ambientLux, 
+                ambientDb = ambientDb,
+                aqi = envContext?.aqi,
+                humidity = envContext?.humidity,
+                barometricPressure = envContext?.pressure
+            )
+            CbtTriggerWorker.schedule(context, alertId, "Behavioral")
+
             notificationHelper.showBehavioralNotification(type, details)
             localSyncRepository.sendData(NearbyPayload(0, "Behavior: $type", ambientTemp, ambientLux, ambientDb))
+            
+            locationRepository.logLocationTag("Behavior ($type)", 0, visitId)
         }
     }
 
@@ -169,8 +264,20 @@ class AlertHandler @Inject constructor(
             val ambientLux = ambientSensorRepository.getAmbientLux().first()
             val ambientDb = ambientSensorRepository.getAmbientNoise().first()
             
+            val envContext = weatherRepository.getLatestEnvironmentalContext().first()
+            
             Log.d("AlertHandler", "Precursor Alert: Score $score, Confidence $confidence")
-            alertsRepository.addAlert((score * 100).toInt(), "AI Precursor", visitId, ambientTemp, ambientLux, ambientDb)
+            alertsRepository.addAlert(
+                hr = (score * 100).toInt(), 
+                type = "AI Precursor", 
+                visitId = visitId, 
+                ambientTemp = ambientTemp, 
+                ambientLux = ambientLux, 
+                ambientDb = ambientDb,
+                aqi = envContext?.aqi,
+                humidity = envContext?.humidity,
+                barometricPressure = envContext?.pressure
+            )
             notificationHelper.showPrecursorNotification(score, confidence)
             localSyncRepository.sendData(NearbyPayload((score * 100).toInt(), "AI Stress Warning", ambientTemp, ambientLux, ambientDb))
         }
