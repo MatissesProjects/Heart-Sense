@@ -42,6 +42,16 @@ fun SettingsScreen(
     var showExportScreen by remember { mutableStateOf(false) }
     var showMedicationScreen by remember { mutableStateOf(false) }
     var showHeatmapScreen by remember { mutableStateOf(false) }
+    var showBleSetupScreen by remember { mutableStateOf(false) }
+
+    if (showBleSetupScreen) {
+        val bleViewModel: com.heart.sense.ui.ble.BleSensorViewModel = hiltViewModel()
+        com.heart.sense.ui.ble.SensorSetupScreen(
+            viewModel = bleViewModel,
+            onBack = { showBleSetupScreen = false }
+        )
+        return
+    }
 
     if (showHeatmapScreen) {
         com.heart.sense.ui.heatmap.HeatmapScreen(
@@ -304,6 +314,25 @@ fun SettingsScreen(
                     Column(modifier = Modifier.weight(1f)) {
                         Text("Stress Hotspots (Heatmap)", style = MaterialTheme.typography.titleMedium, fontWeight = FontWeight.Bold)
                         Text("Visualize environmental triggers on a map.", style = MaterialTheme.typography.bodySmall)
+                    }
+                    Icon(imageVector = Icons.AutoMirrored.Filled.KeyboardArrowRight, contentDescription = null)
+                }
+            }
+        }
+
+        item {
+            Card(
+                modifier = Modifier.fillMaxWidth(),
+                onClick = { showBleSetupScreen = true }
+            ) {
+                Row(
+                    modifier = Modifier.padding(16.dp),
+                    verticalAlignment = Alignment.CenterVertically,
+                    horizontalArrangement = Arrangement.SpaceBetween
+                ) {
+                    Column(modifier = Modifier.weight(1f)) {
+                        Text("External BLE Sensors", style = MaterialTheme.typography.titleMedium, fontWeight = FontWeight.Bold)
+                        Text("Connect medical-grade chest straps or bands.", style = MaterialTheme.typography.bodySmall)
                     }
                     Icon(imageVector = Icons.AutoMirrored.Filled.KeyboardArrowRight, contentDescription = null)
                 }

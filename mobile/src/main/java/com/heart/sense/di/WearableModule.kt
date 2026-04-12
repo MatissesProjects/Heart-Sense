@@ -118,4 +118,10 @@ object WearableModule {
     fun provideCbtJournalDao(database: HeartSenseDatabase): com.heart.sense.data.db.CbtJournalDao {
         return database.cbtJournalDao()
     }
+
+    @Provides
+    @Singleton
+    fun provideBleSensorDao(database: HeartSenseDatabase): com.heart.sense.data.db.BleSensorDao {
+        return database.bleSensorDao()
+    }
 }

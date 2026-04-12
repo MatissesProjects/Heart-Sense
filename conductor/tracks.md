@@ -41,6 +41,6 @@
 | `037-fhir-interoperability` | FHIR Interoperability | Support HL7 FHIR standards for direct EHR integration. | Completed |
 | `038-live-clinician-portal` | Live Clinician Portal | Real-time WebRTC/WebSocket dashboard for active exposure therapy. | Skipped |
 | `039-post-event-cbt` | Post-Event CBT | Mobile UI reflection triggered 30 mins after a stress event. | Completed |
-| `040-spo2-apnea-detection` | SpO2 & Apnea Detection | Utilize Blood Oxygen & RR to detect poor recovery/sleep apnea. | Pending |
+| `040-spo2-apnea-detection` | SpO2 & Apnea Detection | Utilize Blood Oxygen & RR to detect poor recovery/sleep apnea. | Completed |
 | `041-external-ble-sensors` | External BLE Sensors | Support external BLE medical sensors (e.g., chest straps) for research. | Pending |
 | `042-clinical-test-suite` | Clinical Validation | Comprehensive test suite for AI, Baselines, and External Data Sync. | In Progress |
