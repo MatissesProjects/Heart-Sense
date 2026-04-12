@@ -65,7 +65,6 @@
             android:name=".ui.medication.MedicationTileService"
             android:exported="true"
             android:label="Medication Tracking"
-            android:description="Quick-log your medications."
             android:permission="com.google.android.wearable.permission.BIND_TILE">
             <intent-filter>
                 <action android:name="androidx.wear.tiles.action.BIND_TILE_SERVICE" />

@@ -39,7 +39,7 @@ class WearableCommunicationRepository @Inject constructor(
         val request = putDataMapReq.asPutDataRequest()
         request.setUrgent()
         try {
-            dataClient.putData(request).await()
+            dataClient.putDataItem(request).await()
         } catch (e: Exception) {
             // Log error
         }

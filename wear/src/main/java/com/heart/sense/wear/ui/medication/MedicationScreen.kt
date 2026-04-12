@@ -20,7 +20,7 @@ fun MedicationScreen(
 
     ScalingLazyColumn(
         modifier = Modifier.fillMaxSize(),
-        autoCentering = true
+        autoCentering = AutoCenteringParams(itemIndex = 0)
     ) {
         item {
             ListHeader {

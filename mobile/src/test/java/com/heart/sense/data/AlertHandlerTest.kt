@@ -26,6 +26,7 @@ class AlertHandlerTest {
     private lateinit var interventionRepository: InterventionRepository
     private lateinit var sessionRepository: SessionRepository
     private lateinit var ambientSensorRepository: AmbientSensorRepository
+    private lateinit var medicationRepository: MedicationRepository
     private lateinit var alertHandler: AlertHandler
 
     @Before
@@ -54,6 +55,7 @@ class AlertHandlerTest {
         interventionRepository = mockk(relaxed = true)
         sessionRepository = mockk(relaxed = true)
         ambientSensorRepository = mockk(relaxed = true)
+        medicationRepository = mockk(relaxed = true)
         
         every { ambientSensorRepository.getAmbientTemp() } returns flowOf(22.5f)
         every { ambientSensorRepository.getAmbientLux() } returns flowOf(300f)
@@ -68,7 +70,8 @@ class AlertHandlerTest {
             localSyncRepository,
             interventionRepository,
             sessionRepository,
-            ambientSensorRepository
+            ambientSensorRepository,
+            medicationRepository
         )
     }
 
@@ -83,6 +86,8 @@ class AlertHandlerTest {
         try {
             every { settingsDataStore.settings } returns flowOf(Settings())
             coEvery { sessionRepository.getActiveVisitId() } returns null
+            coEvery { medicationRepository.getIntakesForDay(any()) } returns emptyList()
+            every { medicationRepository.activeMedications } returns flowOf(emptyList())
             initHandler()
 
             val hr = 120
