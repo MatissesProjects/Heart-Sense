@@ -57,7 +57,22 @@
             <intent-filter>
                 <action android:name="com.google.android.gms.wearable.DATA_CHANGED" />
                 <data android:scheme="wear" android:host="*" android:pathPrefix="/settings" />
+                <data android:scheme="wear" android:host="*" android:pathPrefix="/medications" />
             </intent-filter>
+        </service>
+
+        <service
+            android:name=".ui.medication.MedicationTileService"
+            android:exported="true"
+            android:label="Medication Tracking"
+            android:description="Quick-log your medications."
+            android:permission="com.google.android.wearable.permission.BIND_TILE">
+            <intent-filter>
+                <action android:name="androidx.wear.tiles.action.BIND_TILE_SERVICE" />
+            </intent-filter>
+            <meta-data
+                android:name="androidx.wear.tiles.PREVIEW_RESOURCE"
+                android:resource="@drawable/ic_launcher_foreground" />
         </service>
 
         <receiver android:name=".receiver.BootReceiver" android:exported="true">
