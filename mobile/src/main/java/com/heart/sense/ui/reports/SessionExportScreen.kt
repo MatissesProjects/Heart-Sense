@@ -14,6 +14,7 @@ import androidx.compose.ui.unit.dp
 import com.heart.sense.data.Session
 import com.heart.sense.ui.settings.SettingsViewModel
 import java.time.format.DateTimeFormatter
+import kotlinx.coroutines.launch
 
 @OptIn(ExperimentalMaterial3Api::class)
 @Composable
@@ -22,6 +23,7 @@ fun SessionExportScreen(
     onBack: () -> Unit
 ) {
     val context = LocalContext.current
+    val scope = rememberCoroutineScope()
     val sessions by viewModel.sessionRepository.allSessions.collectAsState(initial = emptyList())
     val formatter = DateTimeFormatter.ofPattern("MMM dd, yyyy HH:mm")
 
@@ -46,7 +48,7 @@ fun SessionExportScreen(
         ) {
             item {
                 Text("Visit History", style = MaterialTheme.typography.titleMedium, fontWeight = FontWeight.Bold)
-                Text("Select a visit below to generate an anonymized, EHR-ready JSON export.", style = MaterialTheme.typography.bodySmall)
+                Text("Select a visit below to generate an anonymized, HL7 FHIR-compliant JSON bundle.", style = MaterialTheme.typography.bodySmall)
             }
 
             if (sessions.isEmpty()) {
@@ -58,51 +60,88 @@ fun SessionExportScreen(
             }
 
             items(sessions) { session ->
-                SessionItem(session, formatter) {
-                    // Export Logic: In a full implementation, we'd query all data for this VisitID
-                    // For now, simulating the JSON packaging
-                    val json = """
-                        {
-                          "visitId": "${session.visitId}",
-                          "startTime": "${session.startTime}",
-                          "endTime": "${session.endTime}",
-                          "system": "Heart-Sense Wearable",
-                          "anonymized": true,
-                          "note": "${session.clinicianNotes ?: ""}"
+                SessionItem(session, formatter, 
+                    onExportJson = {
+                        val json = """
+                            {
+                              "visitId": "${session.visitId}",
+                              "startTime": "${session.startTime}",
+                              "endTime": "${session.endTime}",
+                              "system": "Heart-Sense Wearable",
+                              "anonymized": true,
+                              "note": "${session.clinicianNotes ?: ""}"
+                            }
+                        """.trimIndent()
+                        
+                        val shareIntent = Intent(Intent.ACTION_SEND).apply {
+                            type = "application/json"
+                            putExtra(Intent.EXTRA_SUBJECT, "EHR Export: ${session.visitId}")
+                            putExtra(Intent.EXTRA_TEXT, json)
                         }
-                    """.trimIndent()
-                    
-                    val shareIntent = Intent(Intent.ACTION_SEND).apply {
-                        type = "application/json"
-                        putExtra(Intent.EXTRA_SUBJECT, "EHR Export: ${session.visitId}")
-                        putExtra(Intent.EXTRA_TEXT, json)
+                        context.startActivity(Intent.createChooser(shareIntent, "Export Session"))
+                    },
+                    onExportFhir = {
+                        scope.launch {
+                            val fhirJson = viewModel.exportVisitToFhir(session.visitId)
+                            if (fhirJson != null) {
+                                val shareIntent = Intent(Intent.ACTION_SEND).apply {
+                                    type = "application/json"
+                                    putExtra(Intent.EXTRA_SUBJECT, "HL7 FHIR Bundle: ${session.visitId}")
+                                    putExtra(Intent.EXTRA_TEXT, fhirJson)
+                                }
+                                context.startActivity(Intent.createChooser(shareIntent, "Export HL7 FHIR Bundle"))
+                            }
+                        }
                     }
-                    context.startActivity(Intent.createChooser(shareIntent, "Export Session"))
-                }
+                )
             }
         }
     }
 }
 
 @Composable
-fun SessionItem(session: Session, formatter: DateTimeFormatter, onExport: () -> Unit) {
+fun SessionItem(
+    session: Session, 
+    formatter: DateTimeFormatter, 
+    onExportJson: () -> Unit,
+    onExportFhir: () -> Unit
+) {
     Card(modifier = Modifier.fillMaxWidth()) {
-        Row(
-            modifier = Modifier.padding(16.dp),
-            horizontalArrangement = Arrangement.SpaceBetween,
-            verticalAlignment = Alignment.CenterVertically
-        ) {
-            Column(modifier = Modifier.weight(1f)) {
-                Text(session.startTime.format(formatter), style = MaterialTheme.typography.bodyLarge, fontWeight = FontWeight.Bold)
-                Text("ID: ${session.visitId.take(8)}...", style = MaterialTheme.typography.labelSmall)
-                if (session.endTime != null) {
-                    Text("Completed", color = MaterialTheme.colorScheme.primary, style = MaterialTheme.typography.labelSmall)
-                } else {
-                    Text("In Progress", color = MaterialTheme.colorScheme.error, style = MaterialTheme.typography.labelSmall)
+        Column(modifier = Modifier.padding(16.dp)) {
+            Row(
+                modifier = Modifier.fillMaxWidth(),
+                horizontalArrangement = Arrangement.SpaceBetween,
+                verticalAlignment = Alignment.CenterVertically
+            ) {
+                Column(modifier = Modifier.weight(1f)) {
+                    Text(session.startTime.format(formatter), style = MaterialTheme.typography.bodyLarge, fontWeight = FontWeight.Bold)
+                    Text("ID: ${session.visitId.take(8)}...", style = MaterialTheme.typography.labelSmall)
+                    if (session.endTime != null) {
+                        Text("Completed", color = MaterialTheme.colorScheme.primary, style = MaterialTheme.typography.labelSmall)
+                    } else {
+                        Text("In Progress", color = MaterialTheme.colorScheme.error, style = MaterialTheme.typography.labelSmall)
+                    }
                 }
             }
-            Button(onClick = onExport) {
-                Text("Export")
+            
+            Spacer(modifier = Modifier.height(12.dp))
+            
+            Row(
+                modifier = Modifier.fillMaxWidth(),
+                horizontalArrangement = Arrangement.spacedBy(8.dp)
+            ) {
+                OutlinedButton(
+                    onClick = onExportJson,
+                    modifier = Modifier.weight(1f)
+                ) {
+                    Text("Basic JSON")
+                }
+                Button(
+                    onClick = onExportFhir,
+                    modifier = Modifier.weight(1f)
+                ) {
+                    Text("HL7 FHIR")
+                }
             }
         }
     }
