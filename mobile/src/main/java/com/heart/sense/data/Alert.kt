@@ -12,5 +12,7 @@ data class Alert(
     val timestamp: LocalDateTime = LocalDateTime.now(),
     val tag: String? = null,
     val visitId: String? = null,
-    val ambientTemp: Float? = null
+    val ambientTemp: Float? = null,
+    val ambientLux: Float? = null,
+    val ambientDb: Int? = null
 )

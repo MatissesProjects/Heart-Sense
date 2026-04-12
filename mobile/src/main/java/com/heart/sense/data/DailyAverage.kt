@@ -10,5 +10,7 @@ data class DailyAverage(
     val isAlertTriggered: Boolean,
     val alertType: String? = null,
     val hrvRmssd: Float = 0f,
-    val avgAmbientTemp: Float? = null
+    val avgAmbientTemp: Float? = null,
+    val avgAmbientLux: Float? = null,
+    val avgAmbientDb: Int? = null
 )

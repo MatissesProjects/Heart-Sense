@@ -33,10 +33,11 @@ class AlertsRepositoryTest {
 
     @Test
     fun `addAlert inserts alert into dao`() = runTest {
-        repository.addAlert(120, "High HR", "visit123", 22.5f)
+        repository.addAlert(120, "High HR", "visit123", 22.5f, 300f, 45)
         
         coVerify { alertDao.insert(match { 
-            it.hr == 120 && it.type == "High HR" && it.visitId == "visit123" && it.ambientTemp == 22.5f
+            it.hr == 120 && it.type == "High HR" && it.visitId == "visit123" && 
+            it.ambientTemp == 22.5f && it.ambientLux == 300f && it.ambientDb == 45
         }) }
     }
 

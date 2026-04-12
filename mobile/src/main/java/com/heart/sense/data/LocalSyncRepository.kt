@@ -23,6 +23,8 @@ data class NearbyPayload(
     val hr: Int,
     val alert: String? = null,
     val temp: Float? = null,
+    val lux: Float? = null,
+    val decibels: Int? = null,
     val timestamp: Long = System.currentTimeMillis()
 )
 
@@ -71,7 +73,9 @@ class LocalSyncRepository @Inject constructor(
                     val hr = parts[0].toIntOrNull() ?: 0
                     val alert = if (parts.size >= 2 && parts[1].isNotEmpty()) parts[1] else null
                     val temp = if (parts.size >= 3) parts[2].toFloatOrNull() else null
-                    _incomingData.value = NearbyPayload(hr, alert, temp)
+                    val lux = if (parts.size >= 4) parts[3].toFloatOrNull() else null
+                    val db = if (parts.size >= 5) parts[4].toIntOrNull() else null
+                    _incomingData.value = NearbyPayload(hr, alert, temp, lux, db)
                 }
             }
         }
@@ -107,7 +111,7 @@ class LocalSyncRepository @Inject constructor(
     }
 
     fun sendData(payload: NearbyPayload) {
-        val text = "${payload.hr}|${payload.alert ?: ""}|${payload.temp ?: ""}"
+        val text = "${payload.hr}|${payload.alert ?: ""}|${payload.temp ?: ""}|${payload.lux ?: ""}|${payload.decibels ?: ""}"
         val bytesPayload = Payload.fromBytes(text.toByteArray())
         _connectedDevices.value.filter { it.status == "Connected" }.forEach {
             connectionsClient.sendPayload(it.id, bytesPayload)
