@@ -6,7 +6,9 @@ import android.content.Intent
 import android.app.NotificationManager
 import android.net.Uri
 import com.heart.sense.data.AlertHandler
+import com.heart.sense.data.MedicationRepository
 import com.heart.sense.data.SettingsDataStore
+import com.heart.sense.data.db.MedicationIntake
 import com.heart.sense.data.SettingsRepository
 import com.heart.sense.data.WearableCommunicationRepository
 import com.heart.sense.util.Constants
@@ -34,6 +36,9 @@ class AlertActionReceiver : BroadcastReceiver() {
     @Inject
     lateinit var alertHandler: AlertHandler
 
+    @Inject
+    lateinit var medicationRepository: MedicationRepository
+
     private val scope = CoroutineScope(SupervisorJob() + Dispatchers.IO)
 
     override fun onReceive(context: Context, intent: Intent) {
@@ -43,6 +48,11 @@ class AlertActionReceiver : BroadcastReceiver() {
         notificationManager.cancel(NotificationHelper.ID_HIGH_HR)
         notificationManager.cancel(NotificationHelper.ID_SIT_DOWN)
         notificationManager.cancel(NotificationHelper.ID_CRITICAL_HR)
+
+        val medId = intent.getIntExtra("medId", -1)
+        if (medId != -1) {
+            notificationManager.cancel(medId + 1000)
+        }
 
         // Stop any active emergency countdowns
         alertHandler.acknowledgeAlert()
@@ -81,6 +91,23 @@ class AlertActionReceiver : BroadcastReceiver() {
             }
             Constants.ACTION_ACKNOWLEDGE -> {
                 // Just dismiss, which we already did
+            }
+            Constants.ACTION_LOG_MED -> {
+                val medName = intent.getStringExtra("medName") ?: ""
+                val dose = intent.getStringExtra("dose") ?: ""
+                if (medId != -1) {
+                    scope.launch {
+                        medicationRepository.logIntake(
+                            MedicationIntake(
+                                medId = medId,
+                                medName = medName,
+                                timestamp = System.currentTimeMillis(),
+                                dose = dose,
+                                source = "Phone"
+                            )
+                        )
+                    }
+                }
             }
         }
     }

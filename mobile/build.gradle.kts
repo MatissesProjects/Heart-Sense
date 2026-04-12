@@ -52,6 +52,9 @@ dependencies {
     implementation(libs.kotlinx.coroutines.play.services)
     implementation(libs.androidx.health.connect)
     implementation(libs.play.services.nearby)
+    implementation(libs.androidx.work.runtime.ktx)
+    implementation(libs.androidx.hilt.work)
+    ksp(libs.androidx.hilt.compiler)
     
     // Room
     implementation(libs.androidx.room.runtime)
