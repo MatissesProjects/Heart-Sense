@@ -25,6 +25,7 @@ import java.time.format.DateTimeFormatter
 @Composable
 fun HealthDashboard(
     dailyAverages: List<DailyAverage>,
+    medicationIntakes: List<com.heart.sense.data.db.MedicationIntake>,
     settings: Settings,
     modifier: Modifier = Modifier
 ) {
@@ -40,6 +41,17 @@ fun HealthDashboard(
         Spacer(modifier = Modifier.height(8.dp))
         HrChart(dailyAverages, settings)
         
+        if (medicationIntakes.isNotEmpty()) {
+            Spacer(modifier = Modifier.height(16.dp))
+            Text("Medication Logs", style = MaterialTheme.typography.titleSmall, fontWeight = FontWeight.Bold)
+            medicationIntakes.forEach { intake ->
+                Text(
+                    text = "💊 ${intake.medName} (${intake.dose}) at ${java.time.Instant.ofEpochMilli(intake.timestamp).atZone(java.time.ZoneId.systemDefault()).format(DateTimeFormatter.ofPattern("HH:mm"))}",
+                    style = MaterialTheme.typography.bodySmall
+                )
+            }
+        }
+
         Spacer(modifier = Modifier.height(24.dp))
         
         Text("HRV (RMSSD ms)", style = MaterialTheme.typography.titleMedium, fontWeight = FontWeight.Bold)

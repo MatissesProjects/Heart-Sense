@@ -28,6 +28,7 @@ fun SettingsScreen(
     val liveHr by viewModel.liveHr.collectAsState()
     val isConnected by viewModel.isWatchConnected.collectAsState()
     val dailyAverages by viewModel.dailyAverages.collectAsState()
+    val medicationIntakes by viewModel.medicationIntakes.collectAsState()
     val aiBaseline by viewModel.aiBaseline.collectAsState()
     val healthPermissionsGranted by viewModel.healthConnectPermissionsGranted.collectAsState()
     val activeSession by viewModel.activeSession.collectAsState()
@@ -35,6 +36,14 @@ fun SettingsScreen(
     var showCaregiverDashboard by remember { mutableStateOf(false) }
     var showReportScreen by remember { mutableStateOf(false) }
     var showExportScreen by remember { mutableStateOf(false) }
+    var showMedicationScreen by remember { mutableStateOf(false) }
+
+    if (showMedicationScreen) {
+        com.heart.sense.ui.medication.MedicationsScreen(
+            onBack = { showMedicationScreen = false }
+        )
+        return
+    }
 
     if (showCaregiverDashboard) {
         com.heart.sense.ui.caregiver.LocalDashboard(
@@ -208,6 +217,25 @@ fun SettingsScreen(
         item {
             Card(
                 modifier = Modifier.fillMaxWidth(),
+                onClick = { showMedicationScreen = true }
+            ) {
+                Row(
+                    modifier = Modifier.padding(16.dp),
+                    verticalAlignment = Alignment.CenterVertically,
+                    horizontalArrangement = Arrangement.SpaceBetween
+                ) {
+                    Column(modifier = Modifier.weight(1f)) {
+                        Text("Medication Tracking", style = MaterialTheme.typography.titleMedium, fontWeight = FontWeight.Bold)
+                        Text("Manage prescriptions and daily schedules.", style = MaterialTheme.typography.bodySmall)
+                    }
+                    Icon(imageVector = Icons.AutoMirrored.Filled.KeyboardArrowRight, contentDescription = null)
+                }
+            }
+        }
+
+        item {
+            Card(
+                modifier = Modifier.fillMaxWidth(),
                 onClick = { showCaregiverDashboard = true }
             ) {
                 Row(
@@ -300,7 +328,11 @@ fun SettingsScreen(
         }
 
         item {
-            HealthDashboard(dailyAverages = dailyAverages, settings = settings)
+            HealthDashboard(
+                dailyAverages = dailyAverages,
+                medicationIntakes = medicationIntakes,
+                settings = settings
+            )
         }
 
         item {

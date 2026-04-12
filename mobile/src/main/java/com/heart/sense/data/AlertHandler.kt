@@ -23,7 +23,8 @@ class AlertHandler @Inject constructor(
     private val localSyncRepository: LocalSyncRepository,
     private val interventionRepository: InterventionRepository,
     private val sessionRepository: SessionRepository,
-    private val ambientSensorRepository: AmbientSensorRepository
+    private val ambientSensorRepository: AmbientSensorRepository,
+    private val medicationRepository: MedicationRepository
 ) {
     // Standard Hilt/Testing practice: Use an injected scope or Dispatchers.Main
     // For simplicity here, we'll keep the internal scope but allow it to be influenced by tests via Dispatchers.setMain
@@ -44,9 +45,12 @@ class AlertHandler @Inject constructor(
             val ambientLux = ambientSensorRepository.getAmbientLux().first()
             val ambientDb = ambientSensorRepository.getAmbientNoise().first()
             
-            alertsRepository.addAlert(hr, "High HR", visitId, ambientTemp, ambientLux, ambientDb)
+            val missedMedContext = checkMissedMedications()
+            val alertType = if (missedMedContext != null) "High HR (Missed: $missedMedContext)" else "High HR"
+            
+            alertsRepository.addAlert(hr, alertType, visitId, ambientTemp, ambientLux, ambientDb)
             notificationHelper.showHighHrNotification(hr)
-            localSyncRepository.sendData(NearbyPayload(hr, "High HR Alert", ambientTemp, ambientLux, ambientDb))
+            localSyncRepository.sendData(NearbyPayload(hr, "$alertType Alert", ambientTemp, ambientLux, ambientDb))
         }
     }
 
@@ -184,5 +188,29 @@ class AlertHandler @Inject constructor(
         Log.d("AlertHandler", "!!! EMERGENCY ESCALATION TRIGGERED !!!")
         Log.d("AlertHandler", "Contacting: ${settings.emergencyContactName} (${settings.emergencyContactPhone})")
         Log.d("AlertHandler", "Reason: Critical HR of $hr BPM unacknowledged.")
+    }
+
+    private suspend fun checkMissedMedications(): String? {
+        val today = System.currentTimeMillis()
+        val intakes = medicationRepository.getIntakesForDay(today)
+        val medications = medicationRepository.activeMedications.first()
+        
+        val now = java.time.LocalTime.now()
+        
+        medications.forEach { med ->
+            try {
+                val reminderTime = java.time.LocalTime.parse(med.reminderTime)
+                // If the reminder was more than 1 hour ago and no intake logged
+                if (now.isAfter(reminderTime.plusHours(1))) {
+                    val intake = intakes.find { it.medId == med.id }
+                    if (intake == null) {
+                        return med.name
+                    }
+                }
+            } catch (e: Exception) {
+                // Ignore parse errors
+            }
+        }
+        return null
     }
 }

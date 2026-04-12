@@ -8,6 +8,7 @@ import com.heart.sense.data.DailyAverage
 import com.heart.sense.data.DailyAverageRepository
 import com.heart.sense.data.HealthConnectRepository
 import com.heart.sense.data.LocalSyncRepository
+import com.heart.sense.data.MedicationRepository
 import com.heart.sense.data.SessionRepository
 import com.heart.sense.data.Settings
 import com.heart.sense.data.SettingsDataStore
@@ -30,8 +31,18 @@ class SettingsViewModel @Inject constructor(
     private val dailyAverageRepository: DailyAverageRepository,
     private val healthConnectRepository: HealthConnectRepository,
     private val localSyncRepository: LocalSyncRepository,
+    private val medicationRepository: MedicationRepository,
     val sessionRepository: SessionRepository
 ) : ViewModel() {
+    
+    private val _medicationIntakes = MutableStateFlow<List<com.heart.sense.data.db.MedicationIntake>>(emptyList())
+    val medicationIntakes: StateFlow<List<com.heart.sense.data.db.MedicationIntake>> = _medicationIntakes.asStateFlow()
+
+    fun refreshMedicationIntakes() {
+        viewModelScope.launch {
+            _medicationIntakes.value = medicationRepository.getIntakesForDay(System.currentTimeMillis())
+        }
+    }
     
     val activeSession: StateFlow<com.heart.sense.data.Session?> = sessionRepository.activeSession.stateIn(
         scope = viewModelScope,
@@ -110,6 +121,7 @@ class SettingsViewModel @Inject constructor(
 
     init {
         refreshDailyAverages()
+        refreshMedicationIntakes()
     }
 
     fun recalculateBaseline() {
